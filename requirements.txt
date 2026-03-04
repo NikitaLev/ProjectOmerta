@@ -1,0 +1,11 @@
+Django==4.2.0
+
+dash==2.14.0
+plotly==5.15.0
+pandas==2.0.0
+
+gunicorn==21.2.0
+whitenoise==6.5.0
+psycopg2-binary==2.9.6
+
+python-decouple==3.8

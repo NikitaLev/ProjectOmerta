@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Project Omerta{% endblock %}</title>
+    
+    <!-- Google Fonts: только современные гротески -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Свои стили -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-area">
+                    <!-- Место для логотипа (пустое) -->
+                    <div class="logo-placeholder"></div>
+                    <h1 class="project-title">PROJECT OMERTA</h1>
+                </div>
+                <div class="header-info">
+                    <span class="info-badge">
+                        <i class="fas fa-users"></i> 10 игроков
+                    </span>
+                    <span class="info-badge">
+                        <i class="fas fa-gamepad"></i> 10 игр
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>Project Omerta — турнирная таблица спортивной мафии</p>
+                <span class="version">v0.1.0</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Скрипты -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

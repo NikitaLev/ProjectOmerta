@@ -1,0 +1,344 @@
+/* ========== ПЕРЕМЕННЫЕ ========== */
+:root {
+    --black: #0a0a0a;
+    --black-soft: #1a1a1a;
+    --white: #ffffff;
+    --white-soft: #f8f9fa;
+    --gold: #d4af37;
+    --gold-dark: #b8860b;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+    
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+    --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+    
+    --transition: all 0.2s ease;
+}
+
+/* ========== СБРОС ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--gray-900);
+    background: var(--white-soft);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== КОНТЕЙНЕР ========== */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ========== ШАПКА ========== */
+.header {
+    background: linear-gradient(135deg, var(--black) 0%, var(--black-soft) 100%);
+    color: var(--white);
+    padding: 20px 0;
+    border-bottom: 3px solid var(--gold);
+    box-shadow: var(--shadow-md);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo-placeholder {
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.05);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--gray-600);
+}
+
+.project-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--gold) 0%, #f5e7c8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-info {
+    display: flex;
+    gap: 16px;
+}
+
+.info-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 40px;
+    font-size: 0.95rem;
+    color: var(--gray-300);
+}
+
+.info-badge i {
+    color: var(--gold);
+}
+
+/* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+.main-content {
+    flex: 1;
+    padding: 40px 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    color: var(--gold);
+}
+
+/* ========== ТАБЛИЦА (ЗАГЛУШКА) ========== */
+.table-section {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    margin-bottom: 40px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+}
+
+.table-placeholder {
+    min-height: 400px;
+    background: linear-gradient(135deg, var(--gray-100) 0%, var(--white) 100%);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--gray-300);
+}
+
+.placeholder-content {
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.placeholder-content i {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.placeholder-content p {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.placeholder-content small {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* ========== НОМИНАЦИИ ========== */
+.nominations-section {
+    margin-bottom: 40px;
+}
+
+.nominations-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.nomination-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.nomination-card.placeholder {
+    opacity: 0.7;
+}
+
+.nomination-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-gold);
+    border-color: var(--gold-light);
+}
+
+.nomination-icon {
+    font-size: 2rem;
+    margin-bottom: 16px;
+}
+
+.nomination-icon i {
+    color: var(--gold);
+}
+
+.nomination-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray-600);
+    margin-bottom: 8px;
+}
+
+.nomination-player {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+/* ========== КНОПКИ ДЕЙСТВИЙ ========== */
+.actions-section {
+    margin-top: 40px;
+}
+
+.actions-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-xl);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-btn:hover:not(:disabled) {
+    background: var(--gray-100);
+    border-color: var(--gold);
+    color: var(--gold-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-btn i {
+    font-size: 1rem;
+}
+
+/* ========== ПОДВАЛ ========== */
+.footer {
+    background: var(--gray-900);
+    color: var(--gray-400);
+    padding: 30px 0;
+    margin-top: 60px;
+    border-top: 1px solid var(--gray-800);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 0.9rem;
+}
+
+.version {
+    padding: 4px 12px;
+    background: var(--gray-800);
+    border-radius: var(--radius-xl);
+    color: var(--gray-400);
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 1024px) {
+    .nominations-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .logo-area {
+        flex-direction: column;
+    }
+    
+    .project-title {
+        font-size: 1.5rem;
+    }
+    
+    .table-section {
+        padding: 20px;
+    }
+    
+    .actions-grid {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
