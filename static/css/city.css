@@ -1,0 +1,202 @@
+/* ========== ПИКСЕЛЬНЫЙ ГОРОД ========== */
+
+/* Контейнер */
+.city-silhouette {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+/* Луна (на заднем плане) */
+.moon {
+    position: absolute;
+    top: 30px;
+    left: -100px; /* Начинаем за пределами экрана */
+    width: 80px;
+    height: 80px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.8),
+        0 0 80px rgba(255, 215, 0, 0.4);
+    z-index: 1; /* Низкий z-index, чтобы быть на заднем плане */
+    animation: moonMove 30s infinite ease-in-out;
+    opacity: 0.7;
+}
+
+@keyframes moonMove {
+    0% {
+        left: 100px;
+        top: 20px;
+    }
+    50% {
+        left: calc(100% - 100px);
+        top: 50px;
+    }
+    100% {
+        left: 100px;
+        top: 20px;
+    }
+}
+
+/* Контейнер для всех домов */
+.city-grid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 350px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-evenly;
+    padding: 0 20px;
+    z-index: 10;
+}
+
+/* Каждый дом — это матрица окон */
+.building {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 4px;
+    height: 280px;
+}
+
+/* Колонка окон в доме */
+.building-column {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 4px;
+    width: 8px;
+}
+
+/* Окна-пиксели */
+.window-pixel {
+    width: 8px;
+    height: 8px;
+    background: #FFD700;
+    box-shadow: 0 0 8px #FFD700;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    transition: opacity 0.2s ease;
+}
+
+/* Эффект растворения — чем ниже этаж, тем меньше окон светятся */
+/* Верхние этажи */
+.building-column .window-pixel:nth-last-child(1),
+.building-column .window-pixel:nth-last-child(2),
+.building-column .window-pixel:nth-last-child(3) {
+    opacity: 0.4;
+    background: #FFD700;
+    box-shadow: 0 0 12px #FFD700;
+}
+
+/* Средние этажи */
+.building-column .window-pixel:nth-last-child(4),
+.building-column .window-pixel:nth-last-child(5),
+.building-column .window-pixel:nth-last-child(6) {
+    opacity: 0.1;
+    background: #FFD700;
+    box-shadow: 0 0 6px #FFD700;
+}
+
+/* Нижние этажи */
+.building-column .window-pixel:nth-last-child(7),
+.building-column .window-pixel:nth-last-child(8),
+.building-column .window-pixel:nth-last-child(9) {
+    opacity: 0.1;
+    background: #FFD700;
+    box-shadow: 0 0 1px #FFD700;
+}
+
+/* Самые нижние — почти исчезли */
+.building-column .window-pixel:nth-last-child(10),
+.building-column .window-pixel:nth-last-child(11),
+.building-column .window-pixel:nth-last-child(12) {
+    opacity: 0.05;
+    background: #FFD700;
+    box-shadow: none;
+}
+
+/* Индивидуальная высота домов (количество этажей) */
+.building-1 { height: 280px; }
+.building-2 { height: 240px; }
+.building-3 { height: 320px; }
+.building-4 { height: 200px; }
+.building-5 { height: 300px; }
+.building-6 { height: 260px; }
+.building-7 { height: 220px; }
+.building-8 { height: 340px; }
+.building-9 { height: 180px; }
+.building-10 { height: 360px; }
+.building-11 { height: 240px; }
+.building-12 { height: 280px; }
+.building-13 { height: 220px; }
+.building-14 { height: 320px; }
+.building-15 { height: 260px; }
+.building-16 { height: 300px; }
+.building-17 { height: 200px; }
+.building-18 { height: 340px; }
+.building-19 { height: 240px; }
+.building-20 { height: 360px; }
+
+/* Ширина домов (количество колонок) */
+.building-1 .building-column { width: 8px; }
+.building-2 .building-column { width: 8px; }
+.building-3 .building-column { width: 8px; }
+.building-4 .building-column { width: 8px; }
+.building-5 .building-column { width: 8px; }
+
+/* Мерцание окон (случайное) */
+@keyframes windowFlicker {
+    0% { opacity: 0.2; }
+    20% { opacity: 1; }
+    40% { opacity: 0.4; }
+    60% { opacity: 0.8; }
+    80% { opacity: 0.7; }
+    100% { opacity: 0.5; }
+}
+
+.window-pixel {
+    animation: windowFlicker 6s infinite;
+}
+
+/* Разные задержки для естественного мерцания */
+.building-1 .window-pixel { animation-delay: 0s; }
+.building-2 .window-pixel { animation-delay: 0.3s; }
+.building-3 .window-pixel { animation-delay: 0.6s; }
+.building-4 .window-pixel { animation-delay: 0.9s; }
+.building-5 .window-pixel { animation-delay: 1.2s; }
+.building-6 .window-pixel { animation-delay: 1.5s; }
+.building-7 .window-pixel { animation-delay: 1.8s; }
+.building-8 .window-pixel { animation-delay: 2.1s; }
+.building-9 .window-pixel { animation-delay: 2.4s; }
+.building-10 .window-pixel { animation-delay: 2.7s; }
+.building-11 .window-pixel { animation-delay: 3.0s; }
+.building-12 .window-pixel { animation-delay: 3.3s; }
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .building {
+        gap: 2px;
+    }
+    
+    .building-column {
+        width: 5px;
+        gap: 2px;
+    }
+    
+    .window-pixel {
+        width: 5px;
+        height: 5px;
+    }
+    
+    .moon {
+        width: 50px;
+        height: 50px;
+    }
+}
