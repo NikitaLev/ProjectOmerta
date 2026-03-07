@@ -129,5 +129,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Кастомная модель пользователя
 AUTH_USER_MODEL = 'tournament.User'
 # Куда перенаправлять после успешного входа
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Куда перенаправлять неавторизованных пользователей
+LOGIN_URL = '/accounts/login/'

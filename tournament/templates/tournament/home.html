@@ -1,281 +1,196 @@
+{% extends 'tournament/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Omerta — платформа для турниров по спортивной мафии</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Свои стили -->
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+{% block title %}Project Omerta — платформа для турниров по спортивной мафии{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/components/city.css' %}">
-    {% block extra_css %}{% endblock %}
-</head>
-<body class="dark-theme">
-    <!-- Шапка -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo-area">
-                    <div class="logo-placeholder"></div>
-                    <span class="logo-text">PROJECT OMERTA</span>
-                </div>
-                <nav class="main-nav">
-                    <ul class="nav-list">
-                        <li><a href="#" class="nav-link">Игрокам</a></li>
-                        <li><a href="#" class="nav-link">Организаторам</a></li>
-                    </ul>
-                </nav>
-                <div class="auth-buttons">
-                    {% if user.is_authenticated %}
-                        <span class="btn btn-outline" style="cursor: default;">{{ user.username }}</span>
-                        <a href="{% url 'logout' %}" class="btn btn-outline">Выйти</a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-outline">Войти</a>
-                        <a href="{% url 'register' %}" class="btn btn-primary">Регистрация</a>
-                    {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Hero секция с городом -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    PROJECT <span class="gold-text">OMERTA</span>
+                </h1>
+                <p class="hero-description">
+                    Платформа для турниров по спортивной мафии.<br>
+                    Статистика, рейтинги, аналитика.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary btn-large">Начать игру</a>
+                    <a href="#" class="btn btn-outline btn-large">Узнать больше</a>
                 </div>
             </div>
-        </div>
-    </header>
-
-    <!-- Hero секция с городом -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        PROJECT <span class="gold-text">OMERTA</span>
-                    </h1>
-                    <p class="hero-description">
-                        Платформа для турниров по спортивной мафии.<br>
-                        Статистика, рейтинги, аналитика.
-                    </p>
-                    <div class="hero-buttons">
-                        <a href="#" class="btn btn-primary btn-large">Начать игру</a>
-                        <a href="#" class="btn btn-outline btn-large">Узнать больше</a>
-                    </div>
-                </div>
-                <div class="hero-visual">
-                    {% include 'includes/city1.html' %}
-                </div>
+            <div class="hero-visual">
+                {% include 'includes/city1.html' %}
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Секция "Для кого это" -->
-    <section class="roles-section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Выберите свою роль</h2>
-                <p class="section-subtitle">Project Omerta объединяет всех участников мафии</p>
+<!-- Секция "Для кого это" -->
+<section class="roles-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Выберите свою роль</h2>
+            <p class="section-subtitle">Project Omerta объединяет всех участников мафии</p>
+        </div>
+        
+        <div class="roles-grid">
+            <!-- Карточка игрока -->
+            <div class="role-card card-player">
+                <div class="card-icon">
+                    <i class="fas fa-user-secret"></i>
+                </div>
+                <h3 class="card-title">Я игрок</h3>
+                <p class="card-description">
+                    Участвуйте в турнирах, отслеживайте свою статистику, 
+                    улучшайте рейтинг и становитесь легендой.
+                </p>
+                <ul class="card-features">
+                    <li><i class="fas fa-chart-line"></i> Личная статистика</li>
+                    <li><i class="fas fa-trophy"></i> История игр</li>
+                    <li><i class="fas fa-ranking-star"></i> Рейтинг</li>
+                </ul>
+                <a href="#" class="btn btn-outline card-btn">Войти как игрок</a>
             </div>
             
-            <div class="roles-grid">
-                <!-- Карточка игрока -->
-                <div class="role-card card-player">
-                    <div class="card-icon">
-                        <i class="fas fa-user-secret"></i>
-                    </div>
-                    <h3 class="card-title">Я игрок</h3>
-                    <p class="card-description">
-                        Участвуйте в турнирах, отслеживайте свою статистику, 
-                        улучшайте рейтинг и становитесь легендой.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-chart-line"></i> Личная статистика</li>
-                        <li><i class="fas fa-trophy"></i> История игр</li>
-                        <li><i class="fas fa-ranking-star"></i> Рейтинг</li>
-                    </ul>
-                    <a href="#" class="btn btn-outline card-btn">Войти как игрок</a>
+            <!-- Карточка организатора -->
+            <div class="role-card card-organizer">
+                <div class="card-icon">
+                    <i class="fas fa-crown"></i>
                 </div>
-                
-                <!-- Карточка организатора -->
-                <div class="role-card card-organizer">
-                    <div class="card-icon">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <h3 class="card-title">Я организатор</h3>
-                    <p class="card-description">
-                        Создавайте турниры, добавляйте игроков, ведите статистику 
-                        в реальном времени и управляйте процессом.
-                    </p>
-                    <ul class="card-features">
-                        <li><i class="fas fa-calendar-plus"></i> Создание турниров</li>
-                        <li><i class="fas fa-users"></i> Управление игроками</li>
-                        <li><i class="fas fa-chart-pie"></i> Статистика в реальном времени</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary card-btn">Панель организатора</a>
-                </div>
+                <h3 class="card-title">Я организатор</h3>
+                <p class="card-description">
+                    Создавайте турниры, добавляйте игроков, ведите статистику 
+                    в реальном времени и управляйте процессом.
+                </p>
+                <ul class="card-features">
+                    <li><i class="fas fa-calendar-plus"></i> Создание турниров</li>
+                    <li><i class="fas fa-users"></i> Управление игроками</li>
+                    <li><i class="fas fa-chart-pie"></i> Статистика в реальном времени</li>
+                </ul>
+                <a href="#" class="btn btn-primary card-btn">Панель организатора</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Секция "Как это работает" (без первого пункта) -->
-    <section class="how-it-works">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Как это работает</h2>
-                <p class="section-subtitle">Всё просто и прозрачно</p>
+<!-- Секция "Как это работает" -->
+<section class="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Как это работает</h2>
+            <p class="section-subtitle">Всё просто и прозрачно</p>
+        </div>
+        
+        <div class="steps-grid">
+            <!-- Шаг 1: Участие -->
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-icon">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h3 class="step-title">Участвуйте</h3>
+                <p class="step-description">
+                    Присоединяйтесь к турнирам в качестве игрока. 
+                    Каждая игра приближает вас к вершине рейтинга.
+                </p>
             </div>
             
-            <div class="steps-grid">
-                <!-- Шаг 1: Участие (бывший шаг 2) -->
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <div class="step-icon">
-                        <i class="fas fa-gamepad"></i>
-                    </div>
-                    <h3 class="step-title">Участвуйте</h3>
-                    <p class="step-description">
-                        Присоединяйтесь к турнирам в качестве игрока. 
-                        Каждая игра приближает вас к вершине рейтинга.
-                    </p>
+            <!-- Шаг 2: Рост -->
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-icon">
+                    <i class="fas fa-chart-simple"></i>
                 </div>
-                
-                <!-- Шаг 2: Рост (бывший шаг 3) -->
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <div class="step-icon">
-                        <i class="fas fa-chart-simple"></i>
-                    </div>
-                    <h3 class="step-title">Растите</h3>
-                    <p class="step-description">
-                        Следите за своей статистикой, анализируйте успехи 
-                        и становитесь лучшим в каждой роли.
-                    </p>
-                </div>
+                <h3 class="step-title">Растите</h3>
+                <p class="step-description">
+                    Следите за своей статистикой, анализируйте успехи 
+                    и становитесь лучшим в каждой роли.
+                </p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Секция "Последние турниры" (динамическая заглушка) -->
-    <section class="recent-tournaments">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Сейчас проходят</h2>
-                <p class="section-subtitle">Активные и завершённые турниры</p>
-            </div>
-            
-            <div class="tournaments-grid">
-                <!-- Карточка-заглушка 1 -->
-                <div class="tournament-card placeholder">
-                    <div class="tournament-status status-upcoming">
-                        <span class="status-dot"></span> Скоро
-                    </div>
-                    <div class="tournament-name">Турнир #1</div>
-                    <div class="tournament-meta">
-                        <span><i class="far fa-calendar"></i> Март 2026</span>
-                        <span><i class="far fa-user"></i> Организатор</span>
-                    </div>
-                    <div class="tournament-players">
-                        <div class="player-avatars">
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar more">+7</span>
-                        </div>
-                    </div>
+<!-- Секция "Последние турниры" -->
+<section class="recent-tournaments">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Сейчас проходят</h2>
+            <p class="section-subtitle">Активные и завершённые турниры</p>
+        </div>
+        
+        <div class="tournaments-grid">
+            <!-- Карточка-заглушка 1 -->
+            <div class="tournament-card placeholder">
+                <div class="tournament-status status-upcoming">
+                    <span class="status-dot"></span> Скоро
                 </div>
-                
-                <!-- Карточка-заглушка 2 -->
-                <div class="tournament-card placeholder">
-                    <div class="tournament-status status-live">
-                        <span class="status-dot"></span> В процессе
-                    </div>
-                    <div class="tournament-name">Турнир #2</div>
-                    <div class="tournament-meta">
-                        <span><i class="far fa-calendar"></i> Март 2026</span>
-                        <span><i class="far fa-user"></i> Организатор</span>
-                    </div>
-                    <div class="tournament-players">
-                        <div class="player-avatars">
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar more">+12</span>
-                        </div>
-                    </div>
+                <div class="tournament-name">Турнир #1</div>
+                <div class="tournament-meta">
+                    <span><i class="far fa-calendar"></i> Март 2026</span>
+                    <span><i class="far fa-user"></i> Организатор</span>
                 </div>
-                
-                <!-- Карточка-заглушка 3 -->
-                <div class="tournament-card placeholder">
-                    <div class="tournament-status status-completed">
-                        <span class="status-dot"></span> Завершён
-                    </div>
-                    <div class="tournament-name">Турнир #3</div>
-                    <div class="tournament-meta">
-                        <span><i class="far fa-calendar"></i> Февраль 2026</span>
-                        <span><i class="far fa-user"></i> Организатор</span>
-                    </div>
-                    <div class="tournament-players">
-                        <div class="player-avatars">
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar"></span>
-                            <span class="avatar more">+10</span>
-                        </div>
+                <div class="tournament-players">
+                    <div class="player-avatars">
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar more">+7</span>
                     </div>
                 </div>
             </div>
             
-            <div class="section-footer">
-                <a href="#" class="btn btn-outline">Все турниры <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Подвал -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <div class="footer-logo">PROJECT OMERTA</div>
-                    <p class="footer-description">
-                        Платформа для турниров по спортивной мафии.<br>
-                        Автоматический подсчёт очков, статистика и аналитика.
-                    </p>
+            <!-- Карточка-заглушка 2 -->
+            <div class="tournament-card placeholder">
+                <div class="tournament-status status-live">
+                    <span class="status-dot"></span> В процессе
                 </div>
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>О проекте</h4>
-                        <ul>
-                            <li><a href="#">Концепция</a></li>
-                            <li><a href="#">Команда</a></li>
-                            <li><a href="#">Контакты</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Участникам</h4>
-                        <ul>
-                            <li><a href="#">Правила</a></li>
-                            <li><a href="#">FAQ</a></li>
-                            <li><a href="#">Поддержка</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Сообщество</h4>
-                        <ul>
-                            <li><a href="#"><i class="fab fa-github"></i> GitHub</a></li>
-                            <li><a href="#"><i class="fab fa-telegram"></i> Telegram</a></li>
-                            <li><a href="#"><i class="fab fa-discord"></i> Discord</a></li>
-                        </ul>
+                <div class="tournament-name">Турнир #2</div>
+                <div class="tournament-meta">
+                    <span><i class="far fa-calendar"></i> Март 2026</span>
+                    <span><i class="far fa-user"></i> Организатор</span>
+                </div>
+                <div class="tournament-players">
+                    <div class="player-avatars">
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar more">+12</span>
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Project Omerta. Все права защищены.</p>
-                <span class="version">v0.2.0</span>
+            
+            <!-- Карточка-заглушка 3 -->
+            <div class="tournament-card placeholder">
+                <div class="tournament-status status-completed">
+                    <span class="status-dot"></span> Завершён
+                </div>
+                <div class="tournament-name">Турнир #3</div>
+                <div class="tournament-meta">
+                    <span><i class="far fa-calendar"></i> Февраль 2026</span>
+                    <span><i class="far fa-user"></i> Организатор</span>
+                </div>
+                <div class="tournament-players">
+                    <div class="player-avatars">
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar"></span>
+                        <span class="avatar more">+10</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </footer>
-</body>
-</html>
+        
+        <div class="section-footer">
+            <a href="#" class="btn btn-outline">Все турниры <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+{% endblock %}

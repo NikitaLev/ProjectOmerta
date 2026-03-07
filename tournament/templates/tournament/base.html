@@ -34,7 +34,9 @@
                 </nav>
                 <div class="auth-buttons">
                     {% if user.is_authenticated %}
-                        <span class="btn btn-outline" style="cursor: default;">{{ user.username }}</span>
+                        <a href="{% url 'profile' %}" class="btn btn-outline">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </a>
                         <a href="{% url 'logout' %}" class="btn btn-outline">Выйти</a>
                     {% else %}
                         <a href="{% url 'login' %}" class="btn btn-outline">Войти</a>

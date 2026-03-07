@@ -1,0 +1,98 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Профиль - {{ user.username }} - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/profile.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="profile-title">
+                <h1>{{ user.username }}</h1>
+                <p class="profile-role">
+                    {% if user.role == 'admin' %}
+                        <span class="role-badge admin">Администратор</span>
+                    {% elif user.role == 'host' and user.is_approved_host %}
+                        <span class="role-badge host">Ведущий</span>
+                    {% else %}
+                        <span class="role-badge player">Игрок</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="profile-body">
+            <div class="profile-info">
+                <div class="info-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <p>{{ user.email|default:"Не указан" }}</p>
+                </div>
+                
+                <div class="info-group">
+                    <label><i class="fas fa-calendar-alt"></i> Дата регистрации</label>
+                    <p>{{ user.date_joined|date:"d.m.Y" }}</p>
+                </div>
+                
+                <div class="info-group">
+                    <label><i class="fas fa-gamepad"></i> Статус</label>
+                    <p>
+                        {% if user.role == 'host' and not user.is_approved_host %}
+                            Ожидает подтверждения ведущего
+                        {% elif user.role == 'host' and user.is_approved_host %}
+                            Подтвержденный ведущий
+                        {% else %}
+                            Игрок
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <h2>Статистика игрока</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ user.games_played|default:0 }}</div>
+                        <div class="stat-label">Игр сыграно</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ user.player_rating|default:0|floatformat:2 }}</div>
+                        <div class="stat-label">Рейтинг</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if user.role == 'host' %}
+            <div class="profile-host-stats">
+                <h2>Статистика ведущего</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ user.tournaments_hosted|default:0 }}</div>
+                        <div class="stat-label">Турниров проведено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ user.host_rating|default:0|floatformat:2 }}</div>
+                        <div class="stat-label">Рейтинг ведущего</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="profile-actions">
+                <a href="{% url 'home' %}" class="btn btn-outline">
+                    <i class="fas fa-home"></i> На главную
+                </a>
+                <a href="{% url 'logout' %}" class="btn btn-outline">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
