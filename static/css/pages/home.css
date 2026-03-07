@@ -1,0 +1,194 @@
+.hero {
+    padding: 20px 0;
+}
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 10px;
+}
+
+.gold-text {
+    color: var(--gold);
+    display: block;
+    font-size: 3rem;
+}
+
+.hero-description {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.hero-visual {
+    flex: 1;
+    height: 300px;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.step-number {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--bg-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.step-icon {
+    font-size: 2rem;
+    color: var(--gold);
+    margin: 15px 0 10px;
+}
+
+.step-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.step-description {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.tournaments-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.tournament-card .tournament-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    margin-bottom: 10px;
+}
+
+.status-upcoming {
+    background: rgba(212,175,55,0.1);
+    color: var(--gold);
+}
+
+.status-live {
+    background: rgba(74,222,128,0.1);
+    color: #4ade80;
+}
+
+.status-completed {
+    background: rgba(156,163,175,0.1);
+    color: #9ca3af;
+}
+
+.tournament-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.tournament-meta {
+    display: flex;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+}
+
+.player-avatars {
+    display: flex;
+    align-items: center;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--bg-card);
+    border-radius: 50%;
+    margin-left: -8px;
+}
+
+.avatar:first-child {
+    margin-left: 0;
+}
+
+.avatar.more {
+    background: var(--gold);
+    color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .gold-text {
+        font-size: 2.5rem;
+    }
+    
+    .roles-grid,
+    .tournaments-grid {
+        grid-template-columns: 1fr;
+    }
+}

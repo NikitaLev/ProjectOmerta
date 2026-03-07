@@ -15,8 +15,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <!-- Свои стили -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/city.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/city.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body class="dark-theme">
     <!-- Шапка -->
@@ -34,8 +35,13 @@
                     </ul>
                 </nav>
                 <div class="auth-buttons">
-                    <a href="#" class="btn btn-outline">Войти</a>
-                    <a href="#" class="btn btn-primary">Регистрация</a>
+                    {% if user.is_authenticated %}
+                        <span class="btn btn-outline" style="cursor: default;">{{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline">Выйти</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline">Войти</a>
+                        <a href="{% url 'register' %}" class="btn btn-primary">Регистрация</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

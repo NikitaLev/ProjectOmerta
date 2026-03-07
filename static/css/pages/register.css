@@ -1,0 +1,167 @@
+/* ========== СТИЛИ СТРАНИЦЫ РЕГИСТРАЦИИ ========== */
+
+/* Специфичные стили для карточки регистрации */
+.register-card .auth-header-icon {
+    width: 80px;
+    height: 80px;
+}
+
+.register-card .auth-header-icon i {
+    font-size: 2.5rem;
+}
+
+/* Список ошибок для формы регистрации */
+.auth-error-list {
+    background-color: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    color: #f87171;
+    animation: slideIn 0.3s ease;
+}
+
+.auth-error-list i {
+    font-size: 1.2rem;
+    color: #f87171;
+    margin-right: 10px;
+    float: left;
+}
+
+.auth-error-list strong {
+    display: block;
+    margin-bottom: 12px;
+    margin-left: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.auth-error-list ul {
+    margin: 0 0 0 45px;
+    padding: 0;
+}
+
+.auth-error-list li {
+    margin: 6px 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Сообщение об успешной регистрации */
+.auth-success {
+    background-color: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    color: #4ade80;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: slideIn 0.3s ease;
+}
+
+.auth-success i {
+    font-size: 1.5rem;
+    color: #4ade80;
+    flex-shrink: 0;
+}
+
+.auth-success p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Анимация появления */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Дополнительные стили для полей с ошибками */
+.auth-form .form-control.error {
+    border-color: #f87171;
+    background-color: rgba(220, 38, 38, 0.05);
+}
+
+.auth-form .form-control.error:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Стили для подсказок к полям */
+.auth-form .form-help {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding-left: 4px;
+    line-height: 1.4;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .register-card .auth-header-icon {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .register-card .auth-header-icon i {
+        font-size: 2.2rem;
+    }
+    
+    .auth-error-list ul {
+        margin-left: 35px;
+    }
+    
+    .auth-error-list strong {
+        margin-left: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .register-card .auth-header-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .register-card .auth-header-icon i {
+        font-size: 2rem;
+    }
+    
+    .auth-error-list {
+        padding: 15px;
+    }
+    
+    .auth-error-list ul {
+        margin-left: 20px;
+    }
+    
+    .auth-error-list strong {
+        margin-left: 20px;
+        font-size: 0.9rem;
+    }
+    
+    .auth-error-list li {
+        font-size: 0.85rem;
+    }
+    
+    .auth-success {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .auth-success i {
+        font-size: 1.2rem;
+    }
+    
+    .auth-success p {
+        font-size: 0.85rem;
+    }
+}

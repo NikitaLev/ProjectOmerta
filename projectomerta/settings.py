@@ -26,7 +26,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 SECRET_KEY = 'django-insecure-3(sbph3_(y$-n-uczo@w62g))y24w!3kjx(=kf!s#q4%$#i)+('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -125,3 +125,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Кастомная модель пользователя
+AUTH_USER_MODEL = 'tournament.User'
+# Куда перенаправлять после успешного входа
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

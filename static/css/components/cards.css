@@ -1,0 +1,51 @@
+.role-card, .tournament-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    transition: var(--transition);
+}
+
+.role-card:hover, .tournament-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+}
+
+.role-card .card-icon {
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 12px;
+}
+
+.role-card .card-title {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.role-card .card-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.role-card .card-features {
+    list-style: none;
+    margin-bottom: 15px;
+}
+
+.role-card .card-features li {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.role-card .card-features li i {
+    color: var(--gold);
+    width: 16px;
+}

@@ -1,0 +1,75 @@
+/* responsive.css - общие адаптивные стили */
+
+@media (max-width: 768px) {
+    .auth-container {
+        min-height: calc(100vh - 150px);
+        padding: 20px;
+    }
+    
+    .auth-card {
+        max-width: 100%;
+    }
+    
+    .auth-header {
+        padding: 30px 30px 20px;
+    }
+    
+    .auth-header-icon {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .auth-header-icon i {
+        font-size: 2.2rem;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.8rem;
+    }
+    
+    .auth-body {
+        padding: 30px;
+    }
+    
+    .auth-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .auth-links a {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .auth-links .separator {
+        display: none;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-header {
+        padding: 25px 20px 15px;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.6rem;
+    }
+    
+    .auth-body {
+        padding: 25px 20px;
+    }
+    
+    .auth-form .form-control {
+        padding: 12px 15px;
+    }
+    
+    .auth-btn {
+        padding: 14px;
+        font-size: 1rem;
+    }
+}

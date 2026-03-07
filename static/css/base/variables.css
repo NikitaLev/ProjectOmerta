@@ -1,0 +1,20 @@
+:root {
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #111111;
+    --bg-card: #1A1A1A;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-muted: #6B6B6B;
+    --gold: #D4AF37;
+    --gold-dark: #B8860B;
+    --gold-light: #F5E7C8;
+    --border-color: #2A2A2A;
+    
+    --font-primary: 'Inter', sans-serif;
+    
+    --transition: all 0.3s ease;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-gold: 0 4px 20px rgba(212,175,55,0.2);
+}

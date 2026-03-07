@@ -1,0 +1,126 @@
+/* ========== СТИЛИ СТРАНИЦЫ ВХОДА ========== */
+
+.auth-container {
+    min-height: calc(100vh - 150px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+}
+
+.auth-card {
+    max-width: 420px;
+    width: 100%;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.auth-header {
+    padding: 30px 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-header-icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-header-icon i {
+    font-size: 2.2rem;
+    color: var(--bg-primary);
+}
+
+.auth-header h2 {
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-body {
+    padding: 30px;
+}
+
+/* Ошибки */
+.auth-error {
+    background-color: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+
+.auth-error i {
+    font-size: 1.2rem;
+    color: #f87171;
+    flex-shrink: 0;
+}
+
+/* Ссылки */
+.auth-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s ease;
+}
+
+.auth-links a:hover {
+    color: var(--gold);
+}
+
+.auth-links a i {
+    font-size: 0.9rem;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .auth-header {
+        padding: 25px 20px 15px;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.6rem;
+    }
+    
+    .auth-body {
+        padding: 25px 20px;
+    }
+    
+    .auth-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+}

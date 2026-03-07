@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Project Omerta{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Только один главный CSS файл -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dark-theme">
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo-placeholder"></div>
+                    <span class="logo-text">PROJECT OMERTA</span>
+                </div>
+                <nav class="main-nav">
+                    <ul class="nav-list">
+                        <li><a href="{% url 'home' %}" class="nav-link">Главная</a></li>
+                        <li><a href="#" class="nav-link">Игрокам</a></li>
+                        <li><a href="#" class="nav-link">Организаторам</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons">
+                    {% if user.is_authenticated %}
+                        <span class="btn btn-outline" style="cursor: default;">{{ user.username }}</span>
+                        <a href="{% url 'logout' %}" class="btn btn-outline">Выйти</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline">Войти</a>
+                        <a href="{% url 'register' %}" class="btn btn-primary">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-logo">PROJECT OMERTA</div>
+                    <p class="footer-description">
+                        Платформа для турниров по спортивной мафии.<br>
+                        Автоматический подсчёт очков, статистика и аналитика.
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>О проекте</h4>
+                        <ul>
+                            <li><a href="#">Концепция</a></li>
+                            <li><a href="#">Команда</a></li>
+                            <li><a href="#">Контакты</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Участникам</h4>
+                        <ul>
+                            <li><a href="#">Правила</a></li>
+                            <li><a href="#">FAQ</a></li>
+                            <li><a href="#">Поддержка</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Сообщество</h4>
+                        <ul>
+                            <li><a href="#"><i class="fab fa-github"></i> GitHub</a></li>
+                            <li><a href="#"><i class="fab fa-telegram"></i> Telegram</a></li>
+                            <li><a href="#"><i class="fab fa-discord"></i> Discord</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Project Omerta. Все права защищены.</p>
+                <span class="version">v0.2.0</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

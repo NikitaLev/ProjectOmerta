@@ -1,0 +1,25 @@
+.main-content {
+    flex: 1;
+    padding: 20px 0;
+}
+
+section {
+    padding: 30px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}

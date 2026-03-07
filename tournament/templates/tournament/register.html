@@ -1,0 +1,113 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Регистрация - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/register.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/components/forms.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card register-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2>Создать аккаунт</h2>
+            <p>Присоединяйтесь к сообществу Project Omerta</p>
+        </div>
+        
+        <div class="auth-body">
+            {% if form.errors %}
+                <div class="auth-error-list">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Пожалуйста, исправьте следующие ошибки:</strong>
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
+                    <input type="text" 
+                           name="{{ form.username.name }}" 
+                           id="{{ form.username.id_for_label }}" 
+                           class="form-control" 
+                           placeholder="Придумайте логин" 
+                           value="{{ form.username.value|default:'' }}" 
+                           required>
+                    {% if form.username.help_text %}
+                        <small class="form-help">{{ form.username.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" 
+                           name="{{ form.email.name }}" 
+                           id="{{ form.email.id_for_label }}" 
+                           class="form-control" 
+                           placeholder="Ваш email" 
+                           value="{{ form.email.value|default:'' }}" 
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.password1.id_for_label }}">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
+                    <input type="password" 
+                           name="{{ form.password1.name }}" 
+                           id="{{ form.password1.id_for_label }}" 
+                           class="form-control" 
+                           placeholder="Придумайте пароль" 
+                           required>
+                    {% if form.password1.help_text %}
+                        <small class="form-help">{{ form.password1.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.password2.id_for_label }}">
+                        <i class="fas fa-lock"></i> Подтверждение пароля
+                    </label>
+                    <input type="password" 
+                           name="{{ form.password2.name }}" 
+                           id="{{ form.password2.id_for_label }}" 
+                           class="form-control" 
+                           placeholder="Повторите пароль" 
+                           required>
+                </div>
+                
+                <button type="submit" class="auth-btn">
+                    <span>Зарегистрироваться</span>
+                    <i class="fas fa-user-check"></i>
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <a href="{% url 'login' %}">
+                    <i class="fas fa-sign-in-alt"></i> Уже есть аккаунт? Войти
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
