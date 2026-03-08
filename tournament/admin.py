@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, HostApplication, Tournament, TournamentPlayer, Game, PlayerGameStats
+from django.utils.timezone import now
 
 # Расширенный админ для пользователей
 @admin.register(User)

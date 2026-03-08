@@ -1,0 +1,91 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Создание турнира - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/create-tournament.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2>Создание нового турнира</h2>
+            <p>Заполните основную информацию о турнире</p>
+        </div>
+        
+        <div class="auth-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="auth-{% if message.tags %}{{ message.tags }}{% endif %}">
+                        <i class="fas fa-info-circle"></i>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> {{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="form-error">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> {{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="form-error">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-alt"></i> {{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <div class="form-error">{{ form.start_date.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> {{ form.max_players.label }}</label>
+                    {{ form.max_players }}
+                    {% if form.max_players.errors %}
+                        <div class="form-error">{{ form.max_players.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Минимум 2, максимум 20 игроков</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-gamepad"></i> {{ form.total_games.label }}</label>
+                    {{ form.total_games }}
+                    {% if form.total_games.errors %}
+                        <div class="form-error">{{ form.total_games.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Сколько игр будет сыграно (по умолчанию 10)</small>
+                </div>
+                
+                
+                <button type="submit" class="auth-btn">
+                    <span>Создать турнир</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <a href="{% url 'profile' %}">
+                    <i class="fas fa-arrow-left"></i> Вернуться в профиль
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

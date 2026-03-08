@@ -55,7 +55,6 @@ class Tournament(models.Model):
         ('completed', 'Завершен'),
         ('cancelled', 'Отменен'),
     ]
-    
     name = models.CharField(max_length=200, verbose_name="Название турнира")
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tournaments')
     description = models.TextField(blank=True)
@@ -65,6 +64,11 @@ class Tournament(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     max_players = models.IntegerField(default=10)
     current_round = models.IntegerField(default=1)
+    total_games = models.IntegerField(
+        default=10, 
+        verbose_name="Количество игр",
+        help_text="Сколько игр будет сыграно в турнире"
+    )
     
     # Статистика ведущего по этому турниру
     host_rating_delta = models.FloatField(default=0.0)  # Изменение рейтинга ведущего

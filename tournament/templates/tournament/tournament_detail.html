@@ -1,0 +1,308 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}{{ tournament.name }} - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/tournament.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="tournament-wrapper">
+    <div class="tournament-card">
+        <!-- Шапка турнира с статусом -->
+        <div class="tournament-header">
+            <div class="tournament-status-badge status-{{ tournament.status }}">
+                {{ tournament.get_status_display }}
+            </div>
+            <h1 class="tournament-name">{{ tournament.name }}</h1>
+            <div class="tournament-meta-header">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>{{ tournament.host.username }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>{{ tournament.start_date|date:"d.m.Y H:i" }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-users"></i>
+                    <span>{{ tournament.players.count }} / {{ tournament.max_players }}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-gamepad"></i>
+                    <span>{{ tournament.total_games }} игр</span>  <!-- Новая строка -->
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Создан: {{ tournament.created_at|date:"d.m.Y" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="tournament-content">
+            <!-- Описание турнира -->
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-align-left"></i>
+                    Описание турнира
+                </h2>
+                <div class="tournament-description">
+                    {{ tournament.description|default:"У этого турнира пока нет описания."|linebreaks }}
+                </div>
+            </div>
+            
+            <!-- Действия для ведущего -->
+            {% if can_edit %}
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Управление турниром
+                </h2>
+                <div class="action-buttons">
+                    <a href="#" class="action-btn primary" id="showAddPlayers">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Добавить игроков</span>
+                    </a>
+                    <a href="#" class="action-btn success">
+                        <i class="fas fa-play"></i>
+                        <span>Начать турнир</span>
+                    </a>
+                    <a href="#" class="action-btn warning">
+                        <i class="fas fa-pencil-alt"></i>
+                        <span>Редактировать</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Список участников -->
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-users"></i>
+                    Участники турнира
+                    <span class="players-count">{{ tournament.players.count }}</span>
+                </h2>
+                
+                {% if tournament.players.exists %}
+                <div class="players-table">
+                    <div class="players-table-header">
+                        <div class="player-cell">Игрок</div>
+                        <div class="player-cell">Никнейм</div>
+                        <div class="player-cell">Статус</div>
+                        {% if can_edit %}
+                        <div class="player-cell actions">Действия</div>
+                        {% endif %}
+                    </div>
+                    
+                    {% for tp in tournament.players.all %}
+                    <div class="players-table-row">
+                        <div class="player-cell">
+                            <i class="fas fa-user"></i>
+                            {{ tp.user.username }}
+                        </div>
+                        <div class="player-cell">
+                            {{ tp.user.player_nickname|default:"Не указан" }}
+                        </div>
+                        <div class="player-cell">
+                            {% if tp.user == tournament.host %}
+                            <span class="player-badge host">Ведущий</span>
+                            {% else %}
+                            <span class="player-badge player">Участник</span>
+                            {% endif %}
+                        </div>
+                        {% if can_edit and tp.user != tournament.host %}
+                        <div class="player-cell actions">
+                            <a href="{% url 'remove_player_from_tournament' tournament.id tp.user.id %}" 
+                            class="btn-icon delete"
+                            onclick="return confirm('Удалить игрока из турнира?')"
+                            title="Удалить">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="players-list empty">
+                    <div class="empty-state">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>Пока нет участников</h3>
+                        <p>Нажмите "Добавить игроков", чтобы пригласить участников</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Модальное окно добавления игроков -->
+<div id="addPlayersModal" class="modal">
+    <div class="modal-content large">  <!-- Увеличили размер -->
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus"></i> Добавить игроков</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        
+        <div class="modal-body">
+            <div class="player-select-container">
+                <label for="playerSelect" class="form-label">Выберите игрока из списка</label>
+                <div class="custom-select-wrapper">
+                    <select id="playerSelect" class="custom-select" size="12">  <!-- Увеличили размер -->
+                        <option value="" disabled selected>── Загрузка списка ──</option>
+                    </select>
+                    <div class="select-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               id="playerSearchInput" 
+                               class="form-control" 
+                               placeholder="Поиск по никнейму..."
+                               autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="selected-player-footer" id="selectedPlayerFooter" style="display: none;">
+                <i class="fas fa-user-check"></i>
+                <span id="selectedPlayerName"></span>
+                <span id="selectedPlayerUsername" class="player-username"></span>
+            </div>
+            <div class="footer-buttons">
+                <button class="btn btn-outline close-modal-btn">Отмена</button>
+                <button class="btn btn-primary" id="addSelectedPlayerBtn" disabled>
+                    <i class="fas fa-user-plus"></i> Добавить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('addPlayersModal');
+    const showBtn = document.getElementById('showAddPlayers');
+    const closeBtn = modal.querySelector('.close-modal');
+    const closeFooterBtn = modal.querySelector('.close-modal-btn');
+    const playerSelect = document.getElementById('playerSelect');
+    const searchInput = document.getElementById('playerSearchInput');
+    const addBtn = document.getElementById('addSelectedPlayerBtn');
+    const selectedPlayerInfo = document.getElementById('selectedPlayerInfo');
+    const selectedPlayerName = document.getElementById('selectedPlayerName');
+    
+    let allPlayers = []; // Храним всех игроков для фильтрации
+    let selectedPlayerId = null;
+    
+    // Открыть модальное окно и загрузить список
+    showBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.style.display = 'block';
+        loadPlayersList();
+    });
+    
+    // Закрыть модальное окно
+    function closeModal() {
+        modal.style.display = 'none';
+        searchInput.value = '';
+        selectedPlayerInfo.style.display = 'none';
+        addBtn.disabled = true;
+        selectedPlayerId = null;
+    }
+    
+    closeBtn.addEventListener('click', closeModal);
+    closeFooterBtn.addEventListener('click', closeModal);
+    
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Загрузка списка игроков
+    function loadPlayersList() {
+        playerSelect.innerHTML = '<option value="" disabled>── Загрузка... ──</option>';
+        
+        fetch('/tournament/{{ tournament.id }}/players/')
+            .then(response => response.json())
+            .then(data => {
+                allPlayers = data.players || [];
+                renderPlayerList(allPlayers);
+            })
+            .catch(error => {
+                playerSelect.innerHTML = '<option value="" disabled>── Ошибка загрузки ──</option>';
+            });
+    }
+    
+    // Отображение списка игроков
+    function renderPlayerList(players) {
+        if (players.length === 0) {
+            playerSelect.innerHTML = '<option value="" disabled>── Нет доступных игроков ──</option>';
+            return;
+        }
+        
+        let html = '';
+        players.forEach(player => {
+            // Используем display-строку для отображения
+            html += `<option value="${player.id}">${player.display}</option>`;
+        });
+        playerSelect.innerHTML = html;
+    }
+    
+    // Поиск по списку
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        
+        if (query === '') {
+            renderPlayerList(allPlayers);
+            return;
+        }
+        
+        const filtered = allPlayers.filter(player => 
+            player.nickname.toLowerCase().includes(query)
+        );
+        
+        renderPlayerList(filtered);
+    });
+    
+    // Выбор игрока из списка
+    playerSelect.addEventListener('change', function() {
+        selectedPlayerId = this.value;
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedPlayerId) {
+            // Разбираем display-строку на никнейм и username
+            const displayText = selectedOption.text;
+            const match = displayText.match(/(.*) \((@.*)\)/);
+            
+            if (match) {
+                document.getElementById('selectedPlayerName').textContent = match[1].trim();
+                document.getElementById('selectedPlayerUsername').textContent = match[2];
+            } else {
+                document.getElementById('selectedPlayerName').textContent = displayText;
+                document.getElementById('selectedPlayerUsername').textContent = '';
+            }
+            
+            document.getElementById('selectedPlayerFooter').style.display = 'flex';
+            addBtn.disabled = false;
+        } else {
+            document.getElementById('selectedPlayerFooter').style.display = 'none';
+            addBtn.disabled = true;
+        }
+    });
+    
+    // Добавление выбранного игрока
+    addBtn.addEventListener('click', function() {
+        if (!selectedPlayerId) return;
+        
+        const selectedNickname = selectedPlayerName.textContent;
+        
+        if (confirm(`Добавить ${selectedNickname} в турнир?`)) {
+            window.location.href = `/tournament/{{ tournament.id }}/add/${selectedPlayerId}/`;
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
+from .models import HostApplication
+from .models import Tournament
+from django.utils import timezone
 
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(
@@ -31,3 +34,55 @@ class UserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+class HostApplicationForm(forms.ModelForm):
+    class Meta:
+        model = HostApplication
+        fields = ['full_name', 'email', 'phone', 'experience', 'reason']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Иванов Иван Иванович'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'your@email.com'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+7 (999) 123-45-67'}),
+            'experience': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Расскажите о своем опыте ведения турниров...'}),
+            'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Почему вы хотите стать ведущим?'}),
+        }
+
+class TournamentCreateForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ['name', 'description', 'start_date', 'max_players', 'total_games']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Название турнира'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Описание турнира (необязательно)'
+            }),
+            'start_date': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local',
+                'value': timezone.now().strftime('%Y-%m-%dT%H:%M')
+            }),
+            'max_players': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 2,
+                'max': 20,
+                'value': 10
+            }),
+            'total_games': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 20,
+                'value': 10
+            }),
+        }
+        labels = {
+            'name': 'Название турнира',
+            'description': 'Описание',
+            'start_date': 'Дата и время начала',
+            'max_players': 'Максимальное количество игроков',
+            'total_games': 'Количество игр в турнире',
+        }

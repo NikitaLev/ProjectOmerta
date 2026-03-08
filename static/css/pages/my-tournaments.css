@@ -1,0 +1,179 @@
+.tournaments-wrapper {
+    padding: 30px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tournaments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-title i {
+    color: var(--gold);
+}
+
+.tournaments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.tournament-grid-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.tournament-grid-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--gold);
+    box-shadow: var(--shadow-gold);
+}
+
+.card-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.card-status.status-draft {
+    background: rgba(212,175,55,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+}
+
+.card-status.status-active {
+    background: rgba(74,222,128,0.1);
+    border: 1px solid #4ade80;
+    color: #4ade80;
+}
+
+.card-status.status-completed {
+    background: rgba(156,163,175,0.1);
+    border: 1px solid #9ca3af;
+    color: #9ca3af;
+}
+
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.card-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.card-title a:hover {
+    color: var(--gold);
+}
+
+.card-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.meta-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.meta-info i {
+    color: var(--gold);
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border-color: var(--gold);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-secondary);
+    border-radius: 40px;
+    border: 1px solid var(--border-color);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--gold);
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+    .tournaments-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 1.8rem;
+    }
+    
+    .tournaments-grid {
+        grid-template-columns: 1fr;
+    }
+}

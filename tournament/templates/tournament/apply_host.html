@@ -1,0 +1,73 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Заявка на ведущего - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/apply-host.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-crown"></i>
+            </div>
+            <h2>Стать ведущим</h2>
+            <p>Заполните форму для получения прав ведущего турниров</p>
+        </div>
+        
+        <div class="auth-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="auth-{% if message.tags %}{{ message.tags }}{% endif %}">
+                        <i class="fas fa-info-circle"></i>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Полное имя</label>
+                    {{ form.full_name }}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    {{ form.email }}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Телефон</label>
+                    {{ form.phone }}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-history"></i> Опыт ведения турниров</label>
+                    {{ form.experience }}
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-question-circle"></i> Почему хотите стать ведущим?</label>
+                    {{ form.reason }}
+                </div>
+                
+                <button type="submit" class="auth-btn">
+                    <span>Отправить заявку</span>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            
+            <div class="auth-links">
+                <a href="{% url 'profile' %}">
+                    <i class="fas fa-arrow-left"></i> Вернуться в профиль
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

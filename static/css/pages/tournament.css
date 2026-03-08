@@ -1,0 +1,956 @@
+/* ========== СТРАНИЦА ТУРНИРА ========== */
+
+.tournament-wrapper {
+    min-height: calc(100vh - 150px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.tournament-card {
+    width: 100%;
+    max-width: 1000px; /* ~70% от 1400px */
+    background: linear-gradient(145deg, var(--bg-card), #1E1E1E);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Шапка турнира */
+.tournament-header {
+    background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(0,0,0,0.3));
+    padding: 40px;
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+}
+
+.tournament-status-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+}
+
+.tournament-status-badge.status-draft {
+    background: rgba(212,175,55,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+}
+
+.tournament-status-badge.status-active {
+    background: rgba(74,222,128,0.1);
+    border: 1px solid #4ade80;
+    color: #4ade80;
+}
+
+.tournament-status-badge.status-completed {
+    background: rgba(156,163,175,0.1);
+    border: 1px solid #9ca3af;
+    color: #9ca3af;
+}
+
+.tournament-name {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #fff, var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tournament-meta-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.meta-item i {
+    color: var(--gold);
+    font-size: 1.2rem;
+    width: 24px;
+}
+
+/* Основной контент */
+.tournament-content {
+    padding: 40px;
+}
+
+.tournament-section {
+    margin-bottom: 40px;
+}
+
+.tournament-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-title i {
+    color: var(--gold);
+    font-size: 1.4rem;
+}
+
+.players-count {
+    margin-left: auto;
+    background: var(--bg-secondary);
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: var(--gold);
+}
+
+.tournament-description {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 25px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 20px;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+}
+
+.action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gold);
+}
+
+.action-btn.success {
+    background: rgba(74,222,128,0.1);
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.action-btn.success:hover {
+    background: rgba(74,222,128,0.2);
+    transform: translateY(-2px);
+}
+
+.action-btn.warning {
+    background: rgba(255,159,67,0.1);
+    border-color: #ff9f43;
+    color: #ff9f43;
+}
+
+.action-btn.warning:hover {
+    background: rgba(255,159,67,0.2);
+    transform: translateY(-2px);
+}
+
+/* Список участников */
+.players-list {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 30px;
+}
+
+.players-list.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+    color: var(--gold);
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.empty-state h3 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+    opacity: 0.7;
+}
+
+/* ========== ТАБЛИЦА УЧАСТНИКОВ ========== */
+.players-table {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.players-table-header {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 80px;
+    background: var(--bg-card);
+    padding: 15px 20px;
+    font-weight: 600;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.players-table-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 80px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.players-table-row:last-child {
+    border-bottom: none;
+}
+
+.players-table-row:hover {
+    background: rgba(212,175,55,0.05);
+}
+
+.player-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+
+.player-cell i {
+    color: var(--gold);
+    width: 16px;
+}
+
+.player-badge {
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.player-badge.host {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+}
+
+.player-badge.player {
+    background: rgba(212,175,55,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+}
+
+.btn-icon.delete {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+.btn-icon.delete:hover {
+    background: #f87171;
+    color: var(--bg-primary);
+    border-color: #f87171;
+}
+
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .players-table-header,
+    .players-table-row {
+        grid-template-columns: 1fr 1fr 1fr 40px;
+        font-size: 0.9rem;
+        gap: 5px;
+    }
+    
+    .player-cell {
+        flex-wrap: wrap;
+    }
+    
+    .modal-content.large {
+        margin: 20px auto;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .tournament-header {
+        padding: 30px 25px;
+    }
+    
+    .tournament-name {
+        font-size: 2.2rem;
+    }
+    
+    .tournament-meta-header {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .tournament-content {
+        padding: 25px;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .tournament-header {
+        padding: 25px 20px;
+    }
+    
+    .tournament-name {
+        font-size: 1.8rem;
+    }
+    
+    .meta-item {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+    }
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ========== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    overflow: auto;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--bg-card);
+    margin: 5% auto;
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s ease;
+    width: 90%;
+}
+
+.modal-content.medium {
+    max-width: 750px;
+}
+
+.modal-content.large {
+    max-width: 800px;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 25px 30px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 30px 30px 0 0;
+}
+
+.modal-header h2 {
+    color: var(--text-primary);
+    font-size: 1.6rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.modal-header h2 i {
+    color: var(--gold);
+    font-size: 1.8rem;
+}
+
+.close-modal {
+    color: var(--text-secondary);
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close-modal:hover {
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-body {
+    padding: 30px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    border-radius: 0 0 30px 30px;
+    background: var(--bg-secondary);
+}
+
+/* ========== КОНТЕЙНЕР ДЛЯ ВЫБОРА ИГРОКА ========== */
+.player-select-container {
+    margin-bottom: 25px;
+    min-height: 100px; 
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.custom-select-wrapper {
+    min-height: 100px;  /* Было 300px - уменьшите */
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+
+.custom-select {
+    min-height: 100px; 
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    min-height: 200px;
+    outline: none;
+    cursor: pointer;
+}
+
+.custom-select option {
+    padding: 12px 15px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.custom-select option:hover {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.custom-select option:checked {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+}
+
+.select-search {
+    position: relative;
+    border-top: 1px solid var(--border-color);
+    padding: 15px;
+    background: var(--bg-card);
+}
+
+.select-search i {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 1rem;
+    z-index: 1;
+}
+
+.select-search input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.select-search input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.select-search input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* ========== ИНФОРМАЦИЯ О ВЫБРАННОМ ИГРОКЕ ========== */
+.selected-player-info {
+    margin-top: 5px;
+    padding: 5px;
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.selected-player-info h4 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.selected-player-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.selected-player-details span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+/* ========== УВЕЛИЧЕННОЕ МОДАЛЬНОЕ ОКНО ========== */
+.modal-content.large {
+    max-width: 700px;  /* Увеличили с 550px до 700px */
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 20px 30px;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+}
+
+.modal-header h2 i {
+    font-size: 1.6rem;
+}
+
+.modal-body {
+    padding: 20px 30px;
+    flex: 1;
+    overflow-y: auto;  /* Скролл только здесь */
+    min-height: 0;  /* Важно для flex-контейнера */
+}
+
+/* Стилизация скролла */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+.modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) var(--bg-secondary);
+}
+
+/* Контейнер для выбора игрока */
+.player-select-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.custom-select-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+
+.custom-select {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    cursor: pointer;
+    max-height: 300px;  /* Минимальная высота для списка */
+}
+
+.custom-select option {
+    padding: 12px 15px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.custom-select option:hover {
+    background: rgba(212, 175, 55, 0.15);
+}
+
+.custom-select option:checked {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+}
+
+.select-search {
+    border-top: 1px solid var(--border-color);
+    padding: 15px;
+    background: var(--bg-card);
+    flex-shrink: 0;
+}
+
+.select-search i {
+    position: absolute;
+    left: 28px;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 1rem;
+}
+
+.select-search input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.select-search input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* ========== ОБНОВЛЕННЫЙ ПОДВАЛ ========== */
+.modal-footer {
+    padding: 15px 30px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.selected-player-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid var(--gold);
+    border-radius: 40px;
+    animation: fadeIn 0.3s ease;
+}
+
+.selected-player-footer i {
+    color: var(--gold);
+    font-size: 1.1rem;
+}
+
+.selected-player-footer span {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.selected-player-footer .player-username {
+    color: var(--gold);
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.footer-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.footer-buttons .btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+}
+
+#addSelectedPlayerBtn {
+    min-width: 130px;
+}
+
+#addSelectedPlayerBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Анимация */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 768px) {
+    .modal-content.large {
+        max-width: 95%;
+        margin: 5% auto;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-body {
+        padding: 15px 20px;
+    }
+    
+    .custom-select-wrapper {
+        min-height: 250px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
+    
+    .selected-player-footer {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .footer-buttons {
+        width: 100%;
+    }
+    
+    .footer-buttons .btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-select option {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .selected-player-footer {
+        flex-wrap: wrap;
+        text-align: center;
+    }
+}
+/* ========== КНОПКИ ========== */
+#addSelectedPlayerBtn {
+    min-width: 200px;
+    padding: 12px 24px;
+}
+
+#addSelectedPlayerBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    transform: none;
+    box-shadow: none;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+    
+    .modal-header {
+        padding: 20px 25px;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .modal-footer {
+        padding: 15px 25px;
+        flex-direction: column;
+    }
+    
+    #addSelectedPlayerBtn {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .custom-select {
+        min-height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .selected-player-details span {
+        font-size: 1rem;
+    }
+}
+/* Улучшаем отображение опций в выпадающем списке */
+.custom-select option {
+    padding: 12px 15px;
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--border-color);
+    white-space: normal; /* Позволяет переносить текст */
+    line-height: 1.4;
+}
+
+/* Можно добавить подсветку при наведении */
+.custom-select option:hover {
+    background: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* Стили для отображения выбранного игрока */
+.selected-player-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 5px 0;
+}
+
+.selected-player-details span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.selected-player-details small {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}

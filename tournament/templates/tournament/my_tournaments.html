@@ -1,0 +1,84 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Мои турниры - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/my-tournaments.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="tournaments-wrapper">
+    <div class="tournaments-header">
+        <h1 class="page-title">
+            {% if is_host %}
+                <i class="fas fa-crown"></i> Мои турниры (как ведущий)
+            {% else %}
+                <i class="fas fa-trophy"></i> Мои турниры (как игрок)
+            {% endif %}
+        </h1>
+        {% if is_host %}
+        <a href="{% url 'create_tournament' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Создать новый
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="tournaments-grid">
+        {% for tournament in tournaments %}
+        <div class="tournament-grid-card">
+            <div class="card-status status-{{ tournament.status }}">
+                {{ tournament.get_status_display }}
+            </div>
+            
+            <h3 class="card-title">
+                <a href="{% url 'tournament_detail' tournament.id %}">{{ tournament.name }}</a>
+            </h3>
+            
+            <div class="card-meta">
+                <div class="meta-info">
+                    <i class="fas fa-calendar"></i>
+                    {{ tournament.start_date|date:"d.m.Y" }}
+                </div>
+                <div class="meta-info">
+                    <i class="fas fa-users"></i>
+                    {{ tournament.players.count }}/{{ tournament.max_players }}
+                </div>
+                <div class="meta-info">
+                    <i class="fas fa-gamepad"></i>
+                    {{ tournament.total_games }} игр  <!-- Новая строка -->
+                </div>
+            </div>
+            
+            {% if is_host and tournament.host == user %}
+            <div class="card-actions">
+                <a href="#" class="btn-icon" title="Редактировать">
+                    <i class="fas fa-pencil-alt"></i>
+                </a>
+                <a href="#" class="btn-icon" title="Добавить игроков">
+                    <i class="fas fa-user-plus"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-trophy"></i>
+            <h3>У вас пока нет турниров</h3>
+            <p>
+                {% if is_host %}
+                    Начните с создания нового турнира!
+                {% else %}
+                    Присоединитесь к турниру через приглашение от ведущего.
+                {% endif %}
+            </p>
+            {% if is_host %}
+            <a href="{% url 'create_tournament' %}" class="btn btn-primary">
+                Создать первый турнир
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

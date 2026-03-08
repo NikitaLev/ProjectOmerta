@@ -52,6 +52,28 @@
                         {% endif %}
                     </p>
                 </div>
+                {% if user.role == 'player' and not user.is_approved_host %}
+                <div class="profile-apply-host">
+                    <h2>Стать ведущим</h2>
+                    <p>Хотите создавать свои турниры и вести статистику?</p>
+                    <a href="{% url 'apply_host' %}" class="btn btn-primary">
+                        <i class="fas fa-crown"></i> Подать заявку на ведущего
+                    </a>
+                </div>
+                {% endif %}
+                {% if user.role == 'host' and user.is_approved_host %}
+                <div class="profile-host-actions">
+                    <h2>Управление турнирами</h2>
+                    <div class="host-buttons">
+                        <a href="{% url 'create_tournament' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Создать новый турнир
+                        </a>
+                        <a href="{% url 'my_tournaments' %}" class="btn btn-outline">
+                            <i class="fas fa-list"></i> Мои турниры
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             
             <div class="profile-stats">
