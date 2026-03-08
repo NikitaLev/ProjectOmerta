@@ -141,3 +141,19 @@
         padding: 10px 12px;
     }
 }
+.required {
+    color: var(--gold);
+    margin-left: 4px;
+    font-size: 1.2rem;
+}
+
+/* Стиль для поля при ошибке */
+.form-control.error {
+    border-color: #f87171;
+}
+
+.error-message {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}

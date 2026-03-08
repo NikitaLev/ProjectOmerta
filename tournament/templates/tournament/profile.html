@@ -105,6 +105,54 @@
                 </div>
             </div>
             {% endif %}
+            {% if user.role == 'host' %}
+            <div class="profile-section">
+                <h2>Созданные игроки</h2>
+                <div class="created-players-list">
+                    {% for player in user.created_players.all %}
+                    <div class="player-item">
+                        <div class="player-info">
+                            <span class="player-nickname">{{ player.player_nickname }}</span>
+                            <span class="player-status {% if player.is_active %}active{% else %}pending{% endif %}">
+                                {% if player.is_active %}
+                                    <i class="fas fa-check-circle"></i> Подтверждён
+                                {% else %}
+                                    <i class="fas fa-clock"></i> Ожидает подтверждения
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if not player.is_active %}
+                        <div class="player-actions">
+                           <div class="invitation-link">
+                                <input type="text" 
+                                    value="{{ request.scheme }}://{{ request.get_host }}{% url 'activate_account' player.invitation_token %}" 
+                                    readonly 
+                                    id="invite-{{ player.id }}">
+                                <button class="btn-icon copy-btn" onclick="copyToClipboard('invite-{{ player.id }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Вы ещё не создавали игроков</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <script>
+            function copyToClipboard(elementId) {
+                var copyText = document.getElementById(elementId);
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                document.execCommand("copy");
+                
+                // Временное уведомление
+                alert('Ссылка скопирована в буфер обмена');
+            }
+            </script>
+            {% endif %}
             
             <div class="profile-actions">
                 <a href="{% url 'home' %}" class="btn btn-outline">

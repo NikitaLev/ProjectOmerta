@@ -55,6 +55,21 @@
                         <small class="form-help">{{ form.username.help_text }}</small>
                     {% endif %}
                 </div>
+
+                <div class="form-group">
+                    <label for="{{ form.player_nickname.id_for_label }}">
+                        <i class="fas fa-mask"></i> Никнейм в мафии
+                    </label>
+                    <input type="text" 
+                        name="{{ form.player_nickname.name }}" 
+                        id="{{ form.player_nickname.id_for_label }}" 
+                        class="form-control" 
+                        placeholder="Как к вам обращаться в игре" 
+                        value="{{ form.player_nickname.value|default:'' }}">
+                    {% if form.player_nickname.help_text %}
+                        <small class="form-help">{{ form.player_nickname.help_text }}</small>
+                    {% endif %}
+                </div>
                 
                 <div class="form-group">
                     <label for="{{ form.email.id_for_label }}">

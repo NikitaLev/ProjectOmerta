@@ -19,6 +19,15 @@ class User(AbstractUser):
     tournaments_hosted = models.IntegerField(default=0)
     approved_by = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='approved_hosts')
     approved_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        'self', 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL,
+        related_name='created_players'
+    )
+    invitation_token = models.CharField(max_length=100, blank=True, null=True)
+    invitation_created = models.DateTimeField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

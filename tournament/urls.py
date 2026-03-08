@@ -12,4 +12,6 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/players/', views.get_players_for_tournament, name='tournament_players_api'),
     path('tournament/<int:tournament_id>/add/<int:player_id>/', views.add_player_to_tournament, name='add_player_to_tournament'),
     path('tournament/<int:tournament_id>/remove/<int:player_id>/', views.remove_player_from_tournament, name='remove_player_from_tournament'),
+    path('tournament/<int:tournament_id>/create-player/', views.create_player_for_tournament, name='create_player_for_tournament'),
+    path('activate/<str:token>/', views.activate_account, name='activate_account'),
 ]

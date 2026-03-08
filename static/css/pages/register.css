@@ -165,3 +165,7 @@
         font-size: 0.85rem;
     }
 }
+/* Иконка для никнейма */
+.fa-mask {
+    color: var(--gold);
+}

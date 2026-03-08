@@ -140,30 +140,58 @@
 </div>
 <!-- Модальное окно добавления игроков -->
 <div id="addPlayersModal" class="modal">
-    <div class="modal-content large">  <!-- Увеличили размер -->
+    <div class="modal-content large">
         <div class="modal-header">
             <h2><i class="fas fa-user-plus"></i> Добавить игроков</h2>
             <span class="close-modal">&times;</span>
         </div>
         
+        <div class="modal-tabs">
+            <button class="tab-btn active" id="tabExisting">Существующие</button>
+            <button class="tab-btn" id="tabNew">Новый игрок</button>
+        </div>
+        
         <div class="modal-body">
-            <div class="player-select-container">
-                <label for="playerSelect" class="form-label">Выберите игрока из списка</label>
-                <div class="custom-select-wrapper">
-                    <select id="playerSelect" class="custom-select" size="12">  <!-- Увеличили размер -->
-                        <option value="" disabled selected>── Загрузка списка ──</option>
-                    </select>
-                    <div class="select-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" 
-                               id="playerSearchInput" 
-                               class="form-control" 
-                               placeholder="Поиск по никнейму..."
-                               autocomplete="off">
+            <!-- Вкладка "Существующие" -->
+            <div id="existingPlayersTab" class="tab-content active">
+                <div class="player-select-container">
+                    <label for="playerSelect" class="form-label">Выберите игрока из списка</label>
+                    <div class="custom-select-wrapper">
+                        <select id="playerSelect" class="custom-select" size="12">
+                            <option value="" disabled selected>── Загрузка списка ──</option>
+                        </select>
+                        <div class="select-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" 
+                                   id="playerSearchInput" 
+                                   class="form-control" 
+                                   placeholder="Поиск по никнейму..."
+                                   autocomplete="off">
+                        </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Вкладка "Новый игрок" -->
+            <div id="newPlayerTab" class="tab-content">
+                <form id="newPlayerForm" method="post" action="{% url 'create_player_for_tournament' tournament.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="newPlayerNickname">
+                            <i class="fas fa-mask"></i> Никнейм нового игрока
+                        </label>
+                        <input type="text" 
+                               id="newPlayerNickname" 
+                               name="nickname" 
+                               class="form-control" 
+                               placeholder="Введите никнейм"
+                               required>
+                        <small class="form-help">Игрок сможет зарегистрироваться по ссылке</small>
+                    </div>
+                </form>
+            </div>
         </div>
+        
         <div class="modal-footer">
             <div class="selected-player-footer" id="selectedPlayerFooter" style="display: none;">
                 <i class="fas fa-user-check"></i>
@@ -174,6 +202,9 @@
                 <button class="btn btn-outline close-modal-btn">Отмена</button>
                 <button class="btn btn-primary" id="addSelectedPlayerBtn" disabled>
                     <i class="fas fa-user-plus"></i> Добавить
+                </button>
+                <button class="btn btn-primary" id="createNewPlayerBtn" style="display: none;">
+                    <i class="fas fa-user-plus"></i> Создать игрока
                 </button>
             </div>
         </div>
@@ -297,12 +328,47 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedPlayerId) return;
         
         const selectedNickname = selectedPlayerName.textContent;
+        window.location.href = `/tournament/{{ tournament.id }}/add/${selectedPlayerId}/`;
+    });
+
+    // Переключение вкладок
+    const tabExisting = document.getElementById('tabExisting');
+    const tabNew = document.getElementById('tabNew');
+    const existingTab = document.getElementById('existingPlayersTab');
+    const newTab = document.getElementById('newPlayerTab');
+    const addExistingBtn = document.getElementById('addSelectedPlayerBtn');
+    const addNewBtn = document.getElementById('createNewPlayerBtn');
+
+    tabExisting.addEventListener('click', function() {
+        tabExisting.classList.add('active');
+        tabNew.classList.remove('active');
+        existingTab.classList.add('active');
+        newTab.classList.remove('active');
+        addExistingBtn.style.display = 'block';
+        addNewBtn.style.display = 'none';
         
-        if (confirm(`Добавить ${selectedNickname} в турнир?`)) {
-            window.location.href = `/tournament/{{ tournament.id }}/add/${selectedPlayerId}/`;
-        }
+        // Сбрасываем выбранного игрока
+        selectedPlayerId = null;
+        document.getElementById('selectedPlayerFooter').style.display = 'none';
+        addExistingBtn.disabled = true;
+    });
+
+    tabNew.addEventListener('click', function() {
+        tabNew.classList.add('active');
+        tabExisting.classList.remove('active');
+        newTab.classList.add('active');
+        existingTab.classList.remove('active');
+        addExistingBtn.style.display = 'none';
+        addNewBtn.style.display = 'block';
+    });
+
+    // Обработка создания нового игрока
+    document.getElementById('createNewPlayerBtn').addEventListener('click', function() {
+        document.getElementById('newPlayerForm').submit();
     });
 });
+
+
 </script>
 {% endblock %}
 {% endblock %}

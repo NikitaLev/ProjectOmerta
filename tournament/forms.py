@@ -13,6 +13,11 @@ class UserRegistrationForm(UserCreationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Имя пользователя'})
     )
+    player_nickname = forms.CharField(
+        required=False,
+        label='Никнейм в мафии',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Как к вам обращаться в игре'})
+    )
     password1 = forms.CharField(
         label='Пароль',
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Пароль'})
@@ -24,12 +29,12 @@ class UserRegistrationForm(UserCreationForm):
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('username', 'email', 'player_nickname', 'password1', 'password2')
     
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
-        # По умолчанию новый пользователь — игрок
+        user.player_nickname = self.cleaned_data['player_nickname']
         user.role = 'player'
         if commit:
             user.save()

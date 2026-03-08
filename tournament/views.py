@@ -10,6 +10,10 @@ from .models import Tournament
 from .forms import TournamentCreateForm
 from django.http import JsonResponse
 from django.db.models import Q
+from django.utils import timezone
+from .utils import generate_invitation_token
+from django.contrib.auth.hashers import make_password
+import secrets
 
 @login_required
 def profile(request):
@@ -193,3 +197,101 @@ def remove_player_from_tournament(request, tournament_id, player_id):
         messages.success(request, f'Игрок {player.username} удален из турнира')
     
     return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def create_player_for_tournament(request, tournament_id):
+    """Создание нового игрока и добавление в турнир"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    if request.method == 'POST':
+        nickname = request.POST.get('nickname', '').strip()
+        
+        if not nickname:
+            messages.error(request, 'Введите никнейм')
+            return redirect('tournament_detail', tournament_id=tournament.id)
+        
+        # Проверяем, нет ли уже такого никнейма
+        if User.objects.filter(player_nickname=nickname).exists():
+            messages.error(request, f'Игрок с никнеймом "{nickname}" уже существует')
+            return redirect('tournament_detail', tournament_id=tournament.id)
+        
+        # Создаем временного пользователя
+        token = generate_invitation_token()
+        username = f"player_{secrets.token_hex(4)}"  # Временный username
+        
+        new_player = User.objects.create(
+            username=username,
+            player_nickname=nickname,
+            created_by=request.user,
+            invitation_token=token,
+            invitation_created=timezone.now(),
+            is_active=False,  # Неактивен до подтверждения
+            role='player'
+        )
+        
+        # Добавляем в турнир
+        TournamentPlayer.objects.create(
+            tournament=tournament,
+            user=new_player,
+            is_active=True
+        )
+        
+        messages.success(request, f'Игрок {nickname} создан и добавлен в турнир')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    return redirect('tournament_detail', tournament_id=tournament.id)
+
+def activate_account(request, token):
+    """Активация аккаунта по приглашению"""
+    user = get_object_or_404(User, invitation_token=token, is_active=False)
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        
+        errors = []
+        
+        # Проверка username
+        if not username:
+            errors.append('Имя пользователя обязательно для заполнения')
+        elif User.objects.filter(username=username).exists():
+            errors.append('Пользователь с таким именем уже существует')
+        
+        # Проверка email
+        if not email:
+            errors.append('Email обязателен для заполнения')
+        elif User.objects.filter(email=email).exists():
+            errors.append('Пользователь с таким email уже существует')
+        
+        # Проверка паролей
+        if not password1 or not password2:
+            errors.append('Пароль обязателен для заполнения')
+        elif password1 != password2:
+            errors.append('Пароли не совпадают')
+        elif len(password1) < 8:
+            errors.append('Пароль должен быть не менее 8 символов')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('activate_account', token=token)
+        
+        # Обновляем пользователя
+        user.username = username
+        user.email = email
+        user.set_password(password1)
+        user.is_active = True
+        user.invitation_token = None
+        user.invitation_created = None
+        user.save()
+        
+        messages.success(request, 'Аккаунт активирован! Теперь вы можете войти.', extra_tags='activation')
+        return redirect('login')
+    
+    return render(request, 'registration/activate.html', {'user': user})
