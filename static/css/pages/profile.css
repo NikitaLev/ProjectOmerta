@@ -184,3 +184,406 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Стили для модального окна игроков */
+.players-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.players-list-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.players-list-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr 3fr;
+    background: var(--bg-card);
+    padding: 15px 20px;
+    font-weight: 600;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.players-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.player-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr 3fr;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.player-row:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.player-row.active {
+    border-left: 3px solid #4ade80;
+}
+
+.player-row.pending {
+    border-left: 3px solid var(--gold);
+}
+
+.player-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+}
+
+.player-cell i {
+    color: var(--gold);
+    width: 16px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+}
+
+.status-badge.active {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+}
+
+.status-badge.pending {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+}
+
+.invite-link-container {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.invite-link-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+
+.copy-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--gold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border-color: var(--gold);
+    transform: scale(1.05);
+}
+
+.copy-btn.copied {
+    background: #4ade80;
+    color: var(--bg-primary);
+    border-color: #4ade80;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .players-list-header {
+        display: none;
+    }
+    
+    .player-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .player-cell {
+        justify-content: space-between;
+    }
+    
+    .invite-link-container {
+        flex-wrap: wrap;
+    }
+    
+    .copy-btn {
+        width: 100%;
+        border-radius: 30px;
+    }
+}
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    overflow: auto;
+}
+
+.modal-content.large {
+    position: relative;
+    background-color: var(--bg-card);
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    width: 90%;
+    max-width: 900px;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 20px 30px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 30px 30px 0 0;
+}
+
+.modal-header h2 {
+    color: var(--text-primary);
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h2 i {
+    color: var(--gold);
+}
+
+.close-modal {
+    color: var(--text-secondary);
+    font-size: 32px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close-modal:hover {
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-body {
+    padding: 30px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    border-radius: 0 0 30px 30px;
+    background: var(--bg-secondary);
+}
+
+.host-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+    align-items: center;
+}
+
+.host-buttons .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    min-width: 160px;
+    white-space: nowrap;
+}
+
+.host-buttons .btn .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gold);
+    color: var(--bg-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    padding: 0 6px;
+    margin-left: 4px;
+}
+
+/* Для мобильных */
+@media (max-width: 768px) {
+    .host-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .host-buttons .btn {
+        width: 100%;
+        min-width: auto;
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+.invite-link-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+}
+
+.invite-link-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+
+.copy-btn, .delete-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.copy-btn {
+    color: var(--gold);
+}
+
+.copy-btn:hover {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border-color: var(--gold);
+    transform: scale(1.05);
+}
+
+.delete-btn {
+    color: #f87171;
+}
+
+.delete-btn:hover {
+    background: #f87171;
+    color: white;
+    border-color: #f87171;
+    transform: scale(1.05);
+}
+
+.copy-btn.copied {
+    background: #4ade80;
+    color: var(--bg-primary);
+    border-color: #4ade80;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .invite-link-container {
+        width: 100%;
+    }
+    
+    .copy-btn, .delete-btn {
+        width: 42px;
+        height: 42px;
+    }
+}

@@ -66,11 +66,15 @@
                     <h2>Управление турнирами</h2>
                     <div class="host-buttons">
                         <a href="{% url 'create_tournament' %}" class="btn btn-primary">
-                            <i class="fas fa-plus-circle"></i> Создать новый турнир
+                            <i class="fas fa-plus-circle"></i> Создать турнир
                         </a>
                         <a href="{% url 'my_tournaments' %}" class="btn btn-outline">
                             <i class="fas fa-list"></i> Мои турниры
                         </a>
+                        <button class="btn btn-outline" id="showCreatedPlayersBtn">
+                            <i class="fas fa-users-cog"></i> Игроки
+                            <span class="badge">{{ user.created_players.count }}</span>
+                        </button>
                     </div>
                 </div>
                 {% endif %}
@@ -105,54 +109,6 @@
                 </div>
             </div>
             {% endif %}
-            {% if user.role == 'host' %}
-            <div class="profile-section">
-                <h2>Созданные игроки</h2>
-                <div class="created-players-list">
-                    {% for player in user.created_players.all %}
-                    <div class="player-item">
-                        <div class="player-info">
-                            <span class="player-nickname">{{ player.player_nickname }}</span>
-                            <span class="player-status {% if player.is_active %}active{% else %}pending{% endif %}">
-                                {% if player.is_active %}
-                                    <i class="fas fa-check-circle"></i> Подтверждён
-                                {% else %}
-                                    <i class="fas fa-clock"></i> Ожидает подтверждения
-                                {% endif %}
-                            </span>
-                        </div>
-                        {% if not player.is_active %}
-                        <div class="player-actions">
-                           <div class="invitation-link">
-                                <input type="text" 
-                                    value="{{ request.scheme }}://{{ request.get_host }}{% url 'activate_account' player.invitation_token %}" 
-                                    readonly 
-                                    id="invite-{{ player.id }}">
-                                <button class="btn-icon copy-btn" onclick="copyToClipboard('invite-{{ player.id }}')">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% empty %}
-                    <p class="text-muted">Вы ещё не создавали игроков</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <script>
-            function copyToClipboard(elementId) {
-                var copyText = document.getElementById(elementId);
-                copyText.select();
-                copyText.setSelectionRange(0, 99999);
-                document.execCommand("copy");
-                
-                // Временное уведомление
-                alert('Ссылка скопирована в буфер обмена');
-            }
-            </script>
-            {% endif %}
             
             <div class="profile-actions">
                 <a href="{% url 'home' %}" class="btn btn-outline">
@@ -165,4 +121,186 @@
         </div>
     </div>
 </div>
+<!-- Модальное окно для списка созданных игроков -->
+<div id="createdPlayersModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2><i class="fas fa-users-cog"></i> Управление игроками</h2>
+            <span class="close-modal" onclick="closePlayersModal()">&times;</span>
+        </div>
+        
+        <div class="modal-body">
+            <div class="players-stats">
+                <div class="stat-card">
+                    <span class="stat-value">{{ user.created_players.count }}</span>
+                    <span class="stat-label">Всего создано</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ user.created_players.active.count }}</span>
+                    <span class="stat-label">Подтверждено</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ user.created_players.pending.count }}</span>
+                    <span class="stat-label">Ожидают</span>
+                </div>
+            </div>
+            
+            <div class="players-list-container">
+                <div class="players-list-header">
+                    <div class="player-cell">Никнейм</div>
+                    <div class="player-cell">Статус</div>
+                    <div class="player-cell">Дата создания</div>
+                    <div class="player-cell">Ссылка</div>
+                </div>
+                
+                <div class="players-list" id="createdPlayersList">
+                    {% for player in user.created_players.all %}
+                    <div class="player-row {% if player.is_active %}active{% else %}pending{% endif %}">
+                        <div class="player-cell">
+                            <i class="fas fa-user"></i>
+                            <span>{{ player.player_nickname }}</span>
+                        </div>
+                        <div class="player-cell">
+                            <span class="status-badge {% if player.is_active %}active{% else %}pending{% endif %}">
+                                {% if player.is_active %}
+                                    <i class="fas fa-check-circle"></i> Подтверждён
+                                {% else %}
+                                    <i class="fas fa-clock"></i> Ожидает
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="player-cell">
+                            <i class="fas fa-calendar"></i>
+                            {{ player.invitation_created|date:"d.m.Y" }}
+                        </div>
+                        <div class="player-cell">
+                            {% if not player.is_active %}
+                            <div class="invite-link-container">
+                                <input type="text" 
+                                       class="invite-link-input" 
+                                       value="{{ request.scheme }}://{{ request.get_host }}{% url 'activate_account' player.invitation_token %}" 
+                                       readonly 
+                                       id="invite-{{ player.id }}">
+                                <button class="copy-btn" onclick="copyInviteLink('invite-{{ player.id }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="delete-btn" onclick="deletePlayer('{{ player.id }}', '{{ player.player_nickname }}')" title="Удалить игрока">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>Нет созданных игроков</h3>
+                        <p>Создайте игрока при добавлении в турнир</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closePlayersModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('createdPlayersModal');
+    const showBtn = document.getElementById('showCreatedPlayersBtn');
+    
+    if (!modal || !showBtn) return;
+    
+    // Убедимся, что модальное окно скрыто при загрузке
+    modal.style.display = 'none';
+    
+    // Открытие модального окна
+    showBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Запрещаем скролл фона
+    });
+    
+    // Функция закрытия
+    window.closePlayersModal = function() {
+        modal.style.display = 'none';
+        document.body.style.overflow = ''; // Возвращаем скролл
+    };
+    
+    // Закрытие по крестику
+    const closeBtn = modal.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closePlayersModal();
+        });
+    }
+    
+    // Закрытие по кнопке в футере
+    const closeFooterBtn = modal.querySelector('.btn-outline');
+    if (closeFooterBtn) {
+        closeFooterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closePlayersModal();
+        });
+    }
+    
+    // Закрытие по клику вне окна
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closePlayersModal();
+        }
+    });
+});
+function deletePlayer(playerId, nickname) {
+    if (confirm(`Удалить игрока ${nickname}? Это действие нельзя отменить.`)) {
+        // Создаем форму для POST запроса
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-player/${playerId}/`;
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Функция копирования
+window.copyInviteLink = function(elementId) {
+    const input = document.getElementById(elementId);
+    if (!input) return;
+    
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        
+        const btn = event.target.closest('.copy-btn');
+        if (btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.add('copied');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Ошибка копирования:', err);
+    }
+};
+</script>
 {% endblock %}

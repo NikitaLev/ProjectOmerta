@@ -295,3 +295,14 @@ def activate_account(request, token):
         return redirect('login')
     
     return render(request, 'registration/activate.html', {'user': user})
+
+@login_required
+def delete_player(request, player_id):
+    """Удаление созданного игрока"""
+    player = get_object_or_404(User, id=player_id, created_by=request.user, is_active=False)
+    
+    if request.method == 'POST':
+        player.delete()
+        messages.success(request, f'Игрок {player.player_nickname} удален')
+    
+    return redirect('profile')

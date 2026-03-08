@@ -28,6 +28,18 @@ class User(AbstractUser):
     )
     invitation_token = models.CharField(max_length=100, blank=True, null=True)
     invitation_created = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def created_players(self):
+        return User.objects.filter(created_by=self)
+    
+    @property
+    def active(self):
+        return self.filter(is_active=True)
+    
+    @property
+    def pending(self):
+        return self.filter(is_active=False)
     
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
