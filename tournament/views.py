@@ -4,9 +4,8 @@ from .forms import UserRegistrationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import HostApplication
-from .models import Tournament, TournamentPlayer, User 
+from .models import Tournament, TournamentPlayer, User, Game
 from .forms import HostApplicationForm
-from .models import Tournament
 from .forms import TournamentCreateForm
 from django.http import JsonResponse
 from django.db.models import Q
@@ -14,6 +13,7 @@ from django.utils import timezone
 from .utils import generate_invitation_token
 from django.contrib.auth.hashers import make_password
 import secrets
+from .utils import generate_seating
 
 @login_required
 def profile(request):
@@ -92,12 +92,18 @@ def create_tournament(request):
 @login_required
 def tournament_detail(request, tournament_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
-    # Проверяем, что пользователь имеет доступ (ведущий или участник)
     can_edit = (request.user == tournament.host)
+    
+    # Статистика игр
+    games = tournament.games.all()
+    completed_games = games.exclude(winning_team__isnull=True).count()
+    pending_games = games.filter(winning_team__isnull=True).count()
     
     context = {
         'tournament': tournament,
         'can_edit': can_edit,
+        'completed_games': completed_games,
+        'pending_games': pending_games,
     }
     return render(request, 'tournament/tournament_detail.html', context)
 
@@ -306,3 +312,102 @@ def delete_player(request, player_id):
         messages.success(request, f'Игрок {player.player_nickname} удален')
     
     return redirect('profile')
+
+
+@login_required
+def start_tournament(request, tournament_id):
+    """Начать турнир - сгенерировать игры"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Проверяем, что турнир в статусе draft или pending
+    if tournament.status not in ['draft', 'pending']:
+        messages.error(request, 'Турнир уже начат или завершен')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Проверяем, что все места заполнены
+    current_players = tournament.players.count()
+    if current_players < tournament.max_players:
+        messages.error(request, f'Не хватает игроков. Текущее количество: {current_players}, нужно: {tournament.max_players}')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Получаем список игроков
+    players = [tp.user for tp in tournament.players.all()]
+    
+    # Генерируем рассадку
+    seating_plan = generate_seating(players, tournament.total_games)
+    
+    # Создаем игры
+    for round_num, game_seating in enumerate(seating_plan, 1):
+        Game.objects.create(
+            tournament=tournament,
+            round_number=round_num,
+            seating={
+                'order': game_seating,
+                'algorithm': 'smart_balanced'
+            }
+        )
+    
+    # Обновляем статус турнира
+    tournament.status = 'active'
+    tournament.save()
+    
+    messages.success(request, f'Турнир начат! Создано {tournament.total_games} игр.')
+    return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def cancel_tournament_start(request, tournament_id):
+    """Отменить старт турнира - удалить все игры"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Проверяем, что турнир активен
+    if tournament.status != 'active':
+        messages.error(request, 'Турнир не в активном состоянии')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Удаляем все игры турнира
+    games_count = tournament.games.count()
+    tournament.games.all().delete()
+    
+    # Возвращаем статус в черновик
+    tournament.status = 'draft'
+    tournament.save()
+    
+    messages.success(request, f'Старт турнира отменён. Удалено {games_count} игр.')
+    return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def tournament_games(request, tournament_id):
+    """Страница со всеми играми турнира"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем доступ (ведущий или участник)
+    is_participant = tournament.players.filter(user=request.user).exists()
+    if request.user != tournament.host and not is_participant:
+        messages.error(request, 'Нет доступа к этому турниру')
+        return redirect('home')
+    
+    games = tournament.games.all().order_by('round_number')
+    
+    # Собираем статистику по играм
+    completed_games = games.exclude(winning_team__isnull=True).count()
+    pending_games = games.filter(winning_team__isnull=True).count()
+    
+    context = {
+        'tournament': tournament,
+        'games': games,
+        'completed_games': completed_games,
+        'pending_games': pending_games,
+        'is_host': request.user == tournament.host,
+    }
+    
+    return render(request, 'tournament/tournament_games.html', context)

@@ -121,8 +121,11 @@ class TournamentPlayer(models.Model):
 class Game(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='games')
     round_number = models.IntegerField(verbose_name="Номер игры")
-    winning_team = models.CharField(max_length=20, choices=[('mafia', 'Мафия'), ('peace', 'Мирные')])
+    winning_team = models.CharField(max_length=20, choices=[('mafia', 'Мафия'), ('peace', 'Мирные')], blank=True, null=True)
     played_at = models.DateTimeField(auto_now_add=True)
+    
+    # Новое поле для хранения рассадки
+    seating = models.JSONField(default=dict, blank=True, verbose_name="Рассадка")
     
     class Meta:
         ordering = ['round_number']

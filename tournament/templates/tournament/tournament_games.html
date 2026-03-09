@@ -1,0 +1,159 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Игры турнира {{ tournament.name }} - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/tournament-games.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="games-page">
+    <!-- Шапка страницы -->
+    <div class="games-header">
+        <div class="header-left">
+            <h1 class="page-title">
+                <i class="fas fa-gamepad"></i>
+                Игры турнира
+            </h1>
+            <div class="tournament-badge">
+                <span class="tournament-name">{{ tournament.name }}</span>
+                <span class="tournament-status status-{{ tournament.status }}">{{ tournament.get_status_display }}</span>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <span class="stat-value">{{ games.count }}</span>
+                    <span class="stat-label">Всего игр</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ completed_games }}</span>
+                    <span class="stat-label">Завершено</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ pending_games }}</span>
+                    <span class="stat-label">Осталось</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Навигация -->
+    <div class="games-nav">
+        <a href="{% url 'tournament_detail' tournament.id %}" class="nav-btn">
+            <i class="fas fa-arrow-left"></i>
+            Вернуться к турниру
+        </a>
+        <div class="nav-filters">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="pending">Ожидают</button>
+            <button class="filter-btn" data-filter="completed">Завершённые</button>
+        </div>
+    </div>
+    
+    <!-- Сетка игр -->
+    <div class="games-grid" id="gamesGrid">
+        {% for game in games %}
+        <div class="game-card {% if game.winning_team %}completed{% endif %}" data-status="{% if game.winning_team %}completed{% else %}pending{% endif %}">
+            <div class="game-header">
+                <div class="game-number-wrapper">
+                    <span class="game-number">Игра {{ game.round_number }}</span>
+                    <span class="game-number-total">/ {{ tournament.total_games }}</span>
+                </div>
+                <div class="game-status-badge {% if game.winning_team %}completed{% else %}pending{% endif %}">
+                    {% if game.winning_team %}
+                        <i class="fas fa-check-circle"></i> Завершена
+                    {% else %}
+                        <i class="fas fa-clock"></i> Ожидает
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="game-seating">
+                <h4 class="seating-title">
+                    <i class="fas fa-chair"></i>
+                    Рассадка за столом
+                </h4>
+                <div class="seating-list">
+                    {% for player_id in game.seating.order %}
+                        {% for tp in tournament.players.all %}
+                            {% if tp.user.id == player_id %}
+                                <div class="seat-item">
+                                    <span class="seat-number">{{ forloop.parentloop.counter }}.</span>
+                                    <div class="player-info">
+                                        <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                        <span class="player-username">@{{ tp.user.username }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if game.winning_team %}
+            <div class="game-result">
+                <span class="result-label">Победила:</span>
+                <span class="result-team {% if game.winning_team == 'mafia' %}mafia{% else %}peace{% endif %}">
+                    {% if game.winning_team == 'mafia' %}
+                        <i class="fas fa-skull"></i> Мафия
+                    {% else %}
+                        <i class="fas fa-users"></i> Мирные
+                    {% endif %}
+                </span>
+            </div>
+            {% else %}
+            <div class="game-actions">
+                <a href="#" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit"></i> Ввести результаты
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-gamepad"></i>
+            <h3>Нет созданных игр</h3>
+            <p>Начните турнир, чтобы сгенерировать игры</p>
+            <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-primary">
+                Вернуться к турниру
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Добавляем фильтрацию -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const gameCards = document.querySelectorAll('.game-card');
+    
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Убираем активный класс у всех кнопок
+            filterBtns.forEach(b => b.classList.remove('active'));
+            // Добавляем активный класс нажатой кнопке
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            
+            gameCards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'flex';
+                } else {
+                    const status = card.dataset.status;
+                    if (status === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

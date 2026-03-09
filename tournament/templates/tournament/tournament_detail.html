@@ -61,17 +61,96 @@
                     Управление турниром
                 </h2>
                 <div class="action-buttons">
+                    <!-- Кнопка добавления игроков (всегда доступна ведущему) -->
                     <a href="#" class="action-btn primary" id="showAddPlayers">
                         <i class="fas fa-user-plus"></i>
                         <span>Добавить игроков</span>
                     </a>
-                    <a href="#" class="action-btn success">
-                        <i class="fas fa-play"></i>
-                        <span>Начать турнир</span>
-                    </a>
-                    <a href="#" class="action-btn warning">
-                        <i class="fas fa-pencil-alt"></i>
-                        <span>Редактировать</span>
+                    
+                    <!-- Кнопка начала турнира (активна только при полном составе и статусе draft) -->
+                    {% if tournament.status == 'draft' %}
+                        {% if tournament.players.count == tournament.max_players %}
+                            <a href="{% url 'start_tournament' tournament.id %}" 
+                            class="action-btn success"
+                            onclick="return confirm('Начать турнир? Будет создано {{ tournament.total_games }} игр.')">
+                                <i class="fas fa-play"></i>
+                                <span>Начать турнир</span>
+                            </a>
+                        {% else %}
+                            <button class="action-btn disabled" disabled 
+                                    title="Нужно еще {{ tournament.max_players|add:"-tournament.players.count" }} игроков">
+                                <i class="fas fa-play"></i>
+                                <span>Начать турнир</span>
+                                <span class="btn-badge">{{ tournament.players.count }}/{{ tournament.max_players }}</span>
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <!-- Кнопка просмотра игр (доступна если есть игры) -->
+                    {% if tournament.games.exists %}
+                        <a href="{% url 'tournament_games' tournament.id %}" class="action-btn info">
+                            <i class="fas fa-list"></i>
+                            <span>Все игры ({{ tournament.games.count }})</span>
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Кнопка отмены старта (только для активных турниров) -->
+                    {% if tournament.status == 'active' %}
+                        <a href="{% url 'cancel_tournament_start' tournament.id %}" 
+                        class="action-btn warning"
+                        onclick="return confirm('Отменить старт турнира? Все созданные игры будут удалены.')">
+                            <i class="fas fa-undo-alt"></i>
+                            <span>Отменить старт</span>
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Кнопка редактирования (для черновиков) -->
+                    {% if tournament.status == 'draft' %}
+                        <a href="#" class="action-btn warning">
+                            <i class="fas fa-pencil-alt"></i>
+                            <span>Редактировать</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Блок с кратким обзором игр (если есть) -->
+            {% if tournament.games.exists %}
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-gamepad"></i>
+                    Игры турнира
+                    <span class="players-count">{{ tournament.games.count }}</span>
+                </h2>
+                
+                <div class="games-preview">
+                    <div class="games-stats">
+                        <div class="stat-card mini">
+                            <span class="stat-value">{{ completed_games }}</span>
+                            <span class="stat-label">Завершено</span>
+                        </div>
+                        <div class="stat-card mini">
+                            <span class="stat-value">{{ pending_games }}</span>
+                            <span class="stat-label">Ожидает</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-grid">
+                        {% for game in tournament.games.all|slice:":3" %}
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <span class="game-number">Игра {{ game.round_number }}</span>
+                                <span class="game-status {% if game.winning_team %}completed{% else %}pending{% endif %}">
+                                    {% if game.winning_team %}✅{% else %}⏳{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline btn-block">
+                        Посмотреть все игры <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -135,6 +214,45 @@
                 </div>
                 {% endif %}
             </div>
+            {% if tournament.games.exists %}
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-gamepad"></i>
+                    Игры турнира
+                    <span class="players-count">{{ tournament.games.count }}</span>
+                </h2>
+                
+                <div class="games-grid">
+                    {% for game in tournament.games.all %}
+                    <div class="game-card">
+                        <div class="game-header">
+                            <span class="game-number">Игра {{ game.round_number }}</span>
+                            <span class="game-status {% if game.winning_team %}completed{% else %}pending{% endif %}">
+                                {% if game.winning_team %}Завершена{% else %}Ожидает{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="game-seating">
+                            <h4>Рассадка:</h4>
+                            <ol class="seating-list">
+                                {% for player_id in game.seating.order %}
+                                    {% for tp in tournament.players.all %}
+                                        {% if tp.user.id == player_id %}
+                                            <li>{{ tp.user.player_nickname|default:tp.user.username }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </ol>
+                        </div>
+                        
+                        <a href="#" class="btn btn-outline btn-sm">
+                            <i class="fas fa-edit"></i> Ввести результаты
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
