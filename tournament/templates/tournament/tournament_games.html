@@ -104,13 +104,22 @@
                     {% endif %}
                 </span>
             </div>
-            {% else %}
-            <div class="game-actions">
-                <a href="#" class="btn btn-primary btn-sm">
-                    <i class="fas fa-edit"></i> Ввести результаты
-                </a>
-            </div>
             {% endif %}
+            
+            <div class="game-actions">
+                {% if game.winning_team %}
+                    <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-eye"></i> Просмотреть
+                    </a>
+                    <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                {% else %}
+                    <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Ввести результаты
+                    </a>
+                {% endif %}
+            </div>
         </div>
         {% empty %}
         <div class="empty-state">

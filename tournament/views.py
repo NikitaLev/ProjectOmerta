@@ -4,7 +4,7 @@ from .forms import UserRegistrationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import HostApplication
-from .models import Tournament, TournamentPlayer, User, Game
+from .models import Tournament, TournamentPlayer, User, Game, PlayerGameStats  
 from .forms import HostApplicationForm
 from .forms import TournamentCreateForm
 from django.http import JsonResponse
@@ -411,3 +411,67 @@ def tournament_games(request, tournament_id):
     }
     
     return render(request, 'tournament/tournament_games.html', context)
+
+@login_required
+def game_input(request, tournament_id, game_round):
+    """Страница ввода результатов игры"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
+    
+    # Проверяем права (только ведущий)
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_games', tournament_id=tournament.id)
+    
+    if request.method == 'POST':
+        # Получаем победителя
+        winning_team = request.POST.get('winning_team')
+        
+        # Обновляем игру
+        game.winning_team = winning_team
+        game.save()
+        
+        # Обрабатываем каждого игрока
+        for tp in tournament.players.all():
+            player_id = tp.user.id
+            
+            # Получаем роль
+            role = request.POST.get(f'role_{player_id}')
+            if not role:
+                continue
+            
+            # Получаем баллы
+            bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
+            penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+            first_kill = request.POST.get(f'first_kill_{player_id}') == 'true'
+            best_shot = request.POST.get(f'best_shot_{player_id}', '')
+            
+            # Основные баллы (победа)
+            main_score = 0
+            if (winning_team == 'mafia' and role in ['mafia', 'don']) or \
+            (winning_team == 'peace' and role in ['civil', 'sheriff']):
+                main_score = 1
+            
+            # Создаем или обновляем статистику - ИСПРАВЛЕНО: используем tp, а не просто user
+            stats, created = PlayerGameStats.objects.update_or_create(
+                game=game,
+                tournament_player=tp,  # ← ВАЖНО: используем TournamentPlayer, а не User
+                defaults={
+                    'user': tp.user,  # все равно нужно для быстрого доступа
+                    'role': role,
+                    'place': 0,  # TODO: добавить поле места
+                    'main_score': main_score,
+                    'bonus_score': bonus,
+                    'penalty_score': penalty,
+                    'first_shot': best_shot if first_kill else '',
+                }
+            )
+        
+        messages.success(request, f'Результаты игры {game.round_number} сохранены')
+        return redirect('tournament_games', tournament_id=tournament.id)
+    
+    context = {
+        'tournament': tournament,
+        'game': game,
+    }
+    return render(request, 'tournament/game_input.html', context)

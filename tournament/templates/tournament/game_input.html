@@ -1,0 +1,554 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Ввод результатов - Игра {{ game.round_number }} - {{ tournament.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/game-input.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="game-input-page">
+    <div class="game-input-header">
+        <div class="header-left">
+            <h1 class="page-title">
+                <i class="fas fa-edit"></i>
+                Ввод результатов
+            </h1>
+            <div class="game-badge">
+                <span class="tournament-name">{{ tournament.name }}</span>
+                <span class="game-number">Игра {{ game.round_number }} / {{ tournament.total_games }}</span>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i>
+                Вернуться к играм
+            </a>
+        </div>
+    </div>
+    
+    <!-- Форма ввода результатов -->
+    <form method="post" class="game-form" id="gameForm">
+        {% csrf_token %}
+        
+        <!-- Блок выбора победителя -->
+        <div class="form-section winner-section">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                Победитель игры
+            </h2>
+            <div class="winner-options">
+                <label class="winner-option {% if game.winning_team == 'mafia' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="mafia" {% if game.winning_team == 'mafia' %}checked{% endif %} required>
+                    <div class="winner-card mafia">
+                        <i class="fas fa-skull"></i>
+                        <span>Мафия</span>
+                    </div>
+                </label>
+                <label class="winner-option {% if game.winning_team == 'peace' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="peace" {% if game.winning_team == 'peace' %}checked{% endif %} required>
+                    <div class="winner-card peace">
+                        <i class="fas fa-users"></i>
+                        <span>Мирные</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Таблица игроков -->
+        <div class="form-section players-section">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>
+                Игроки
+            </h2>
+            
+            <div class="players-table-wrapper">
+                <table class="players-input-table">
+                    <thead>
+                        <tr>
+                            <th>Место</th>
+                            <th>Игрок</th>
+                            <th>Роль</th>
+                            <th>Основные</th>
+                            <th>Доп.</th>
+                            <th>Штраф</th>
+                            <th>Сумма</th>
+                            <th>1й убит</th>
+                            <th>Лучший ход</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player_id in game.seating.order %}
+                            {% for tp in tournament.players.all %}
+                                {% if tp.user.id == player_id %}
+                                    <tr class="player-row" data-player-id="{{ tp.user.id }}" id="row-{{ tp.user.id }}">
+                                        <td class="seat-cell">{{ forloop.parentloop.counter }}</td>
+                                        <td class="player-cell">
+                                            <div class="player-info">
+                                                <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                                <span class="player-username">@{{ tp.user.username }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="role-cell">
+                                            <div class="role-select-wrapper">
+                                                <select name="role_{{ tp.user.id }}" class="role-select" required>
+                                                    <option value="">-- Выберите роль --</option>
+                                                    <option value="civil">Мирный</option>
+                                                    <option value="sheriff">Шериф</option>
+                                                    <option value="mafia">Мафия</option>
+                                                    <option value="don">Дон</option>
+                                                </select>
+                                                <span class="role-icon" id="icon_{{ tp.user.id }}"></span>
+                                            </div>
+                                        </td>
+                                        <td class="score-cell">
+                                            <span class="base-score" id="base_{{ tp.user.id }}">0</span>
+                                        </td>
+                                        <td class="bonus-cell">
+                                            <div class="score-control">
+                                                <button type="button" class="score-btn minus" data-player="{{ tp.user.id }}" data-field="bonus">−</button>
+                                                <input type="text"
+                                                    name="bonus_{{ tp.user.id }}" 
+                                                    id="bonus_{{ tp.user.id }}"
+                                                    class="score-input bonus-input" 
+                                                    value="0" 
+                                                    data-player="{{ tp.user.id }}"
+                                                    data-min="-10"
+                                                    data-max="10">
+                                                <button type="button" class="score-btn plus" data-player="{{ tp.user.id }}" data-field="bonus">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="penalty-cell">
+                                            <div class="score-control">
+                                                <button type="button" class="score-btn minus" data-player="{{ tp.user.id }}" data-field="penalty">−</button>
+                                                <input type="text"
+                                                    name="penalty_{{ tp.user.id }}" 
+                                                    id="penalty_{{ tp.user.id }}"
+                                                    class="score-input penalty-input" 
+                                                    value="0" 
+                                                    data-player="{{ tp.user.id }}"
+                                                    data-min="0"
+                                                    data-max="10">
+                                                <button type="button" class="score-btn plus" data-player="{{ tp.user.id }}" data-field="penalty">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="total-cell">
+                                            <span class="total-score" id="total_{{ tp.user.id }}">0</span>
+                                        </td>
+                                        <td class="first-kill-cell">
+                                            <input type="checkbox" 
+                                                name="first_kill_{{ tp.user.id }}" 
+                                                class="first-kill-checkbox" 
+                                                value="true"
+                                                data-player="{{ tp.user.id }}">
+                                        </td>
+                                        <td class="best-shot-cell">
+                                            <input type="text" 
+                                                name="best_shot_{{ tp.user.id }}" 
+                                                class="best-shot-input" 
+                                                placeholder="1 2 3"
+                                                pattern="\d+\s*\d+\s*\d+"
+                                                title="Введите три числа через пробел"
+                                                data-player="{{ tp.user.id }}">
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Кнопки сохранения -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i>
+                Сохранить результаты
+            </button>
+            <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline btn-large">
+                <i class="fas fa-times"></i>
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const winnerRadios = document.querySelectorAll('input[name="winning_team"]');
+    const roleSelects = document.querySelectorAll('.role-select');
+    const bonusInputs = document.querySelectorAll('.bonus-input');
+    const penaltyInputs = document.querySelectorAll('.penalty-input');
+    const firstKillCheckboxes = document.querySelectorAll('.first-kill-checkbox');
+
+    // Карта ролей для иконок и цветов
+    const roleMap = {
+        'civil': { 
+            icon: '<i class="bi bi-hand-thumbs-up-fill"></i>',  // Добавьте -fill
+            color: '#ef4444', 
+            name: 'Мирный',
+            html: '<span class="role-icon" style="color: #ef4444;"><i class="bi bi-hand-thumbs-up-fill"></i></span>'
+        },
+        'sheriff': { 
+            icon: '<i class="mdi mdi-police-badge"></i>', 
+            color: '#fbbf24', 
+            name: 'Шериф',
+            html: '<span class="role-icon" style="color: #fbbf24;"><i class="mdi mdi-police-badge"></i></span>'
+        },
+        'mafia': { 
+            icon: '<i class="bi bi-hand-thumbs-down-fill"></i>',  // Палец вниз с заливкой
+            color: '#6b21a5', 
+            name: 'Мафия',
+            html: '<span class="role-icon" style="color: #6b21a5;"><i class="bi bi-hand-thumbs-down-fill"></i></span>'
+        },
+        'don': { 
+            icon: '<i class="ph-fill ph-crown-simple"></i>', 
+            color: '#6b21a5', 
+            name: 'Дон',
+            html: '<span class="role-icon" style="color: #d4af37;"><i class="ph-fill ph-crown-simple"></i></span>'
+        }
+    };
+        
+    // Функция обновления иконки роли
+    function updateRoleIcon(select) {
+        console.log('updateRoleIcon вызван для:', select);
+        
+        const playerId = select.name.split('_')[1];
+        console.log('playerId:', playerId);
+        
+        const iconSpan = document.getElementById(`icon_${playerId}`);
+        console.log('iconSpan:', iconSpan);
+        
+        const value = select.value;
+        console.log('value:', value);
+        
+        if (value && roleMap[value]) {
+            console.log('Устанавливаем иконку для:', value);
+            iconSpan.innerHTML = roleMap[value].icon;
+            iconSpan.style.color = roleMap[value].color;
+            iconSpan.style.display = 'inline-block';
+        } else {
+            console.log('Скрываем иконку');
+            iconSpan.innerHTML = '';
+            iconSpan.style.display = 'none';
+        }
+    }
+    
+    // Функция подсчета общей суммы для игрока
+    function calculateTotal(playerId) {
+        const baseScore = parseFloat(document.getElementById(`base_${playerId}`).textContent) || 0;
+        const bonus = parseFloat(document.querySelector(`input[name="bonus_${playerId}"]`).value) || 0;
+        const penalty = parseFloat(document.querySelector(`input[name="penalty_${playerId}"]`).value) || 0;
+        
+        return baseScore + bonus - penalty;
+    }
+    
+    // Функция обновления всех сумм и подсветки MVP
+    function updateAllTotals() {
+        const totals = {};
+        const scores = [];
+        
+        // Обновляем каждую сумму
+        roleSelects.forEach(select => {
+            const playerId = select.name.split('_')[1];
+            const total = calculateTotal(playerId);
+            document.getElementById(`total_${playerId}`).textContent = total.toFixed(2);
+            totals[playerId] = total;
+            scores.push(total);
+        });
+        
+        // Убираем подсветку MVP у всех
+        document.querySelectorAll('.player-row').forEach(row => {
+            row.classList.remove('mvp-row');
+        });
+        
+        // Находим максимальную сумму и проверяем, уникальна ли она
+        const maxTotal = Math.max(...scores);
+        const maxCount = scores.filter(score => score === maxTotal).length;
+        
+        // Подсвечиваем MVP только если есть явный лидер (максимум уникален)
+        if (maxCount === 1 && maxTotal > 0) {
+            Object.entries(totals).forEach(([playerId, total]) => {
+                if (total === maxTotal) {
+                    document.getElementById(`row-${playerId}`).classList.add('mvp-row');
+                }
+            });
+        }
+    }
+    
+    // Счетчики выбранных ролей
+    function countRoles() {
+        let mafia = 0;
+        let don = 0;
+        let sheriff = 0;
+        let civil = 0;
+        
+        roleSelects.forEach(select => {
+            switch(select.value) {
+                case 'mafia': mafia++; break;
+                case 'don': don++; break;
+                case 'sheriff': sheriff++; break;
+                case 'civil': civil++; break;
+            }
+        });
+        
+        return { mafia, don, sheriff, civil };
+    }
+    
+    // Обновление незаполненных ролей до мирных
+    function fillRemainingCivil() {
+        const { mafia, don, sheriff } = countRoles();
+        const totalSpecial = mafia + don + sheriff;
+        
+        if (totalSpecial >= 4) {
+            roleSelects.forEach(select => {
+                if (!select.value) {
+                    select.value = 'civil';
+                    updateRoleIcon(select);
+                }
+            });
+            updateAllTotals();
+        }
+    }
+    
+    // Валидация количества мафии
+    function validateMafiaCount(select) {
+        const { mafia, don } = countRoles();
+        
+        if (select.value === 'mafia' && mafia > 2) {
+            alert('В игре может быть только 2 мафии');
+            select.value = '';
+            updateRoleIcon(select);
+            return false;
+        }
+        
+        if (select.value === 'don' && don > 1) {
+            alert('В игре может быть только один Дон');
+            select.value = '';
+            updateRoleIcon(select);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Функция обновления основных баллов
+    function updateBaseScores() {
+        const winningTeam = document.querySelector('input[name="winning_team"]:checked')?.value;
+        
+        roleSelects.forEach(select => {
+            const playerId = select.name.split('_')[1];
+            const baseScoreSpan = document.getElementById(`base_${playerId}`);
+            const role = select.value;
+            
+            let baseScore = 0;
+            if (winningTeam === 'mafia' && (role === 'mafia' || role === 'don')) {
+                baseScore = 1;
+            } else if (winningTeam === 'peace' && (role === 'civil' || role === 'sheriff')) {
+                baseScore = 1;
+            }
+            
+            baseScoreSpan.textContent = baseScore;
+        });
+        
+        updateAllTotals();
+    }
+    
+    // Обработчики событий
+    roleSelects.forEach(select => {
+        // Инициализация иконки
+        updateRoleIcon(select);
+        
+        select.addEventListener('change', function() {
+            updateRoleIcon(this);
+            if (!validateMafiaCount(this)) return;
+            updateBaseScores();
+            fillRemainingCivil();
+        });
+    });
+    
+    winnerRadios.forEach(radio => {
+        radio.addEventListener('change', updateBaseScores);
+    });
+    
+    bonusInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Округляем до 2 знаков после запятой при вводе
+            if (this.value.includes('.')) {
+                const parts = this.value.split('.');
+                if (parts[1] && parts[1].length > 2) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            }
+            
+            const playerId = this.dataset.player;
+            document.getElementById(`total_${playerId}`).textContent = calculateTotal(playerId).toFixed(2);
+            updateAllTotals();
+        });
+    });
+    
+    penaltyInputs.forEach(input => {
+        input.addEventListener('input', function() {
+        // Округляем до 2 знаков после запятой при вводе
+        if (this.value.includes('.')) {
+            const parts = this.value.split('.');
+            if (parts[1] && parts[1].length > 2) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        }
+        
+        const playerId = this.dataset.player;
+        document.getElementById(`total_${playerId}`).textContent = calculateTotal(playerId).toFixed(2);
+        updateAllTotals();
+    });
+    });
+    
+    // Ограничение на одного первого убитого
+    firstKillCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                firstKillCheckboxes.forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = false;
+                    }
+                });
+            }
+        });
+    });
+    
+    // Валидация лучшего хода
+    document.querySelectorAll('.best-shot-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value) {
+                const numbers = value.split(/\s+/).map(Number);
+                if (numbers.length !== 3 || numbers.some(isNaN)) {
+                    this.setCustomValidity('Введите ровно три числа через пробел');
+                } else {
+                    this.setCustomValidity('');
+                }
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+    
+    // Функция управления полем лучшего хода
+    function updateBestShotFields() {
+        const firstKilled = document.querySelector('.first-kill-checkbox:checked');
+        const bestShotInputs = document.querySelectorAll('.best-shot-input');
+        
+        bestShotInputs.forEach(input => {
+            if (firstKilled && input.dataset.player === firstKilled.dataset.player) {
+                // Это первый убитый - можно вводить
+                input.disabled = false;
+                input.placeholder = "1 2 3";
+                input.title = "Введите три числа через пробел";
+            } else {
+                // Остальным нельзя
+                input.disabled = true;
+                input.value = '';
+                input.placeholder = "Только 1й убитый";
+                input.title = "Лучший ход может оставить только первый убитый";
+            }
+        });
+    }
+
+    // Обновите обработчик первого убитого
+    firstKillCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                firstKillCheckboxes.forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = false;
+                    }
+                });
+            }
+            updateBestShotFields();
+        });
+    });
+
+    // Функция валидации и форматирования числа
+    function validateAndFormatNumber(value, min, max) {
+        // Заменяем запятую на точку
+        value = value.replace(',', '.');
+        
+        // Удаляем все кроме цифр, точки и минуса
+        value = value.replace(/[^\d.-]/g, '');
+        
+        // Проверяем, что это число
+        let num = parseFloat(value);
+        if (isNaN(num)) return '0';
+        
+        // Ограничиваем двумя знаками после запятой
+        num = Math.round(num * 100) / 100;
+        
+        // Проверяем границы
+        if (num < min) num = min;
+        if (num > max) num = max;
+        
+        return num.toFixed(2);
+    }
+
+    // Обработчики для ручного ввода
+    document.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('blur', function() {
+            const min = parseFloat(this.dataset.min);
+            const max = parseFloat(this.dataset.max);
+            this.value = validateAndFormatNumber(this.value, min, max);
+            
+            // Триггерим событие для обновления суммы
+            this.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        
+        input.addEventListener('keypress', function(e) {
+            // Разрешаем цифры, точку, минус и backspace
+            const allowed = /[\d.-]/;
+            if (!allowed.test(e.key) && e.key !== 'Backspace') {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Обновляем обработчики кнопок
+    document.querySelectorAll('.score-btn.plus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const playerId = this.dataset.player;
+            const field = this.dataset.field;
+            const input = document.getElementById(`${field}_${playerId}`);
+            const min = parseFloat(input.dataset.min);
+            const max = parseFloat(input.dataset.max);
+            let value = parseFloat(input.value) || 0;
+            value = Math.min(value + 0.1, max);
+            input.value = value.toFixed(2);
+            
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    document.querySelectorAll('.score-btn.minus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const playerId = this.dataset.player;
+            const field = this.dataset.field;
+            const input = document.getElementById(`${field}_${playerId}`);
+            const min = parseFloat(input.dataset.min);
+            const max = parseFloat(input.dataset.max);
+            let value = parseFloat(input.value) || 0;
+            value = Math.max(value - 0.1, min);
+            input.value = value.toFixed(2);
+            
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    // Инициализация при загрузке
+    updateBestShotFields();
+    
+    // Инициализация
+    updateAllTotals();
+    fillRemainingCivil();
+});
+</script>
+{% endblock %}
