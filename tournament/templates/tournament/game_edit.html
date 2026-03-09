@@ -1,10 +1,22 @@
 {% extends 'tournament/base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Ввод результатов - Игра {{ game.round_number }} - {{ tournament.name }}{% endblock %}
+{% block title %}Редактирование - Игра {{ game.round_number }} - {{ tournament.name }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/pages/game-input.css' %}?v=1">
+    <style>
+        .existing-data-badge {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            margin-left: 15px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -13,7 +25,10 @@
         <div class="header-left">
             <h1 class="page-title">
                 <i class="fas fa-edit"></i>
-                Ввод результатов
+                Редактирование результатов
+                <span class="existing-data-badge">
+                    <i class="fas fa-check-circle"></i> Редактирование игры
+                </span>
             </h1>
             <div class="game-badge">
                 <span class="tournament-name">{{ tournament.name }}</span>
@@ -29,7 +44,7 @@
         </div>
     </div>
     
-    <!-- Форма ввода результатов (пустая) -->
+    <!-- Форма редактирования (с данными) -->
     <form method="post" class="game-form" id="gameForm">
         {% csrf_token %}
         
@@ -40,15 +55,15 @@
                 Победитель игры
             </h2>
             <div class="winner-options">
-                <label class="winner-option">
-                    <input type="radio" name="winning_team" value="mafia" required>
+                <label class="winner-option {% if game.winning_team == 'mafia' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="mafia" {% if game.winning_team == 'mafia' %}checked{% endif %} required>
                     <div class="winner-card mafia">
                         <i class="fas fa-skull"></i>
                         <span>Мафия</span>
                     </div>
                 </label>
-                <label class="winner-option">
-                    <input type="radio" name="winning_team" value="peace" required>
+                <label class="winner-option {% if game.winning_team == 'peace' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="peace" {% if game.winning_team == 'peace' %}checked{% endif %} required>
                     <div class="winner-card peace">
                         <i class="fas fa-users"></i>
                         <span>Мирные</span>
@@ -84,6 +99,7 @@
                         {% for player_id in game.seating.order %}
                             {% for tp in tournament.players.all %}
                                 {% if tp.user.id == player_id %}
+                                    {% with stats=existing_stats|get_item:player_id %}
                                     <tr class="player-row" data-player-id="{{ tp.user.id }}" id="row-{{ tp.user.id }}">
                                         <td class="seat-cell">{{ forloop.parentloop.counter }}</td>
                                         <td class="player-cell">
@@ -96,16 +112,16 @@
                                             <div class="role-select-wrapper">
                                                 <select name="role_{{ tp.user.id }}" class="role-select" required>
                                                     <option value="">-- Выберите роль --</option>
-                                                    <option value="civil">Мирный</option>
-                                                    <option value="sheriff">Шериф</option>
-                                                    <option value="mafia">Мафия</option>
-                                                    <option value="don">Дон</option>
+                                                    <option value="civil" {% if stats.role == 'civil' %}selected{% endif %}>Мирный</option>
+                                                    <option value="sheriff" {% if stats.role == 'sheriff' %}selected{% endif %}>Шериф</option>
+                                                    <option value="mafia" {% if stats.role == 'mafia' %}selected{% endif %}>Мафия</option>
+                                                    <option value="don" {% if stats.role == 'don' %}selected{% endif %}>Дон</option>
                                                 </select>
                                                 <span class="role-icon" id="icon_{{ tp.user.id }}"></span>
                                             </div>
                                         </td>
                                         <td class="score-cell">
-                                            <span class="base-score" id="base_{{ tp.user.id }}">0</span>
+                                            <span class="base-score" id="base_{{ tp.user.id }}">{{ stats.main_score|default:"0" }}</span>
                                         </td>
                                         <td class="bonus-cell">
                                             <div class="score-control">
@@ -114,7 +130,7 @@
                                                     name="bonus_{{ tp.user.id }}" 
                                                     id="bonus_{{ tp.user.id }}"
                                                     class="score-input bonus-input" 
-                                                    value="0" 
+                                                    value="{{ stats.bonus_score|floatformat:2 }}" 
                                                     data-player="{{ tp.user.id }}"
                                                     data-min="-10"
                                                     data-max="10">
@@ -128,7 +144,7 @@
                                                     name="penalty_{{ tp.user.id }}" 
                                                     id="penalty_{{ tp.user.id }}"
                                                     class="score-input penalty-input" 
-                                                    value="0" 
+                                                    value="{{ stats.penalty_score|floatformat:2 }}" 
                                                     data-player="{{ tp.user.id }}"
                                                     data-min="0"
                                                     data-max="10">
@@ -137,20 +153,21 @@
                                         </td>
                                         <td class="yellow-card-cell">
                                             <select name="yellow_cards_{{ tp.user.id }}" class="yellow-card-select">
-                                                <option value="0">0</option>
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
+                                                <option value="0" {% if stats.yellow_cards == 0 %}selected{% endif %}>0</option>
+                                                <option value="1" {% if stats.yellow_cards == 1 %}selected{% endif %}>1</option>
+                                                <option value="2" {% if stats.yellow_cards == 2 %}selected{% endif %}>2</option>
                                             </select>
                                         </td>
                                         <td class="total-cell">
-                                            <span class="total-score" id="total_{{ tp.user.id }}">0</span>
+                                            <span class="total-score" id="total_{{ tp.user.id }}">{{ stats.total_score|floatformat:2 }}</span>
                                         </td>
                                         <td class="first-kill-cell">
                                             <input type="checkbox" 
                                                 name="first_kill_{{ tp.user.id }}" 
                                                 class="first-kill-checkbox" 
                                                 value="true"
-                                                data-player="{{ tp.user.id }}">
+                                                data-player="{{ tp.user.id }}"
+                                                {% if stats.first_shot %}checked{% endif %}>
                                         </td>
                                         <td class="best-shot-cell">
                                             <input type="text" 
@@ -160,9 +177,13 @@
                                                 pattern="\d+\s*\d+\s*\d+"
                                                 title="Введите три числа через пробел"
                                                 data-player="{{ tp.user.id }}"
-                                                disabled>
+                                                value="{{ stats.first_shot|default:'' }}"
+                                                {% if not stats.first_shot %}disabled{% endif %}>
+                                            <!-- Скрытое поле с сохранённым значением lh_bonus -->
+                                            <input type="hidden" id="lh_bonus_{{ tp.user.id }}" value="{{ stats.lh_bonus|default:'0' }}">
                                         </td>
                                     </tr>
+                                    {% endwith %}
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
@@ -175,7 +196,7 @@
         <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-large">
                 <i class="fas fa-save"></i>
-                Сохранить результаты
+                Обновить результаты
             </button>
             <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline btn-large">
                 <i class="fas fa-times"></i>
@@ -292,12 +313,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (firstKilled && input.dataset.player === firstKilled.dataset.player) {
                 input.disabled = false;
                 input.placeholder = "1 2 3";
-                input.title = "Введите три числа через пробел";
             } else {
                 input.disabled = true;
-                input.value = '';
-                input.placeholder = "Только 1й убитый";
-                input.title = "Лучший ход может оставить только первый убитый";
+                if (!input.value) {
+                    input.placeholder = "Только 1й убитый";
+                }
             }
         });
     }
@@ -315,21 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         return { mafia, don, sheriff, civil };
-    }
-    
-    function fillRemainingCivil() {
-        const { mafia, don, sheriff } = countRoles();
-        const totalSpecial = mafia + don + sheriff;
-        
-        if (totalSpecial >= 4) {
-            roleSelects.forEach(select => {
-                if (!select.value) {
-                    select.value = 'civil';
-                    updateRoleIcon(select);
-                }
-            });
-            updateAllTotals();
-        }
     }
     
     function validateMafiaCount(select) {
@@ -352,23 +357,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    function validateAndFormatNumber(value, min, max) {
-        value = value.replace(',', '.').replace(/[^\d.-]/g, '');
-        let num = parseFloat(value);
-        if (isNaN(num)) return '0';
-        num = Math.max(min, Math.min(max, Math.round(num * 100) / 100));
-        return num.toFixed(2);
-    }
-    
     // ---------- ОБРАБОТЧИКИ СОБЫТИЙ ----------
+    // Инициализация иконок
+    roleSelects.forEach(select => updateRoleIcon(select));
+    
+    // Обработчики изменений
     roleSelects.forEach(select => {
-        updateRoleIcon(select);
-        
         select.addEventListener('change', function() {
             updateRoleIcon(this);
             if (!validateMafiaCount(this)) return;
             updateBaseScores();
-            fillRemainingCivil();
         });
     });
     
@@ -382,13 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(`total_${playerId}`).textContent = calculateTotal(playerId).toFixed(2);
             updateAllTotals();
         });
-        
-        input.addEventListener('blur', function() {
-            const min = parseFloat(this.dataset.min);
-            const max = parseFloat(this.dataset.max);
-            this.value = validateAndFormatNumber(this.value, min, max);
-            this.dispatchEvent(new Event('input'));
-        });
     });
     
     penaltyInputs.forEach(input => {
@@ -396,13 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const playerId = this.dataset.player;
             document.getElementById(`total_${playerId}`).textContent = calculateTotal(playerId).toFixed(2);
             updateAllTotals();
-        });
-        
-        input.addEventListener('blur', function() {
-            const min = parseFloat(this.dataset.min);
-            const max = parseFloat(this.dataset.max);
-            this.value = validateAndFormatNumber(this.value, min, max);
-            this.dispatchEvent(new Event('input'));
         });
     });
     
@@ -416,48 +400,44 @@ document.addEventListener('DOMContentLoaded', function() {
             updateBestShotFields();
         });
     });
-    
-    bestShotInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const value = this.value.trim();
-            if (value) {
-                const numbers = value.split(/\s+/).map(Number);
-                if (numbers.length !== 3 || numbers.some(isNaN)) {
-                    this.setCustomValidity('Введите ровно три числа через пробел');
-                } else {
-                    this.setCustomValidity('');
-                }
+
+    function adjustBonusesForEdit() {
+        const firstKillCheckboxes = document.querySelectorAll('.first-kill-checkbox');
+        
+        firstKillCheckboxes.forEach(checkbox => {
+            const playerId = checkbox.dataset.player;
+            const bestShotInput = document.querySelector(`input[name="best_shot_${playerId}"]`);
+            const bonusInput = document.querySelector(`input[name="bonus_${playerId}"]`);
+            const lhBonusField = document.getElementById(`lh_bonus_${playerId}`);
+            
+            if (checkbox.checked && bestShotInput && bestShotInput.value.trim() && lhBonusField) {
+                let currentBonus = parseFloat(bonusInput.value) || 0;
+                const savedLhBonus = parseFloat(lhBonusField.value) || 0;
+                
+                // Вычитаем сохранённый бонус за ЛХ
+                const adjustedBonus = currentBonus - savedLhBonus;
+                bonusInput.value = adjustedBonus.toFixed(2);
+                
+                console.log(`Игрок ${playerId}: скорректирован бонус ${currentBonus} -> ${adjustedBonus} (ЛХ: ${savedLhBonus})`);
             }
         });
-    });
+        
+        // Обновляем все суммы
+        if (typeof updateAllTotals === 'function') {
+            updateAllTotals();
+        }
+    }
     
-    document.querySelectorAll('.score-btn.plus').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const playerId = this.dataset.player;
-            const field = this.dataset.field;
-            const input = document.getElementById(`${field}_${playerId}`);
-            const min = parseFloat(input.dataset.min);
-            const max = parseFloat(input.dataset.max);
-            let value = (parseFloat(input.value) || 0) + 0.1;
-            input.value = Math.min(value, max).toFixed(2);
-            input.dispatchEvent(new Event('input'));
-        });
-    });
-    
-    document.querySelectorAll('.score-btn.minus').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const playerId = this.dataset.player;
-            const field = this.dataset.field;
-            const input = document.getElementById(`${field}_${playerId}`);
-            const min = parseFloat(input.dataset.min);
-            let value = (parseFloat(input.value) || 0) - 0.1;
-            input.value = Math.max(value, min).toFixed(2);
-            input.dispatchEvent(new Event('input'));
-        });
-    });
+    // Вызываем корректировку после загрузки всех данных
+    setTimeout(adjustBonusesForEdit, 100);
     
     // ---------- ФИНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ----------
-    updateAllTotals();
+    
+    // Пересчитываем основные баллы на основе сохранённого победителя
+    if (document.querySelector('input[name="winning_team"]:checked')) {
+        updateBaseScores();
+    }
+    updateBestShotFields();
 });
 </script>
 {% endblock %}

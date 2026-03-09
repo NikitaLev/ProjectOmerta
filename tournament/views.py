@@ -14,6 +14,7 @@ from .utils import generate_invitation_token
 from django.contrib.auth.hashers import make_password
 import secrets
 from .utils import generate_seating
+from django.conf import settings
 
 @login_required
 def profile(request):
@@ -402,11 +403,25 @@ def tournament_games(request, tournament_id):
     completed_games = games.exclude(winning_team__isnull=True).count()
     pending_games = games.filter(winning_team__isnull=True).count()
     
+    # Загружаем статистику для всех игр одним запросом
+    game_stats = {}
+    if games:
+        all_stats = PlayerGameStats.objects.filter(
+            game__in=games
+        ).select_related('user', 'tournament_player')
+        
+        # Группируем статистику по играм
+        for stat in all_stats:
+            if stat.game_id not in game_stats:
+                game_stats[stat.game_id] = {}
+            game_stats[stat.game_id][stat.user_id] = stat
+    
     context = {
         'tournament': tournament,
         'games': games,
         'completed_games': completed_games,
         'pending_games': pending_games,
+        'game_stats': game_stats,  # Добавляем статистику
         'is_host': request.user == tournament.host,
     }
     
@@ -414,9 +429,14 @@ def tournament_games(request, tournament_id):
 
 @login_required
 def game_input(request, tournament_id, game_round):
-    """Страница ввода результатов игры"""
+    """Страница ввода результатов для новой игры"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
+    
+    # Проверяем, что игра ещё не завершена
+    if game.winning_team:
+        messages.warning(request, 'Эта игра уже завершена. Используйте страницу редактирования.')
+        return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
     
     # Проверяем права (только ведущий)
     if request.user != tournament.host:
@@ -424,54 +444,328 @@ def game_input(request, tournament_id, game_round):
         return redirect('tournament_games', tournament_id=tournament.id)
     
     if request.method == 'POST':
-        # Получаем победителя
-        winning_team = request.POST.get('winning_team')
-        
-        # Обновляем игру
-        game.winning_team = winning_team
-        game.save()
-        
-        # Обрабатываем каждого игрока
-        for tp in tournament.players.all():
-            player_id = tp.user.id
+        try:
+            # Получаем победителя
+            winning_team = request.POST.get('winning_team')
+            if not winning_team:
+                messages.error(request, 'Необходимо выбрать победителя игры')
+                return redirect('game_input', tournament_id=tournament.id, game_round=game_round)
             
-            # Получаем роль
-            role = request.POST.get(f'role_{player_id}')
-            if not role:
-                continue
+            # Обновляем игру
+            game.winning_team = winning_team
+            game.save()
             
-            # Получаем баллы
-            bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
-            penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
-            first_kill = request.POST.get(f'first_kill_{player_id}') == 'true'
-            best_shot = request.POST.get(f'best_shot_{player_id}', '')
+            # Получаем порядок рассадки
+            seating_order = game.seating.get('order', [])
             
-            # Основные баллы (победа)
-            main_score = 0
-            if (winning_team == 'mafia' and role in ['mafia', 'don']) or \
-            (winning_team == 'peace' and role in ['civil', 'sheriff']):
-                main_score = 1
+            # Находим первого убитого
+            first_killed_id = None
+            for player_id in seating_order:
+                if request.POST.get(f'first_kill_{player_id}') == 'true':
+                    first_killed_id = player_id
+                    break
             
-            # Создаем или обновляем статистику - ИСПРАВЛЕНО: используем tp, а не просто user
-            stats, created = PlayerGameStats.objects.update_or_create(
-                game=game,
-                tournament_player=tp,  # ← ВАЖНО: используем TournamentPlayer, а не User
-                defaults={
-                    'user': tp.user,  # все равно нужно для быстрого доступа
-                    'role': role,
-                    'place': 0,  # TODO: добавить поле места
-                    'main_score': main_score,
-                    'bonus_score': bonus,
-                    'penalty_score': penalty,
-                    'first_shot': best_shot if first_kill else '',
-                }
-            )
-        
-        messages.success(request, f'Результаты игры {game.round_number} сохранены')
-        return redirect('tournament_games', tournament_id=tournament.id)
+            # Словарь для хранения ролей
+            roles_dict = {}
+            for tp in tournament.players.all():
+                player_id = tp.user.id
+                role = request.POST.get(f'role_{player_id}')
+                if role:
+                    roles_dict[player_id] = role
+            
+            # Сохраняем статистику для каждого игрока
+            for position, player_id in enumerate(seating_order, 1):
+                tp = tournament.players.get(user_id=player_id)
+                role = roles_dict.get(player_id)
+                
+                if not role:
+                    messages.error(request, f'Не выбрана роль для игрока {tp.user.player_nickname or tp.user.username}')
+                    return redirect('game_input', tournament_id=tournament.id, game_round=game_round)
+                
+                # Получаем данные из формы
+                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
+                penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+                yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
+                
+                first_kill = (str(player_id) == str(first_killed_id))
+                best_shot = request.POST.get(f'best_shot_{player_id}', '') if first_kill else ''
+                
+                # Основные баллы
+                main_score = 0
+                if (winning_team == 'mafia' and role in ['mafia', 'don']) or \
+                   (winning_team == 'peace' and role in ['civil', 'sheriff']):
+                    main_score = 1
+                
+                # Расчёт бонуса за лучший ход
+                lh_bonus = 0
+                if first_kill and best_shot and role in ['civil', 'sheriff']:
+                    try:
+                        numbers = [int(x) for x in best_shot.split() if x.strip()]
+                        if len(numbers) == 3 and all(1 <= n <= len(seating_order) for n in numbers):
+                            mafia_count = 0
+                            for seat_num in numbers:
+                                target_player_id = seating_order[seat_num - 1]
+                                target_role = roles_dict.get(target_player_id)
+                                if target_role in ['mafia', 'don']:
+                                    mafia_count += 1
+                            
+                            if mafia_count >= 3:
+                                lh_bonus = 0.5
+                            elif mafia_count >= 2:
+                                lh_bonus = 0.3
+                    except (ValueError, TypeError, IndexError):
+                        pass
+                
+                # Создаём запись
+                PlayerGameStats.objects.create(
+                    game=game,
+                    tournament_player=tp,
+                    user=tp.user,
+                    role=role,
+                    place=position,
+                    main_score=main_score,
+                    bonus_score=manual_bonus + lh_bonus,
+                    penalty_score=penalty,
+                    yellow_cards=yellow_cards,
+                    lh_bonus=lh_bonus,
+                    first_shot=best_shot if first_kill else '',
+                    ci=0.0,
+                )
+            
+            # Обновляем статистику турнира
+            for tp in tournament.players.all():
+                update_player_tournament_stats(tp)
+            
+            check_tournament_completion(tournament)
+            
+            messages.success(request, f'Результаты игры {game.round_number} успешно сохранены!')
+            return redirect('tournament_games', tournament_id=tournament.id)
+            
+        except Exception as e:
+            messages.error(request, f'Ошибка при сохранении: {str(e)}')
+            if settings.DEBUG:
+                import traceback
+                traceback.print_exc()
+            return redirect('game_input', tournament_id=tournament.id, game_round=game_round)
     
+    # GET запрос - показываем пустую форму
     context = {
         'tournament': tournament,
         'game': game,
+        'is_edit': False,
     }
     return render(request, 'tournament/game_input.html', context)
+
+
+@login_required
+def game_edit(request, tournament_id, game_round):
+    """Страница редактирования результатов завершённой игры"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
+    
+    # Проверяем, что игра завершена
+    if not game.winning_team:
+        messages.warning(request, 'Эта игра ещё не завершена. Используйте страницу ввода результатов.')
+        return redirect('game_input', tournament_id=tournament.id, game_round=game_round)
+    
+    # Проверяем права (только ведущий)
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_games', tournament_id=tournament.id)
+    
+    # ПОЛУЧАЕМ СУЩЕСТВУЮЩУЮ СТАТИСТИКУ
+    existing_stats = {}
+    player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
+    for stat in player_stats:
+        existing_stats[stat.user_id] = stat
+    
+    if request.method == 'POST':
+        try:
+            # Получаем нового победителя
+            winning_team = request.POST.get('winning_team')
+            if not winning_team:
+                messages.error(request, 'Необходимо выбрать победителя игры')
+                return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
+            
+            # Обновляем игру
+            game.winning_team = winning_team
+            game.save()
+            
+            # Получаем порядок рассадки
+            seating_order = game.seating.get('order', [])
+            
+            # Находим первого убитого
+            first_killed_id = None
+            for player_id in seating_order:
+                if request.POST.get(f'first_kill_{player_id}') == 'true':
+                    first_killed_id = player_id
+                    break
+            
+            # Словарь для хранения ролей
+            roles_dict = {}
+            for tp in tournament.players.all():
+                player_id = tp.user.id
+                role = request.POST.get(f'role_{player_id}')
+                if role:
+                    roles_dict[player_id] = role
+            
+            # Обновляем статистику для каждого игрока
+            for position, player_id in enumerate(seating_order, 1):
+                tp = tournament.players.get(user_id=player_id)
+                role = roles_dict.get(player_id)
+                
+                if not role:
+                    messages.error(request, f'Не выбрана роль для игрока {tp.user.player_nickname or tp.user.username}')
+                    return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
+                
+                # Получаем данные из формы
+                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
+                penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+                yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
+                
+                first_kill = (str(player_id) == str(first_killed_id))
+                best_shot = request.POST.get(f'best_shot_{player_id}', '') if first_kill else ''
+                
+                # Основные баллы
+                main_score = 0
+                if (winning_team == 'mafia' and role in ['mafia', 'don']) or \
+                   (winning_team == 'peace' and role in ['civil', 'sheriff']):
+                    main_score = 1
+                
+                # Расчёт бонуса за лучший ход
+                lh_bonus = 0
+                if first_kill and best_shot and role in ['civil', 'sheriff']:
+                    try:
+                        numbers = [int(x) for x in best_shot.split() if x.strip()]
+                        if len(numbers) == 3 and all(1 <= n <= len(seating_order) for n in numbers):
+                            mafia_count = 0
+                            for seat_num in numbers:
+                                target_player_id = seating_order[seat_num - 1]
+                                target_role = roles_dict.get(target_player_id)
+                                if target_role in ['mafia', 'don']:
+                                    mafia_count += 1
+                            
+                            if mafia_count >= 3:
+                                lh_bonus = 0.5
+                            elif mafia_count >= 2:
+                                lh_bonus = 0.3
+                    except (ValueError, TypeError, IndexError):
+                        pass
+                
+                # Обновляем существующую запись
+                try:
+                    stats = PlayerGameStats.objects.get(
+                        game=game,
+                        tournament_player=tp
+                    )
+                    
+                    stats.role = role
+                    stats.place = position
+                    stats.main_score = main_score
+                    stats.bonus_score = manual_bonus + lh_bonus
+                    stats.penalty_score = penalty
+                    stats.yellow_cards = yellow_cards
+                    stats.lh_bonus = lh_bonus
+                    stats.first_shot = best_shot if first_kill else ''
+                    stats.ci = 0.0
+                    stats.save()
+                    
+                except PlayerGameStats.DoesNotExist:
+                    # Если по какой-то причине записи нет, создаём новую
+                    PlayerGameStats.objects.create(
+                        game=game,
+                        tournament_player=tp,
+                        user=tp.user,
+                        role=role,
+                        place=position,
+                        main_score=main_score,
+                        bonus_score=manual_bonus + lh_bonus,
+                        penalty_score=penalty,
+                        yellow_cards=yellow_cards,
+                        lh_bonus=lh_bonus,
+                        first_shot=best_shot if first_kill else '',
+                        ci=0.0,
+                    )
+            
+            # Обновляем статистику турнира
+            for tp in tournament.players.all():
+                update_player_tournament_stats(tp)
+            
+            check_tournament_completion(tournament)
+            
+            messages.success(request, f'Результаты игры {game.round_number} успешно обновлены!')
+            return redirect('tournament_games', tournament_id=tournament.id)
+            
+        except Exception as e:
+            messages.error(request, f'Ошибка при обновлении: {str(e)}')
+            if settings.DEBUG:
+                import traceback
+                traceback.print_exc()
+            return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
+    
+    # GET запрос - передаём существующие данные в шаблон
+    context = {
+        'tournament': tournament,
+        'game': game,
+        'existing_stats': existing_stats,  # ЭТО КЛЮЧЕВОЕ!
+    }
+    return render(request, 'tournament/game_edit.html', context)
+
+
+def update_player_tournament_stats(tournament_player):
+    """Обновляет общую статистику игрока в турнире"""
+    # Получаем все статистики игрока в этом турнире
+    all_stats = PlayerGameStats.objects.filter(
+        tournament_player=tournament_player
+    )
+    
+    # Суммируем все баллы
+    total_main = sum(stat.main_score for stat in all_stats)
+    total_bonus = sum(stat.bonus_score for stat in all_stats)
+    total_ci = sum(stat.ci for stat in all_stats)
+    
+    # Обновляем запись
+    tournament_player.total_main_score = total_main
+    tournament_player.total_bonus_score = total_bonus
+    tournament_player.total_ci = total_ci
+    tournament_player.save()
+    
+    return tournament_player
+
+
+def check_tournament_completion(tournament):
+    """Проверяет, все ли игры турнира завершены"""
+    total_games = tournament.games.count()
+    completed_games = tournament.games.exclude(winning_team__isnull=True).count()
+    
+    if total_games == completed_games and total_games > 0:
+        tournament.status = 'completed'
+        tournament.end_date = timezone.now()
+        tournament.save()
+        
+        # Рассчитываем итоговые места
+        calculate_final_places(tournament)
+        
+        return True
+    return False
+
+
+def calculate_final_places(tournament):
+    """Рассчитывает итоговые места игроков в турнире"""
+    players = TournamentPlayer.objects.filter(
+        tournament=tournament
+    ).order_by('-total_main_score', '-total_bonus_score')
+    
+    current_place = 1
+    for i, player in enumerate(players):
+        if i > 0:
+            prev_player = players[i-1]
+            if (player.total_main_score == prev_player.total_main_score and 
+                player.total_bonus_score == prev_player.total_bonus_score):
+                player.final_place = prev_player.final_place
+            else:
+                player.final_place = i + 1
+        else:
+            player.final_place = 1
+        
+        player.save()

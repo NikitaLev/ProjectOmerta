@@ -576,3 +576,17 @@
         font-size: 0.9rem;
     }
 }
+.yellow-card-select {
+    width: 60px;
+    padding: 6px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.yellow-card-select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}

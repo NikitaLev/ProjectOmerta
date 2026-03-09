@@ -1,6 +1,6 @@
 {% extends 'tournament/base.html' %}
 {% load static %}
-
+{% load custom_filters %} 
 {% block title %}Игры турнира {{ tournament.name }} - Project Omerta{% endblock %}
 
 {% block extra_css %}
@@ -74,19 +74,47 @@
             <div class="game-seating">
                 <h4 class="seating-title">
                     <i class="fas fa-chair"></i>
-                    Рассадка за столом
+                    Рассадка и результаты
                 </h4>
                 <div class="seating-list">
                     {% for player_id in game.seating.order %}
                         {% for tp in tournament.players.all %}
                             {% if tp.user.id == player_id %}
-                                <div class="seat-item">
+                                {% with stats=game_stats|get_item:game.id|get_item:player_id %}
+                                <div class="seat-item {% if stats %}has-stats{% endif %}">
                                     <span class="seat-number">{{ forloop.parentloop.counter }}.</span>
                                     <div class="player-info">
-                                        <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
-                                        <span class="player-username">@{{ tp.user.username }}</span>
+                                        <div class="player-name-row">
+                                            <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                            {% if stats %}
+                                                <span class="player-role-badge" title="{{ stats.role|get_role_name }}">
+                                                    {{ stats.role|get_role_icon|safe }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
                                     </div>
+                                    {% if stats %}
+                                    <div class="player-stats">
+                                        <span class="stat-badge main" title="Основные баллы">
+                                            <i class="fas fa-star"></i> {{ stats.main_score|floatformat:1 }}
+                                        </span>
+                                        {% if stats.bonus_score != 0 %}
+                                        <span class="stat-badge bonus" title="Бонус">
+                                            <i class="fas fa-plus-circle"></i> {{ stats.bonus_score|floatformat:1 }}
+                                        </span>
+                                        {% endif %}
+                                        {% if stats.penalty_score != 0 %}
+                                        <span class="stat-badge penalty" title="Штраф">
+                                            <i class="fas fa-minus-circle"></i> {{ stats.penalty_score|floatformat:1 }}
+                                        </span>
+                                        {% endif %}
+                                        <span class="stat-badge total" title="Итого">
+                                            <i class="fas fa-calculator"></i> {{ stats.total_score|floatformat:1 }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
                                 </div>
+                                {% endwith %}
                             {% endif %}
                         {% endfor %}
                     {% endfor %}
@@ -108,10 +136,7 @@
             
             <div class="game-actions">
                 {% if game.winning_team %}
-                    <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-outline btn-sm">
-                        <i class="fas fa-eye"></i> Просмотреть
-                    </a>
-                    <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-primary btn-sm">
+                    <a href="{% url 'game_edit' tournament.id game.round_number %}" class="btn btn-primary btn-sm">
                         <i class="fas fa-edit"></i> Редактировать
                     </a>
                 {% else %}

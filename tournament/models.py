@@ -165,7 +165,8 @@ class PlayerGameStats(models.Model):
     bonus_score = models.FloatField(default=0.0, verbose_name="Бонусные баллы")
     penalty_score = models.FloatField(default=0.0, verbose_name="Штрафные баллы")
     first_shot = models.CharField(max_length=50, blank=True, verbose_name="Первый отстрел")
-    
+    lh_bonus = models.FloatField(default=0.0, verbose_name="Бонус за лучший ход")
+    yellow_cards = models.IntegerField(default=0, verbose_name="Жёлтые карточки")
     # Вычисляемые поля
     total_score = models.FloatField(default=0.0)  # main + bonus - penalty
     ci = models.FloatField(default=0.0, verbose_name="Ci коэффициент")
@@ -174,7 +175,9 @@ class PlayerGameStats(models.Model):
         unique_together = ['game', 'tournament_player']
     
     def save(self, *args, **kwargs):
+        # Явно пересчитываем total_score перед сохранением
         self.total_score = self.main_score + self.bonus_score - self.penalty_score
+        print(f"Saving: main={self.main_score}, bonus={self.bonus_score}, penalty={self.penalty_score}, total={self.total_score}")  # Для отладки
         super().save(*args, **kwargs)
     
     def __str__(self):
