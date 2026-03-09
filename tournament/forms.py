@@ -55,7 +55,7 @@ class HostApplicationForm(forms.ModelForm):
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'description', 'start_date', 'max_players', 'total_games']
+        fields = ['name', 'description', 'start_date', 'max_players', 'total_games', 'rules']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -83,6 +83,7 @@ class TournamentCreateForm(forms.ModelForm):
                 'max': 20,
                 'value': 10
             }),
+            'rules': forms.Select(attrs={'class': 'form-control'}),
         }
         labels = {
             'name': 'Название турнира',
@@ -90,4 +91,5 @@ class TournamentCreateForm(forms.ModelForm):
             'start_date': 'Дата и время начала',
             'max_players': 'Максимальное количество игроков',
             'total_games': 'Количество игр в турнире',
+            'rules': 'Правила турнира',
         }

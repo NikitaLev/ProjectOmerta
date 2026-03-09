@@ -37,6 +37,18 @@
                     <i class="fas fa-clock"></i>
                     <span>Создан: {{ tournament.created_at|date:"d.m.Y" }}</span>
                 </div>
+                <div class="meta-item">
+                    <i class="fas fa-scroll"></i>
+                    <span>Правила: 
+                        {% if tournament.rules|upper == 'BMF' %}  <!-- Добавлено |upper -->
+                            <span class="rules-badge bmf">БМФ</span>
+                        {% elif tournament.rules|upper == 'KSL' %}  <!-- Добавлено |upper -->
+                            <span class="rules-badge ksl">КСЛ</span>
+                        {% else %}
+                            <span class="rules-badge">{{ tournament.get_rules_display }}</span>
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </div>
         

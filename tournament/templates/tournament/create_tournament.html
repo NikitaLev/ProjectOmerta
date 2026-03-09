@@ -72,7 +72,16 @@
                     {% endif %}
                     <small class="form-help">Сколько игр будет сыграно (по умолчанию 10)</small>
                 </div>
-                
+
+                <div class="form-group">
+                    <label><i class="fas fa-scroll"></i> {{ form.rules.label }}</label>
+                    {{ form.rules }}
+                    {% if form.rules.errors %}
+                        <div class="form-error">{{ form.rules.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Выберите систему правил для подсчёта баллов</small>
+                </div>
+                                
                 
                 <button type="submit" class="auth-btn">
                     <span>Создать турнир</span>

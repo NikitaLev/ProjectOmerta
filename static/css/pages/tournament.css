@@ -1345,3 +1345,38 @@
     justify-content: center;
     padding: 12px;
 }
+
+/* ========== БЭЙДЖИ ПРАВИЛ ========== */
+.rules-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.rules-badge.bmf {
+    background: linear-gradient(135deg, var(--gold), #b8860b);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.rules-badge.ksl {
+    background: linear-gradient(135deg, #6f42c1, #4a1d96);
+    color: white;
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+}
+
+/* Если нужно добавить иконки к правилам */
+.meta-item i.fa-scroll {
+    color: var(--gold);
+}
+
+/* Адаптивность для маленьких экранов */
+@media (max-width: 768px) {
+    .rules-badge {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+}

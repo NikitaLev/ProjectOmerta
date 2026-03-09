@@ -76,6 +76,13 @@ class Tournament(models.Model):
         ('completed', 'Завершен'),
         ('cancelled', 'Отменен'),
     ]
+
+    # Добавляем выбор правил
+    RULES_CHOICES = [
+        ('BMF', 'БМФ'),
+        ('KSL', 'КСЛ'),
+    ]
+
     name = models.CharField(max_length=200, verbose_name="Название турнира")
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tournaments')
     description = models.TextField(blank=True)
@@ -89,6 +96,12 @@ class Tournament(models.Model):
         default=10, 
         verbose_name="Количество игр",
         help_text="Сколько игр будет сыграно в турнире"
+    )
+    rules = models.CharField(
+        max_length=3,
+        choices=RULES_CHOICES,
+        default='BMF',
+        verbose_name='Правила турнира'
     )
     
     # Статистика ведущего по этому турниру
