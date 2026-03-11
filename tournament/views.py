@@ -484,11 +484,18 @@ def game_input(request, tournament_id, game_round):
                 
                 # Получаем данные из формы
                 manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
+
+                manual_penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+
                 penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
-                yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
                 
                 first_kill = (str(player_id) == str(first_killed_id))
                 best_shot = request.POST.get(f'best_shot_{player_id}', '') if first_kill else ''
+
+                yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
+
+                yellow_penalty = calculate_yellow_card_penalty(tp, yellow_cards)
+                total_penalty = penalty + yellow_penalty
                 
                 # Основные баллы
                 main_score = 0
@@ -525,13 +532,16 @@ def game_input(request, tournament_id, game_round):
                     place=position,
                     main_score=main_score,
                     bonus_score=manual_bonus + lh_bonus,
-                    penalty_score=penalty,
                     yellow_cards=yellow_cards,
+                    manual_penalty=manual_penalty,  # Сохраняем ручной штраф отдельно
+                    penalty_score=0,  # Временное значение
                     lh_bonus=lh_bonus,
                     first_shot=best_shot if first_kill else '',
                     ci=0.0,
                 )
+
             
+            recalculate_yellow_card_penalties(tournament)
             # Обновляем статистику турнира
             for tp in tournament.players.all():
                 update_player_tournament_stats(tp)
@@ -573,7 +583,7 @@ def game_edit(request, tournament_id, game_round):
         messages.error(request, 'Нет доступа')
         return redirect('tournament_games', tournament_id=tournament.id)
     
-    # ПОЛУЧАЕМ СУЩЕСТВУЮЩУЮ СТАТИСТИКУ
+    # Получаем существующую статистику
     existing_stats = {}
     player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
     for stat in player_stats:
@@ -609,7 +619,7 @@ def game_edit(request, tournament_id, game_round):
                 if role:
                     roles_dict[player_id] = role
             
-            # Обновляем статистику для каждого игрока
+            # Обрабатываем каждого игрока
             for position, player_id in enumerate(seating_order, 1):
                 tp = tournament.players.get(user_id=player_id)
                 role = roles_dict.get(player_id)
@@ -619,8 +629,8 @@ def game_edit(request, tournament_id, game_round):
                     return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
                 
                 # Получаем данные из формы
-                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
-                penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)  # Ручной бонус
+                manual_penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)  # Ручной штраф
                 yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
                 
                 first_kill = (str(player_id) == str(first_killed_id))
@@ -632,8 +642,8 @@ def game_edit(request, tournament_id, game_round):
                    (winning_team == 'peace' and role in ['civil', 'sheriff']):
                     main_score = 1
                 
-                # Расчёт бонуса за лучший ход
-                lh_bonus = 0
+                # Расчёт нового бонуса за лучший ход
+                new_lh_bonus = 0
                 if first_kill and best_shot and role in ['civil', 'sheriff']:
                     try:
                         numbers = [int(x) for x in best_shot.split() if x.strip()]
@@ -646,48 +656,56 @@ def game_edit(request, tournament_id, game_round):
                                     mafia_count += 1
                             
                             if mafia_count >= 3:
-                                lh_bonus = 0.5
+                                new_lh_bonus = 0.5
                             elif mafia_count >= 2:
-                                lh_bonus = 0.3
+                                new_lh_bonus = 0.3
                     except (ValueError, TypeError, IndexError):
                         pass
                 
-                # Обновляем существующую запись
+                # Общий бонус = ручной бонус + новый бонус за ЛХ
+                total_bonus = manual_bonus + new_lh_bonus
+                
+                # Обновляем или создаём запись
                 try:
                     stats = PlayerGameStats.objects.get(
                         game=game,
                         tournament_player=tp
                     )
                     
+                    # Обновляем поля
                     stats.role = role
                     stats.place = position
                     stats.main_score = main_score
-                    stats.bonus_score = manual_bonus + lh_bonus
-                    stats.penalty_score = penalty
+                    stats.bonus_score = total_bonus
+                    stats.manual_penalty = manual_penalty  # Сохраняем ручной штраф отдельно
                     stats.yellow_cards = yellow_cards
-                    stats.lh_bonus = lh_bonus
+                    stats.lh_bonus = new_lh_bonus
                     stats.first_shot = best_shot if first_kill else ''
                     stats.ci = 0.0
-                    stats.save()
+                    stats.save()  # penalty_score и total_score пока не пересчитываем
                     
                 except PlayerGameStats.DoesNotExist:
-                    # Если по какой-то причине записи нет, создаём новую
-                    PlayerGameStats.objects.create(
+                    # Если записи нет, создаём новую
+                    stats = PlayerGameStats.objects.create(
                         game=game,
                         tournament_player=tp,
                         user=tp.user,
                         role=role,
                         place=position,
                         main_score=main_score,
-                        bonus_score=manual_bonus + lh_bonus,
-                        penalty_score=penalty,
+                        bonus_score=total_bonus,
+                        manual_penalty=manual_penalty,
                         yellow_cards=yellow_cards,
-                        lh_bonus=lh_bonus,
+                        lh_bonus=new_lh_bonus,
                         first_shot=best_shot if first_kill else '',
                         ci=0.0,
+                        penalty_score=0,  # Временное значение
                     )
             
-            # Обновляем статистику турнира
+            # После обновления всех игроков, пересчитываем штрафы за ЖК для всех игр
+            recalculate_yellow_card_penalties(tournament)
+            
+            # Обновляем общую статистику игроков в турнире
             for tp in tournament.players.all():
                 update_player_tournament_stats(tp)
             
@@ -707,10 +725,9 @@ def game_edit(request, tournament_id, game_round):
     context = {
         'tournament': tournament,
         'game': game,
-        'existing_stats': existing_stats,  # ЭТО КЛЮЧЕВОЕ!
+        'existing_stats': existing_stats,
     }
     return render(request, 'tournament/game_edit.html', context)
-
 
 def update_player_tournament_stats(tournament_player):
     """Обновляет общую статистику игрока в турнире"""
@@ -769,3 +786,131 @@ def calculate_final_places(tournament):
             player.final_place = 1
         
         player.save()
+
+def calculate_yellow_card_penalty(tournament_player, current_game_yellow_cards):
+    """
+    Рассчитывает штраф за жёлтые карточки с учётом всех игр турнира
+    
+    Args:
+        tournament_player: объект TournamentPlayer
+        current_game_yellow_cards: количество ЖК в текущей игре (0, 1, или 2)
+    
+    Returns:
+        float: сумма штрафа за ЖК для этой игры
+    """
+    # Получаем все предыдущие игры игрока в этом турнире
+    previous_stats = PlayerGameStats.objects.filter(
+        tournament_player=tournament_player
+    ).exclude(game__winning_team__isnull=True)  # только сыгранные игры
+    
+    # Считаем общее количество ЖК до этой игры
+    total_previous_yellow = sum(stat.yellow_cards for stat in previous_stats)
+    
+    # Если в текущей игре 2 ЖК - это красная карточка, фиксированный штраф 0.5
+    if current_game_yellow_cards >= 2:
+        return 0.5
+    
+    # Если 0 или 1 ЖК - считаем по прогрессии
+    if current_game_yellow_cards == 0:
+        return 0.0
+    else:  # 1 ЖК
+        # Номер этой ЖК в общем зачёте
+        card_number = total_previous_yellow + 1
+        # Штраф = 0.15 * номер карточки
+        return 0.15 * card_number
+    
+def recalculate_all_penalties(tournament, game):
+    """Пересчитывает штрафы за ЖК для всех игр турнира после редактирования"""
+    
+    # Получаем все игры турнира по порядку
+    all_games = tournament.games.filter(winning_team__isnull=False).order_by('round_number')
+    
+    for player in tournament.players.all():
+        # Сбрасываем счётчик ЖК
+        total_yellow = 0
+        
+        # Проходим по всем играм по порядку
+        for g in all_games:
+            try:
+                stats = PlayerGameStats.objects.get(
+                    game=g,
+                    tournament_player=player
+                )
+                
+                # Получаем ЖК в этой игре
+                game_yellow = stats.yellow_cards
+                
+                # Рассчитываем штраф для этой игры
+                if game_yellow >= 2:
+                    # Красная карточка
+                    yellow_penalty = 0.5
+                elif game_yellow == 1:
+                    # Обычная ЖК
+                    total_yellow += 1
+                    yellow_penalty = 0.15 * total_yellow
+                else:
+                    yellow_penalty = 0
+                
+                # Обновляем штраф (оставляем ручной штраф из penalty_score без изменений)
+                # В penalty_score хранится только ручной штраф, не включая ЖК
+                stats.penalty_score = stats.penalty_score  # оставляем как есть
+                stats.save()
+                
+            except PlayerGameStats.DoesNotExist:
+                pass
+
+def recalculate_yellow_card_penalties(tournament):
+    """
+    Пересчитывает штрафы за ЖК для ВСЕХ игр турнира
+    Вызывать после любого изменения ЖК в любой игре
+    """
+    # Получаем все завершённые игры по порядку
+    games = tournament.games.filter(winning_team__isnull=False).order_by('round_number')
+    
+    if not games:
+        return
+    
+    # Для каждого игрока в турнире
+    for tp in tournament.players.all():
+        cumulative_yellow = 0  # Счётчик ЖК на текущий момент
+        
+        # Проходим по всем играм по порядку
+        for game in games:
+            try:
+                stats = PlayerGameStats.objects.get(
+                    game=game,
+                    tournament_player=tp
+                )
+                
+                # Получаем ручной штраф из отдельного поля
+                manual_penalty = stats.manual_penalty
+                
+                # Сколько ЖК в этой игре
+                game_yellow = stats.yellow_cards
+                
+                # Рассчитываем штраф за ЖК для ЭТОЙ игры
+                if game_yellow >= 2:
+                    # Красная карточка - фиксированный штраф
+                    yellow_penalty = 0.5
+                    cumulative_yellow += game_yellow
+                elif game_yellow == 1:
+                    # Обычная ЖК - штраф зависит от номера
+                    cumulative_yellow += 1
+                    yellow_penalty = 0.15 * cumulative_yellow
+                else:
+                    yellow_penalty = 0
+                
+                # Сохраняем отдельно штраф за ЖК
+                stats.yellow_penalty = yellow_penalty
+                
+                # Общий штраф = ручной штраф + штраф за ЖК
+                stats.penalty_score = manual_penalty + yellow_penalty
+                
+                # Сохраняем (total_score пересчитается автоматически)
+                stats.save()
+                
+            except PlayerGameStats.DoesNotExist:
+                # Если статистики нет, значит игра не введена - пропускаем
+                pass
+    
+    return True

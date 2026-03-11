@@ -179,8 +179,8 @@
                                                 data-player="{{ tp.user.id }}"
                                                 value="{{ stats.first_shot|default:'' }}"
                                                 {% if not stats.first_shot %}disabled{% endif %}>
-                                            <!-- Скрытое поле с сохранённым значением lh_bonus -->
                                             <input type="hidden" id="lh_bonus_{{ tp.user.id }}" value="{{ stats.lh_bonus|default:'0' }}">
+                                            <input type="hidden" id="yellow_penalty_{{ tp.user.id }}" value="{{ stats.yellow_penalty|default:'0' }}">
                                         </td>
                                     </tr>
                                     {% endwith %}
@@ -427,9 +427,67 @@ document.addEventListener('DOMContentLoaded', function() {
             updateAllTotals();
         }
     }
+    document.querySelectorAll('.score-btn.plus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const playerId = this.dataset.player;
+            const field = this.dataset.field;
+            const input = document.getElementById(`${field}_${playerId}`);
+            const min = parseFloat(input.dataset.min);
+            const max = parseFloat(input.dataset.max);
+            let value = (parseFloat(input.value) || 0) + 0.1;
+            value = Math.min(value, max);
+            input.value = value.toFixed(2);
+            
+            // Триггерим событие input для обновления суммы
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    document.querySelectorAll('.score-btn.minus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const playerId = this.dataset.player;
+            const field = this.dataset.field;
+            const input = document.getElementById(`${field}_${playerId}`);
+            const min = parseFloat(input.dataset.min);
+            let value = (parseFloat(input.value) || 0) - 0.1;
+            value = Math.max(value, min);
+            input.value = value.toFixed(2);
+            
+            // Триггерим событие input для обновления суммы
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+    function adjustPenaltiesForEdit() {
+        const penaltyInputs = document.querySelectorAll('.penalty-input');
+        
+        penaltyInputs.forEach(input => {
+            const playerId = input.dataset.player;
+            const yellowPenaltyField = document.getElementById(`yellow_penalty_${playerId}`);
+            
+            if (yellowPenaltyField) {
+                let currentPenalty = parseFloat(input.value) || 0;
+                const savedYellowPenalty = parseFloat(yellowPenaltyField.value) || 0;
+                
+                // Вычитаем сохранённый штраф за ЖК
+                const adjustedPenalty = currentPenalty - savedYellowPenalty;
+                input.value = adjustedPenalty.toFixed(2);
+                
+                console.log(`Игрок ${playerId}: скорректирован штраф ${currentPenalty} -> ${adjustedPenalty} (ЖК: ${savedYellowPenalty})`);
+            }
+        });
+        
+        // Обновляем все суммы
+        if (typeof updateAllTotals === 'function') {
+            updateAllTotals();
+        }
+    }
     
     // Вызываем корректировку после загрузки всех данных
-    setTimeout(adjustBonusesForEdit, 100);
+    // Вызываем корректировки
+    setTimeout(() => {
+        adjustBonusesForEdit();
+        adjustPenaltiesForEdit();
+    }, 100);
     
     // ---------- ФИНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ----------
     

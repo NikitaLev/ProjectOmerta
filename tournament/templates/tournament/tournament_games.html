@@ -96,20 +96,20 @@
                                     {% if stats %}
                                     <div class="player-stats">
                                         <span class="stat-badge main" title="Основные баллы">
-                                            <i class="fas fa-star"></i> {{ stats.main_score|floatformat:1 }}
+                                            <i class="fas fa-star"></i> {{ stats.main_score|floatformat:2 }}
                                         </span>
                                         {% if stats.bonus_score != 0 %}
                                         <span class="stat-badge bonus" title="Бонус">
-                                            <i class="fas fa-plus-circle"></i> {{ stats.bonus_score|floatformat:1 }}
+                                            <i class="fas fa-plus-circle"></i> {{ stats.bonus_score|floatformat:2 }}
                                         </span>
                                         {% endif %}
                                         {% if stats.penalty_score != 0 %}
                                         <span class="stat-badge penalty" title="Штраф">
-                                            <i class="fas fa-minus-circle"></i> {{ stats.penalty_score|floatformat:1 }}
+                                            <i class="fas fa-minus-circle"></i> {{ stats.penalty_score|floatformat:2 }}
                                         </span>
                                         {% endif %}
                                         <span class="stat-badge total" title="Итого">
-                                            <i class="fas fa-calculator"></i> {{ stats.total_score|floatformat:1 }}
+                                            <i class="fas fa-calculator"></i> {{ stats.total_score|floatformat:2 }}
                                         </span>
                                     </div>
                                     {% endif %}
