@@ -1,0 +1,565 @@
+.game-view-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* Шапка страницы */
+.game-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title i {
+    color: var(--gold);
+    font-size: 2rem;
+}
+
+.game-badge {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.tournament-name {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.game-number {
+    font-size: 1.1rem;
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.tournament-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.tournament-status.status-active {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border: 1px solid #4ade80;
+}
+
+.tournament-status.status-completed {
+    background: rgba(156, 163, 175, 0.1);
+    color: #9ca3af;
+    border: 1px solid #9ca3af;
+}
+
+.header-right {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.btn-primary {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border: 1px solid var(--gold);
+}
+
+.btn-primary:hover {
+    background: transparent;
+    color: var(--gold);
+}
+
+/* Карточка с информацией об игре */
+.game-info-card {
+    background: linear-gradient(145deg, var(--bg-card), #1E1E1E);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: center;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.winner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 30px;
+}
+
+.winner-badge.mafia {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.winner-badge.peace {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+}
+
+.rules-badge {
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+}
+
+.rules-badge.bmf {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+}
+
+.rules-badge.ksl {
+    background: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+    border: 1px solid #6f42c1;
+}
+
+/* Таблица результатов */
+.results-table-container {
+    background: linear-gradient(145deg, var(--bg-card), #1E1E1E);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-title i {
+    color: var(--gold);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.results-table th {
+    text-align: left;
+    padding: 12px 8px;
+    color: var(--gold);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.results-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.results-table tbody tr:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.results-table tbody tr.mvp-row {
+    background: rgba(212, 175, 55, 0.1);
+    border-left: 4px solid var(--gold);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-nickname {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.player-role-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.player-role-badge i,
+.player-role-badge .mdi,
+.player-role-badge .ph-fill {
+    font-size: 1rem;
+}
+
+.role-name {
+    padding: 4px 8px;
+    border-radius: 20px;
+    background: var(--bg-secondary);
+    font-size: 0.85rem;
+}
+
+.role-name.none {
+    color: var(--text-muted);
+}
+
+.score-cell {
+    font-weight: 600;
+}
+
+.score-cell.main {
+    color: #ffd700;
+}
+
+.score-cell.bonus {
+    color: #4ade80;
+}
+
+.score-cell.penalty {
+    color: #f87171;
+}
+
+.score-cell.total {
+    color: var(--gold);
+    font-weight: 700;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.card-badge.yellow {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+}
+
+.card-badge.red {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.card-badge.none {
+    color: var(--text-muted);
+}
+
+.check-yes {
+    color: #4ade80;
+}
+
+.check-yes i {
+    font-size: 0.9rem;
+}
+
+.check-no {
+    color: var(--text-muted);
+}
+
+.best-shot-value {
+    font-family: monospace;
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Блоки статистики */
+.game-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.stat-block {
+    background: linear-gradient(145deg, var(--bg-card), #1E1E1E);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.block-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.block-title i {
+    color: var(--gold);
+}
+
+.stat-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.mvp-value {
+    color: var(--gold);
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .game-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .game-view-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .game-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-table {
+        font-size: 0.8rem;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.8rem;
+    }
+    
+    .game-badge {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .header-right {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Детальная статистика */
+.player-stat-item {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.player-stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.player-stat-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.player-stat-name .player-nickname {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.player-stat-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.detail-label {
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    font-weight: 600;
+}
+
+.detail-value.best-shot {
+    font-family: monospace;
+    background: var(--bg-card);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--gold);
+}
+
+.detail-value.black-count {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.detail-value.lh-bonus {
+    color: #4ade80;
+}
+
+.detail-value.penalty-value {
+    color: #f87171;
+}
+
+.empty-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+    justify-content: center;
+}
+
+.empty-stat i {
+    font-size: 1.2rem;
+    opacity: 0.5;
+}
+
+.card-badge.yellow, 
+.card-badge.red {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.card-badge.yellow {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+}
+
+.card-badge.red {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}

@@ -1,0 +1,298 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Просмотр игры {{ game.round_number }} - {{ tournament.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/game-view.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="game-view-page">
+    <!-- Шапка страницы -->
+    <div class="game-view-header">
+        <div class="header-left">
+            <h1 class="page-title">
+                <i class="fas fa-eye"></i>
+                Просмотр результатов
+            </h1>
+            <div class="game-badge">
+                <span class="tournament-name">{{ tournament.name }}</span>
+                <span class="game-number">Игра {{ game.round_number }} / {{ tournament.total_games }}</span>
+                <span class="tournament-status status-{{ tournament.status }}">{{ tournament.get_status_display }}</span>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i>
+                Вернуться к играм
+            </a>
+            {% if user == tournament.host %}
+            <a href="{% url 'game_edit' tournament.id game.round_number %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Редактировать
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Основная информация об игре -->
+    <div class="game-info-card">
+        <div class="info-row">
+            <div class="info-item">
+                <span class="info-label">Дата игры:</span>
+                <span class="info-value">{{ game.played_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Победитель:</span>
+                <span class="info-value winner-badge {% if game.winning_team == 'mafia' %}mafia{% else %}peace{% endif %}">
+                    {% if game.winning_team == 'mafia' %}
+                        <i class="fas fa-skull"></i> Мафия
+                    {% else %}
+                        <i class="fas fa-users"></i> Мирные
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Правила:</span>
+                <span class="info-value rules-badge {% if tournament.rules == 'BMF' %}bmf{% else %}ksl{% endif %}">
+                    {{ tournament.get_rules_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица результатов -->
+    <div class="results-table-container">
+        <h2 class="section-title">
+            <i class="fas fa-users"></i>
+            Результаты игры
+        </h2>
+        
+        <div class="table-wrapper">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Игрок</th>
+                        <th>Роль</th>
+                        <th>Основные</th>
+                        <th>Бонус</th>
+                        <th>Штраф</th>
+                        <th>ЖК</th>
+                        <th>Итого</th>
+                        <th>Первый убитый</th>
+                        <th>Лучший ход</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player_id in game.seating.order %}
+                        {% for tp in tournament.players.all %}
+                            {% if tp.user.id == player_id %}
+                                {% with stats=existing_stats|get_item:player_id %}
+                                <tr class="player-row {% if stats.total_score == max_total and max_total > 0 %}mvp-row{% endif %}">
+                                    <td class="seat-cell">{{ forloop.parentloop.counter }}</td>
+                                    <td class="player-cell">
+                                        <div class="player-info">
+                                            <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                            {% if stats %}
+                                                <span class="player-role-badge" title="{{ stats.role|get_role_name }}">
+                                                    {{ stats.role|get_role_icon|safe }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="role-cell">
+                                        {% if stats %}
+                                            <span class="role-name">{{ stats.role|get_role_name }}</span>
+                                        {% else %}
+                                            <span class="role-name none">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="score-cell main">{{ stats.main_score|default:"0"|floatformat:2 }}</td>
+                                    <td class="score-cell bonus">{{ stats.bonus_score|default:"0"|floatformat:2 }}</td>
+                                    <td class="score-cell penalty">{{ stats.penalty_score|default:"0"|floatformat:2 }}</td>
+                                    <td class="cards-cell">
+                                        {% if stats %}
+                                            {% if stats.yellow_cards == 1 %}
+                                                <span class="card-badge yellow" title="Жёлтая карточка">ЖК</span>
+                                            {% elif stats.yellow_cards >= 2 %}
+                                                <span class="card-badge red" title="Красная карточка">КК</span>
+                                            {% else %}
+                                                <span class="card-badge none">—</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="card-badge none">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="score-cell total">{{ stats.total_score|default:"0"|floatformat:2 }}</td>
+                                    <td class="first-kill-cell">
+                                        {% if stats and stats.first_shot %}
+                                            <span class="check-yes">
+                                                <i class="fas fa-check-circle"></i> Да
+                                            </span>
+                                        {% else %}
+                                            <span class="check-no">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="best-shot-cell">
+                                        {% if stats and stats.first_shot %}
+                                            <span class="best-shot-value">{{ stats.first_shot }}</span>
+                                        {% else %}
+                                            <span class="check-no">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Блоки статистики -->
+<div class="game-stats-grid">
+    <!-- Блок первого убитого и лучшего хода -->
+    <div class="stat-block">
+        <h3 class="block-title">
+            <i class="fas fa-crosshairs"></i>
+            Первый убитый
+        </h3>
+        <div class="stat-items">
+            {% for player_id in game.seating.order %}
+                {% for tp in tournament.players.all %}
+                    {% if tp.user.id == player_id %}
+                        {% with stats=existing_stats|get_item:player_id %}
+                            {% if stats and stats.first_shot %}
+                            <div class="player-stat-item">
+                                <div class="player-stat-name">
+                                    <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                    <span class="player-role-badge" title="{{ stats.role|get_role_name }}">
+                                        {{ stats.role|get_role_icon|safe }}
+                                    </span>
+                                </div>
+                                <div class="player-stat-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Лучший ход:</span>
+                                        <span class="detail-value best-shot">{{ stats.first_shot }}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Чёрных игроков:</span>
+                                        <span class="detail-value black-count">{{ stats.lh_black_count|default:"0" }}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Бонус за ЛХ:</span>
+                                        <span class="detail-value lh-bonus">+{{ stats.lh_bonus|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            
+            {% if not first_killed_name %}
+            <div class="empty-stat">
+                <i class="fas fa-info-circle"></i>
+                <span>В этой игре не было первого убитого</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Блок жёлтых и красных карточек -->
+    <div class="stat-block">
+        <h3 class="block-title">
+            <i class="fas fa-square"></i>
+            Карточки в игре
+        </h3>
+        <div class="stat-items">
+            {% for player_id in game.seating.order %}
+                {% for tp in tournament.players.all %}
+                    {% if tp.user.id == player_id %}
+                        {% with stats=existing_stats|get_item:player_id %}
+                            {% if stats and stats.yellow_cards > 0 %}
+                            <div class="player-stat-item">
+                                <div class="player-stat-name">
+                                    <span class="player-nickname">{{ tp.user.player_nickname|default:tp.user.username }}</span>
+                                    <span class="player-role-badge" title="{{ stats.role|get_role_name }}">
+                                        {{ stats.role|get_role_icon|safe }}
+                                    </span>
+                                </div>
+                                <div class="player-stat-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Карточка:</span>
+                                        <span class="detail-value">
+                                            {% if stats.yellow_cards == 1 %}
+                                                <span class="card-badge yellow">Жёлтая</span>
+                                            {% elif stats.yellow_cards >= 2 %}
+                                                <span class="card-badge red">Красная</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">№ карточки в турнире:</span>
+                                        <span class="detail-value">{{ stats.card_number_in_tournament|default:"1" }}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Штраф:</span>
+                                        <span class="detail-value penalty-value">-{{ stats.yellow_penalty|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            
+            {% if total_yellow == 0 and total_red == 0 %}
+            <div class="empty-stat">
+                <i class="fas fa-info-circle"></i>
+                <span>В этой игре нет карточек</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Блок краткой статистики -->
+    <div class="stat-block">
+        <h3 class="block-title">
+            <i class="fas fa-chart-bar"></i>
+            Статистика игры
+        </h3>
+        <div class="stat-items">
+            <div class="stat-item">
+                <span class="stat-label">MVP игры:</span>
+                <span class="stat-value mvp-value">
+                    {% for player_id in game.seating.order %}
+                        {% for tp in tournament.players.all %}
+                            {% if tp.user.id == player_id %}
+                                {% with stats=existing_stats|get_item:player_id %}
+                                    {% if stats.total_score == max_total and max_total > 0 %}
+                                        {{ tp.user.player_nickname|default:tp.user.username }}
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Жёлтые карточки:</span>
+                <span class="stat-value">{{ total_yellow }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Красные карточки:</span>
+                <span class="stat-value">{{ total_red }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

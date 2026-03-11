@@ -923,19 +923,90 @@ def recalculate_yellow_card_penalties(tournament):
 
 @login_required
 def game_view(request, tournament_id, game_round):
-    """Страница просмотра результатов игры (без редактирования)"""
+    """Страница просмотра результатов игры"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
     
     # Получаем статистику
     existing_stats = {}
     player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
+    
+    max_total = 0
+    total_yellow = 0
+    total_red = 0
+    first_killed_name = None
+    total_score_sum = 0
+    
+    # Для подсчёта номера карточки в турнире
     for stat in player_stats:
         existing_stats[stat.user_id] = stat
+        if stat.total_score > max_total:
+            max_total = stat.total_score
+        
+        if stat.yellow_cards == 1:
+            total_yellow += 1
+        elif stat.yellow_cards >= 2:
+            total_red += 1
+        
+        if stat.first_shot:
+            first_killed_name = stat.user.player_nickname or stat.user.username
+            
+            # Подсчёт чёрных игроков в лучшем ходе
+            if stat.first_shot and stat.role in ['civil', 'sheriff']:
+                try:
+                    numbers = [int(x) for x in stat.first_shot.split() if x.strip()]
+                    seating_order = game.seating.get('order', [])
+                    
+                    black_count = 0
+                    for seat_num in numbers:
+                        if 1 <= seat_num <= len(seating_order):
+                            target_player_id = seating_order[seat_num - 1]
+                            target_stats = existing_stats.get(target_player_id)
+                            if target_stats and target_stats.role in ['mafia', 'don']:
+                                black_count += 1
+                    
+                    stat.lh_black_count = black_count
+                except (ValueError, TypeError, IndexError):
+                    stat.lh_black_count = 0
+        
+        total_score_sum += stat.total_score
+    
+    # Подсчёт номера карточки в турнире для каждого игрока
+    for player_id, stat in existing_stats.items():
+        if stat.yellow_cards > 0:
+            # Получаем все игры турнира по порядку
+            all_games = tournament.games.filter(
+                winning_team__isnull=False,
+                round_number__lte=game.round_number
+            ).order_by('round_number')
+            
+            card_number = 0
+            for g in all_games:
+                try:
+                    g_stats = PlayerGameStats.objects.get(
+                        game=g,
+                        tournament_player=stat.tournament_player
+                    )
+                    if g_stats.yellow_cards > 0:
+                        card_number += g_stats.yellow_cards
+                        if g.id == game.id:
+                            break
+                except PlayerGameStats.DoesNotExist:
+                    pass
+            
+            stat.card_number_in_tournament = card_number
+    
+    avg_score = total_score_sum / len(player_stats) if player_stats else 0
     
     context = {
         'tournament': tournament,
         'game': game,
         'existing_stats': existing_stats,
+        'max_total': max_total,
+        'total_yellow': total_yellow,
+        'total_red': total_red,
+        'first_killed_name': first_killed_name,
+        'avg_score': avg_score,
+        'total_score_sum': total_score_sum,
     }
     return render(request, 'tournament/game_view.html', context)
