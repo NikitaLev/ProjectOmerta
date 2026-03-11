@@ -415,7 +415,12 @@ def tournament_games(request, tournament_id):
             if stat.game_id not in game_stats:
                 game_stats[stat.game_id] = {}
             game_stats[stat.game_id][stat.user_id] = stat
-    
+    max_totals = {}
+    for game in games:
+        if game.id in game_stats:
+            totals = [stat.total_score for stat in game_stats[game.id].values()]
+            if totals:
+                max_totals[game.id] = max(totals)
     context = {
         'tournament': tournament,
         'games': games,
@@ -423,6 +428,7 @@ def tournament_games(request, tournament_id):
         'pending_games': pending_games,
         'game_stats': game_stats,  # Добавляем статистику
         'is_host': request.user == tournament.host,
+        'max_totals': max_totals,
     }
     
     return render(request, 'tournament/tournament_games.html', context)
@@ -914,3 +920,22 @@ def recalculate_yellow_card_penalties(tournament):
                 pass
     
     return True
+
+@login_required
+def game_view(request, tournament_id, game_round):
+    """Страница просмотра результатов игры (без редактирования)"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
+    
+    # Получаем статистику
+    existing_stats = {}
+    player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
+    for stat in player_stats:
+        existing_stats[stat.user_id] = stat
+    
+    context = {
+        'tournament': tournament,
+        'game': game,
+        'existing_stats': existing_stats,
+    }
+    return render(request, 'tournament/game_view.html', context)

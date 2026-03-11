@@ -160,10 +160,10 @@
     border-color: var(--gold);
 }
 
-/* Сетка игр */
+/* Сетка игр - 2 колонки */
 .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 25px;
     margin-top: 20px;
 }
@@ -248,6 +248,7 @@
 .seating-title {
     display: flex;
     align-items: center;
+    justify-content: space-between; /* Раздвигает заголовок и победителя */
     gap: 8px;
     color: var(--text-secondary);
     font-size: 1rem;
@@ -255,9 +256,37 @@
     padding-bottom: 8px;
     border-bottom: 1px dashed var(--border-color);
 }
+.game-result-mini {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    margin-left: auto; /* Дополнительно прижимает вправо */
+}
+
+.result-team-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.result-team-mini.mafia {
+    color: #6b21a5;
+}
+
+.result-team-mini.peace {
+    color: #ef4444;
+}
+
+.result-team-mini i {
+    font-size: 0.8rem;
+}
 
 .seating-title i {
-    color: var(--gold);
+    color: #A0A0A0;
 }
 
 .seating-list {
@@ -267,14 +296,17 @@
 }
 
 .seat-item {
+    position: relative;
     display: flex;
+    flex-wrap: wrap;  /* Разрешаем перенос для баллов */
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 8px 12px;
     background: var(--bg-secondary);
     border-radius: 12px;
     border: 1px solid var(--border-color);
     transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 .seat-item:hover {
@@ -294,70 +326,105 @@
     font-weight: 600;
     color: var(--gold);
     font-size: 0.9rem;
+    position: relative;
+    z-index: 10; /* Номер всегда поверх полоски MVP */
+}
+
+/* Убираем точку после номера */
+.seat-number::after {
+    content: none;
 }
 
 .player-info {
     flex: 1;
+    min-width: 120px;  /* Минимальная ширина для ника */
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.player-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .player-nickname {
     font-weight: 500;
     color: var(--text-primary);
+    font-size: 1rem;
+    position: relative;
+    z-index: 2;
 }
 
-.player-username {
+
+/* MVP подсветка - вертикальная плашка слева */
+.seat-item.mvp {
+    position: relative;
+    border: 1px solid var(--gold);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+}
+
+.seat-item.mvp::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background: linear-gradient(to bottom, var(--gold), #b8860b);
+    box-shadow: 0 0 30px var(--gold);
+    border-radius: 2px 0 0 2px;
+    z-index: 5;
+}
+.seat-item.mvp .player-nickname::after {
+    content: '--MVP--';
     font-size: 0.8rem;
-    color: var(--text-muted);
+    margin-left: 10px;
+    color: var(--gold);
+    opacity: 0.9;
 }
 
-/* Результаты */
-.game-result {
-    padding: 15px 20px;
-    background: rgba(74, 222, 128, 0.05);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.result-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.result-team {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 12px;
-    border-radius: 30px;
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.result-team.mafia {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.result-team.peace {
-    background: rgba(74, 222, 128, 0.1);
-    color: #4ade80;
-}
 
 /* Действия */
 .game-actions {
     padding: 15px 20px;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
 }
 
 .btn-sm {
-    width: 100%;
+    flex: 1;
     padding: 10px;
     font-size: 0.95rem;
     justify-content: center;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.btn-sm.btn-primary {
+    background: var(--gold);
+    color: var(--bg-primary);
+    border: 1px solid var(--gold);
+}
+
+.btn-sm.btn-primary:hover {
+    background: transparent;
+    color: var(--gold);
+}
+
+.btn-sm.btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-sm.btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
 }
 
 /* Пустое состояние */
@@ -389,6 +456,12 @@
 }
 
 /* Адаптивность */
+@media (max-width: 992px) {
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .games-header {
         flex-direction: column;
@@ -422,6 +495,12 @@
     .games-grid {
         grid-template-columns: 1fr;
     }
+    
+    .seat-item.mvp::before {
+        left: -2px;
+        font-size: 0.6rem;
+        padding: 3px 4px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -437,100 +516,121 @@
         min-width: 100%;
     }
     
-    .seat-item {
-        flex-wrap: wrap;
+    .game-actions {
+        flex-direction: column;
     }
     
-    .player-info {
+    .btn-sm {
         width: 100%;
     }
 }
 
-/* Стили для отображения ролей и статистики */
-.player-name-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* ОДНА ДИАГОНАЛЬНАЯ ПОЛОСКА НА НИКНЕЙМЕ */
+.seat-item.has-yellow .player-nickname {
+    position: relative;
+    display: inline-block;
 }
 
-.player-role-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+.seat-item.has-yellow .player-nickname::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -100px;
+    right: 50px;
+    bottom: -120px;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 215, 0, 0.5) 40%,
+        rgba(255, 215, 0, 0.5) 60%,
+        transparent 60%,
+        transparent 100%
+    );
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
 }
 
-.player-role-badge i,
-.player-role-badge .mdi,
-.player-role-badge .ph-fill {
-    font-size: 1.1rem;
+.seat-item.has-red .player-nickname {
+    position: relative;
+    display: inline-block;
 }
 
-/* Стили для статистики игрока */
+.seat-item.has-red .player-nickname::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -100px;
+    right: 50px;
+    bottom: -120px;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 0, 0, 0.5) 40%,
+        rgba(239, 68, 68, 0.5) 60%,
+        transparent 60%,
+        transparent 100%
+    );
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ЕДИНЫЙ БЛОК БАЛЛОВ - ВСЁ В ОДНУ СТРОКУ */
 .player-stats {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px dashed var(--border-color);
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .stat-badge {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 3px 8px;
-    border-radius: 30px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
+    min-width: 32px;
+    height: 24px;
+    white-space: nowrap;
 }
 
 .stat-badge i {
     font-size: 0.7rem;
+    margin-right: 2px;
 }
 
 .stat-badge.main {
     color: #ffd700;
-    border-color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.3);
 }
 
 .stat-badge.bonus {
     color: #4ade80;
-    border-color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
 }
 
 .stat-badge.penalty {
     color: #f87171;
-    border-color: #f87171;
+    border-color: rgba(248, 113, 113, 0.3);
 }
 
 .stat-badge.total {
-    color: #60a5fa;
-    border-color: #60a5fa;
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), transparent);
+    color: var(--gold);
+    border-color: rgba(212, 175, 55, 0.3);
+    background: rgba(212, 175, 55, 0.1);
+    min-width: 40px;
 }
 
-/* Подсветка для строк с данными */
-.seat-item.has-stats {
-    background: rgba(212, 175, 55, 0.05);
-    border-left: 3px solid var(--gold);
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .player-stats {
-        gap: 4px;
-    }
-    
-    .stat-badge {
-        padding: 2px 6px;
-        font-size: 0.7rem;
-    }
+/* Убираем отдельный контейнер для итога */
+.total-score-container {
+    display: contents;  /* Игнорируем этот div */
 }
