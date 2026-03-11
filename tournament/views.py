@@ -548,6 +548,7 @@ def game_input(request, tournament_id, game_round):
 
             
             recalculate_yellow_card_penalties(tournament)
+            recalculate_ci(tournament)
             # Обновляем статистику турнира
             for tp in tournament.players.all():
                 update_player_tournament_stats(tp)
@@ -710,7 +711,7 @@ def game_edit(request, tournament_id, game_round):
             
             # После обновления всех игроков, пересчитываем штрафы за ЖК для всех игр
             recalculate_yellow_card_penalties(tournament)
-            
+            recalculate_ci(tournament)
             # Обновляем общую статистику игроков в турнире
             for tp in tournament.players.all():
                 update_player_tournament_stats(tp)
@@ -1010,3 +1011,77 @@ def game_view(request, tournament_id, game_round):
         'total_score_sum': total_score_sum,
     }
     return render(request, 'tournament/game_view.html', context)
+
+def recalculate_ci(tournament):
+    """
+    Пересчитывает компенсационные баллы Ci для всех игроков турнира.
+    Вызывать после каждого изменения результатов игр.
+    """
+    # Получаем всех игроков турнира
+    tournament_players = TournamentPlayer.objects.filter(tournament=tournament)
+    
+    for tp in tournament_players:
+        # Все завершённые игры игрока в этом турнире
+        all_stats = PlayerGameStats.objects.filter(
+            tournament_player=tp,
+            game__winning_team__isnull=False
+        ).order_by('game__round_number')
+        
+        N = all_stats.count()
+        if N == 0:
+            continue
+        
+        # Подсчёт i: количество первых убийств в роли мирного или шерифа
+        first_kill_stats = all_stats.filter(
+            role__in=['civil', 'sheriff'],
+            first_shot__isnull=False
+        ).exclude(first_shot='')
+        i = first_kill_stats.count()
+        
+        # Вычисление B (40% от N, округлённое до целого, но не менее 4)
+        B = round(0.4 * N)
+        if B < 4:
+            B = 4
+        
+        # Вычисление глобального Ci
+        if i <= B and B > 0:
+            Ci_global = (i / B) * 0.4
+        else:
+            Ci_global = 0.4
+        
+        # Для каждой игры, где игрок был первым убитым, вычисляем индивидуальный ci
+        for stat in first_kill_stats:
+            # Проверяем наличие чёрных (мафия/дон) в лучшем ходе
+            best_shot = stat.first_shot
+            has_black = False
+            if best_shot:
+                try:
+                    numbers = [int(x) for x in best_shot.split() if x.strip()]
+                    seating_order = stat.game.seating.get('order', [])
+                    for num in numbers:
+                        if 1 <= num <= len(seating_order):
+                            target_player_id = seating_order[num - 1]
+                            # Ищем статистику цели в этой игре
+                            target_stat = PlayerGameStats.objects.filter(
+                                game=stat.game,
+                                user_id=target_player_id
+                            ).first()
+                            if target_stat and target_stat.role in ['mafia', 'don']:
+                                has_black = True
+                                break
+                except (ValueError, TypeError, IndexError):
+                    pass
+            
+            # Определяем коэффициент по правилам 8.2
+            winning_team = stat.game.winning_team
+            if winning_team == 'mafia':  # красная команда проиграла
+                coef = 1.0 if has_black else 0.5
+            else:  # красная команда выиграла
+                coef = 0.5 if has_black else 0.25
+            
+            # Вычисляем ci для этой игры
+            ci_value = round(Ci_global * coef, 2)
+            
+            # Обновляем поле ci
+            stat.ci = ci_value
+            stat.save()  # save автоматически пересчитает total_score

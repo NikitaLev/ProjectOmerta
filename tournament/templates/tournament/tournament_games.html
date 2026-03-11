@@ -141,6 +141,13 @@
                                             </span>
                                             {% endif %}
                                             
+                                            <!-- Новый блок для Ci -->
+                                            {% if stats.ci > 0 %}
+                                            <span class="stat-badge ci" title="Компенсационные баллы">
+                                                <i class="fas fa-shield-alt"></i> {{ stats.ci|floatformat:2 }}
+                                            </span>
+                                            {% endif %}
+                                            
                                             <span class="stat-badge total" title="Итого">
                                                 <i class="fas fa-calculator"></i> {{ stats.total_score|floatformat:2 }}
                                             </span>

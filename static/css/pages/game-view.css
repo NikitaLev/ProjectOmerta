@@ -563,3 +563,52 @@
     background: rgba(239, 68, 68, 0.2);
     color: #ef4444;
 }
+
+.score-cell.ci {
+    color: #a78bfa;  /* Фиолетовый цвет для компенсационных баллов */
+    font-weight: 600;
+}
+
+.ci-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.ci-badge.none {
+    color: var(--text-muted);
+}
+.results-table th,
+.results-table td {
+    padding: 10px 6px;  /* Немного уменьшаем отступы из-за новой колонки */
+}
+
+/* Стили для компенсационных баллов */
+.score-cell.ci {
+    color: #a78bfa;
+    font-weight: 600;
+}
+
+.ci-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.ci-badge.none {
+    color: var(--text-muted);
+}
+
+/* Адаптивность для таблицы */
+@media (max-width: 1200px) {
+    .results-table {
+        font-size: 0.8rem;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px 3px;
+    }
+}

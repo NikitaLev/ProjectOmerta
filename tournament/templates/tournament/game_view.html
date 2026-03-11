@@ -81,6 +81,7 @@
                         <th>Основные</th>
                         <th>Бонус</th>
                         <th>Штраф</th>
+                        <th>Ci</th>  <!-- Новая колонка -->
                         <th>ЖК</th>
                         <th>Итого</th>
                         <th>Первый убитый</th>
@@ -114,6 +115,13 @@
                                     <td class="score-cell main">{{ stats.main_score|default:"0"|floatformat:2 }}</td>
                                     <td class="score-cell bonus">{{ stats.bonus_score|default:"0"|floatformat:2 }}</td>
                                     <td class="score-cell penalty">{{ stats.penalty_score|default:"0"|floatformat:2 }}</td>
+                                    <td class="score-cell ci">  <!-- Новая ячейка -->
+                                        {% if stats and stats.ci > 0 %}
+                                            <span class="ci-badge" title="Компенсационные баллы">+{{ stats.ci|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="ci-badge none">—</span>
+                                        {% endif %}
+                                    </td>
                                     <td class="cards-cell">
                                         {% if stats %}
                                             {% if stats.yellow_cards == 1 %}

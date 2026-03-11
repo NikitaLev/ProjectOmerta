@@ -180,7 +180,10 @@ class PlayerGameStats(models.Model):
     
     def save(self, *args, **kwargs):
         # Явно пересчитываем total_score перед сохранением
-        self.total_score = self.main_score + self.bonus_score - self.penalty_score
+        self.total_score = round(
+            self.main_score + self.bonus_score + self.ci - self.penalty_score,
+            2
+        )
         super().save(*args, **kwargs)
     
     def __str__(self):
