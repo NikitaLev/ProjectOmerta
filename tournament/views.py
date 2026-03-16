@@ -15,6 +15,7 @@ from django.contrib.auth.hashers import make_password
 import secrets
 from .utils import generate_seating
 from django.conf import settings
+from django.db import models
 
 @login_required
 def profile(request):
@@ -99,12 +100,36 @@ def tournament_detail(request, tournament_id):
     games = tournament.games.all()
     completed_games = games.exclude(winning_team__isnull=True).count()
     pending_games = games.filter(winning_team__isnull=True).count()
+
+    player_totals = {}
+    for tp in tournament.players.all():
+        total_score = PlayerGameStats.objects.filter(
+            tournament_player=tp
+        ).aggregate(total=models.Sum('total_score'))['total'] or 0
+        player_totals[tp.user.id] = round(total_score, 2)
+        
+    game_stats = {}
+    for game in games:
+        stats_for_game = {}
+        player_stats = PlayerGameStats.objects.filter(game=game).select_related('user')
+        for stat in player_stats:
+            stats_for_game[stat.user_id] = {
+                'total_score': stat.total_score,
+                'role': stat.role,
+                'main_score': stat.main_score,
+                'bonus_score': stat.bonus_score,
+                'penalty_score': stat.penalty_score,
+                'ci': stat.ci,
+            }
+        game_stats[game.id] = stats_for_game
     
     context = {
         'tournament': tournament,
         'can_edit': can_edit,
         'completed_games': completed_games,
         'pending_games': pending_games,
+        'player_totals': player_totals,  # Добавляем суммы баллов
+        'game_stats': game_stats,  # Добавляем статистику по играм
     }
     return render(request, 'tournament/tournament_detail.html', context)
 
