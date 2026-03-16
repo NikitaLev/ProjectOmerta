@@ -1,6 +1,7 @@
 {% extends 'tournament/base.html' %}
 {% load static %}
 
+{% load custom_filters %}
 {% block title %}Профиль - {{ user.username }} - Project Omerta{% endblock %}
 
 {% block extra_css %}
@@ -92,6 +93,84 @@
                         <div class="stat-label">Рейтинг</div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Участие в турнирах -->
+            <div class="profile-tournaments">
+                <h2>
+                    <i class="fas fa-trophy"></i> 
+                    Мои турниры
+                    <span class="badge">{{ tournaments_stats.total }}</span>
+                </h2>
+                
+                {% if participated_tournaments %}
+                <div class="tournaments-list">
+                    {% for tournament in participated_tournaments %}
+                    <div class="tournament-item">
+                        <div class="tournament-info">
+                            <h3 class="tournament-name">
+                                <a href="{% url 'tournament_public' tournament.id %}">
+                                    {{ tournament.name }}
+                                </a>
+                            </h3>
+                            <div class="tournament-meta">
+                                <span class="tournament-status status-{{ tournament.status }}">
+                                    {{ tournament.get_status_display }}
+                                </span>
+                                <span class="tournament-date">
+                                    <i class="fas fa-calendar-alt"></i> {{ tournament.start_date|date:"d.m.Y" }}
+                                </span>
+                                <span class="tournament-host">
+                                    <i class="fas fa-user"></i> {{ tournament.host.username }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="tournament-stats">
+                            {% with stats=tournament_stats|get_item:tournament.id %}
+                            <div class="stat-mini">
+                                <span class="stat-label">Игр:</span>
+                                <span class="stat-value">{{ tournament.games.count }}</span>
+                            </div>
+                            <div class="stat-mini">
+                                <span class="stat-label">Моих очков:</span>
+                                <span class="stat-value">{{ stats.total_score|default:"0"|floatformat:1 }}</span>
+                            </div>
+                            {% endwith %}
+                        </div>
+                        
+                        <div class="tournament-actions">
+                            <a href="{% url 'tournament_public' tournament.id %}" class="btn-icon" title="Просмотреть">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if tournament.games.exists %}
+                            <a href="{% url 'tournament_games' tournament.id %}" class="btn-icon" title="Игры">
+                                <i class="fas fa-gamepad"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if tournaments_stats.total > 5 %}
+                    <div class="view-all">
+                        <a href="{% url 'my_tournaments' %}" class="btn btn-outline btn-sm">
+                            Все турниры <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state small">
+                    <i class="fas fa-trophy"></i>
+                    <p>Вы пока не участвуете в турнирах</p>
+                    {% if is_host %}
+                    <a href="{% url 'create_tournament' %}" class="btn btn-primary btn-sm">
+                        Создать турнир
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             
             {% if user.role == 'host' %}
