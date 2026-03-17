@@ -25,10 +25,18 @@
         </div>
         
         <div class="header-right">
-            <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline">
-                <i class="fas fa-arrow-left"></i>
-                Вернуться к играм
-            </a>
+            {% if from_public %}
+                <a href="{% url 'tournament_public' tournament.id %}?tab=games" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Вернуться к турниру
+                </a>
+            {% else %}
+                <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Вернуться к играм
+                </a>
+            {% endif %}
+            
             {% if user == tournament.host %}
             <a href="{% url 'game_edit' tournament.id game.round_number %}" class="btn btn-primary">
                 <i class="fas fa-edit"></i>

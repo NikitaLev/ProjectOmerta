@@ -1346,3 +1346,59 @@ def tournament_public_games(request, tournament_id):
     }
     
     return JsonResponse(data)
+
+@login_required
+def public_game_view(request, tournament_id, game_round):
+    """Публичная страница просмотра результатов игры (без редактирования)"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
+    
+    # Проверяем доступ (участник турнира или ведущий)
+    is_participant = tournament.players.filter(user=request.user).exists()
+    if not (request.user == tournament.host or is_participant or request.user.is_superuser):
+        messages.error(request, 'Нет доступа к этой игре')
+        return redirect('tournament_public', tournament_id=tournament.id)
+    
+    # Получаем статистику
+    game_stats = {}
+    player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
+    
+    max_total = 0
+    mvp_name = None
+    total_yellow = 0
+    total_red = 0
+    first_killed_name = None
+    first_killed_role = None
+    total_score_sum = 0
+    
+    for stat in player_stats:
+        game_stats[stat.user_id] = stat
+        
+        if stat.total_score > max_total:
+            max_total = stat.total_score
+            mvp_name = stat.user.player_nickname or stat.user.username
+        
+        if stat.yellow_cards == 1:
+            total_yellow += 1
+        elif stat.yellow_cards >= 2:
+            total_red += 1
+        
+        if stat.first_shot:
+            first_killed_name = stat.user.player_nickname or stat.user.username
+            first_killed_role = stat.get_role_display()
+        
+        total_score_sum += stat.total_score
+    
+    context = {
+        'tournament': tournament,
+        'game': game,
+        'game_stats': game_stats,
+        'max_total': max_total,
+        'mvp_name': mvp_name,
+        'total_yellow': total_yellow,
+        'total_red': total_red,
+        'first_killed_name': first_killed_name,
+        'first_killed_role': first_killed_role,
+        'total_score_sum': total_score_sum,
+    }
+    return render(request, 'tournament/public_game_view.html', context)

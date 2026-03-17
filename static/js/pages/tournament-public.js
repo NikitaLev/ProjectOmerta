@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Кнопка просмотра
             const viewBtn = cardTemplate.querySelector('.view-game-btn');
             const tournamentId = window.location.pathname.split('/')[2];
-            viewBtn.href = `/tournament/${tournamentId}/game/${game.round_number}/view/`;
+            viewBtn.href = `/tournament/${tournamentId}/game/${game.round_number}/public-view/`;
             
             grid.appendChild(cardTemplate);
         });
