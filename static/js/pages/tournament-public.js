@@ -269,14 +269,41 @@ document.addEventListener('DOMContentLoaded', function() {
         
         template.querySelector('#total-games').textContent = data.tournament.total_games;
         template.querySelector('#completed-games').textContent = data.tournament.completed_games;
-        
+
         const tbody = template.querySelector('#players-stats-body');
         
-        data.players.sort((a, b) => b.total_score - a.total_score).forEach(player => {
+        // Сортируем игроков по сумме баллов (убывание)
+        const sortedPlayers = [...data.players].sort((a, b) => b.total_score - a.total_score);
+        
+        // Рассчитываем места (с учётом равенства баллов)
+        let currentPlace = 1;
+        let previousScore = null;
+        
+        sortedPlayers.forEach((player, index) => {
+            // Если баллы совпадают с предыдущим игроком, место то же
+            if (index > 0 && player.total_score === previousScore) {
+                // Место не меняем
+            } else {
+                currentPlace = index + 1;
+            }
+            
+            // Определяем класс для значка места
+            let placeClass = '';
+            if (currentPlace === 1) {
+                placeClass = 'first';
+            } else if (currentPlace === 2) {
+                placeClass = 'second';
+            } else if (currentPlace === 3) {
+                placeClass = 'third';
+            }
+            
             const row = document.createElement('tr');
             
             row.innerHTML = `
-                <td class="player-name-cell">${player.nickname}</td>
+                <td class="player-name-cell">
+                    <span class="place-badge ${placeClass}">${currentPlace}</span>
+                    ${escapeHtml(player.nickname)}
+                </td>
                 <td><strong>${player.total_score}</strong></td>
                 <td>${player.wins}</td>
                 <td>${player.first_kills}</td>
@@ -287,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     ${player.yellow_cards > 0 ? `<span class="card-badge yellow" title="Жёлтые">Ж:${player.yellow_cards}</span>` : ''}
                     ${player.red_cards > 0 ? `<span class="card-badge red" title="Красные">К:${player.red_cards}</span>` : ''}
+                    ${player.yellow_cards === 0 && player.red_cards === 0 ? '—' : ''}
                 </td>
                 <td>${player.roles.don}</td>
                 <td>${player.roles.mafia}</td>
@@ -295,6 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             
             tbody.appendChild(row);
+            previousScore = player.total_score;
         });
         
         container.appendChild(template);
@@ -306,6 +335,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             completedStatsContainer.style.display = 'none';
         }
+    }
+
+    // Вспомогательная функция для экранирования HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function renderCompletedStats(stats, container) {

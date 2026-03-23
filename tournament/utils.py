@@ -253,6 +253,28 @@ def calculate_tournament_statistics(tournament):
             'total_games': total_completed
         }
     
+    # 10. ПОБЕДИТЕЛЬ ТУРНИРА (игрок с максимальным total_score)
+    winner_data = players.annotate(
+        total_score=Sum('game_stats__total_score')
+    ).order_by('-total_score').first()
+    
+    if winner_data and winner_data.total_score:
+        # Находим второе место для определения уникальности
+        second_place = players.annotate(
+            total_score=Sum('game_stats__total_score')
+        ).exclude(id=winner_data.id).order_by('-total_score').first()
+        
+        is_unique = True
+        if second_place and second_place.total_score == winner_data.total_score:
+            is_unique = False
+        
+        stats['winner'] = {
+            'player_id': winner_data.user.id,
+            'player_name': winner_data.user.player_nickname or winner_data.user.username,
+            'total_score': round(float(winner_data.total_score), 2),
+            'is_unique': is_unique
+        }
+    
     return stats
 
 def calculate_final_places(tournament):

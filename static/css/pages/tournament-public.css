@@ -206,24 +206,149 @@
     letter-spacing: 0.5px;
 }
 
-/* Таблица статистики игроков */
+/* ========== ТАБЛИЦА СТАТИСТИКИ ИГРОКОВ ========== */
 .players-stats-table-wrapper {
     overflow-x: auto;
     border-radius: 16px;
     border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .players-stats-table {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8rem;
     min-width: 1000px;
 }
 
-.players-stats-table th {
-    background: var(--bg-secondary);
+.players-stats-table th,
+.players-stats-table td {
     padding: 12px 8px;
     text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+/* Фиксируем только колонку с именем игрока */
+.players-stats-table th:first-child,
+.players-stats-table td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: var(--bg-secondary);
+    z-index: 10;
+    text-align: left;
+}
+
+/* Для заголовка таблицы */
+.players-stats-table thead th:first-child {
+    background-color: var(--bg-card);
+    z-index: 20;
+}
+
+/* Для строки subhead */
+.players-stats-table tr.subhead th:first-child {
+    background-color: var(--bg-card);
+    z-index: 20;
+}
+
+/* Тень для зафиксированной колонки */
+.players-stats-table td:first-child::after,
+.players-stats-table th:first-child::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+}
+
+/* Ячейка с игроком - относительное позиционирование для значка места */
+.player-name-cell {
+    position: relative;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding-left: 35px !important;
+}
+
+/* Значок места */
+.place-badge {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.place-badge.first {
+    background: linear-gradient(135deg, #ffd700, #b8860b);
+    border-color: #ffd700;
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.place-badge.second {
+    background: linear-gradient(135deg, #c0c0c0, #8f8f8f);
+    border-color: #c0c0c0;
+    color: #1a1a1a;
+}
+
+.place-badge.third {
+    background: linear-gradient(135deg, #cd7f32, #8b5a2b);
+    border-color: #cd7f32;
+    color: #1a1a1a;
+}
+
+/* При скролле значок уменьшается */
+@media (max-width: 768px) {
+    .players-stats-table {
+        min-width: 900px;
+    }
+    
+    .player-name-cell {
+        padding-left: 28px !important;
+    }
+    
+    .place-badge {
+        width: 20px;
+        height: 20px;
+        font-size: 0.65rem;
+        left: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .players-stats-table {
+        min-width: 800px;
+    }
+    
+    .player-name-cell {
+        padding-left: 24px !important;
+    }
+    
+    .place-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 0.6rem;
+        left: 5px;
+    }
+}
+
+/* Остальные стили */
+.players-stats-table th {
+    background: var(--bg-secondary);
     color: var(--gold);
     font-weight: 600;
     border-bottom: 1px solid var(--border-color);
@@ -237,22 +362,18 @@
 }
 
 .players-stats-table td {
-    padding: 10px 8px;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
     color: var(--text-primary);
 }
 
-.players-stats-table tbody tr:hover {
+.players-stats-table tbody tr:hover td {
     background: rgba(212, 175, 55, 0.05);
 }
 
-.player-name-cell {
-    text-align: left !important;
-    font-weight: 500;
-    color: var(--text-primary);
+.players-stats-table tbody tr:hover td:first-child {
+    background: rgba(212, 175, 55, 0.05);
 }
 
+/* Карточки для ЖК/КК */
 .card-badge {
     display: inline-block;
     padding: 2px 6px;
@@ -1000,4 +1121,8 @@
         display:none;
         color: var(--gold);
     }
+}
+
+.completed-stats-container{
+    padding-top: 10px;
 }

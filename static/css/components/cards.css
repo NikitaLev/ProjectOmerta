@@ -49,3 +49,205 @@
     color: var(--gold);
     width: 16px;
 }
+
+/* Стили для карточек турниров */
+.tournament-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px;
+    transition: all 0.2s ease;
+}
+
+.tournament-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gold);
+}
+
+.tournament-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 30px;
+    margin-bottom: 12px;
+    width: fit-content;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.tournament-card.status-live .tournament-status {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+}
+
+.tournament-card.status-completed .tournament-status {
+    background: rgba(156, 163, 175, 0.1);
+    color: #9ca3af;
+}
+
+.tournament-card.status-upcoming .tournament-status {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+}
+
+.tournament-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.tournament-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.tournament-meta i {
+    width: 14px;
+    margin-right: 4px;
+}
+
+.tournament-winner {
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tournament-winner i {
+    font-size: 0.9rem;
+}
+
+.tournament-progress {
+    margin-bottom: 12px;
+}
+
+.progress-bar {
+    background: var(--bg-card);
+    border-radius: 10px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.progress-fill {
+    background: var(--gold);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.tournament-players {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.player-avatars {
+    display: flex;
+    gap: 4px;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.avatar.more {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.players-count {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.tournament-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+}
+
+/* Пустое состояние */
+.tournaments-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+}
+
+.tournaments-empty i {
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.tournaments-empty h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.tournaments-empty p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+.tie-indicator {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+
+.winner-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-left: 12px;
+}
+
+.winner-score i {
+    color: var(--gold);
+    font-size: 0.7rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .tournaments-grid {
+        grid-template-columns: 1fr;
+    }
+}

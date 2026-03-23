@@ -4,6 +4,9 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
+    backdrop-filter: blur(10px);
+    background: rgba(30, 30, 30, 0.95);
 }
 
 .header-content {
@@ -17,6 +20,15 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.logo-area a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
 }
 
 .logo-placeholder {
@@ -24,6 +36,11 @@
     height: 36px;
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.logo-area:hover .logo-placeholder {
+    transform: scale(1.05);
 }
 
 .logo-text {
@@ -31,6 +48,11 @@
     font-weight: 700;
     letter-spacing: -0.5px;
     color: var(--gold);
+    transition: color 0.2s ease;
+}
+
+.logo-area:hover .logo-text {
+    color: var(--gold-light);
 }
 
 .main-nav {
@@ -61,50 +83,67 @@
     gap: 10px;
 }
 
-.btn {
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: var(--transition);
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-    color: var(--bg-primary);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-gold);
-}
-
-.btn-outline {
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    background: transparent;
-}
-
-.btn-outline:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-}
-
+/* Мобильная версия */
 @media (max-width: 768px) {
     .header-content {
-        flex-direction: column;
-        gap: 12px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+    }
+    
+    .logo-area {
+        flex-shrink: 0;
+    }
+    
+    .logo-placeholder {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .logo-text {
+        font-size: 1rem;
+        letter-spacing: -0.3px;
     }
     
     .main-nav {
-        margin-left: 0;
+        display: none; /* Скрываем навигацию на мобильных */
     }
     
-    .nav-list {
-        justify-content: center;
-        gap: 16px;
+    .auth-buttons {
+        gap: 6px;
+    }
+    
+    .auth-buttons .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .auth-buttons .btn-outline {
+        background: transparent;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        padding: 10px 0;
+    }
+    
+    .logo-placeholder {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .logo-text {
+        font-size: 0.85rem;
+    }
+    
+    .auth-buttons {
+        gap: 4px;
+    }
+    
+    .auth-buttons .btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
     }
 }

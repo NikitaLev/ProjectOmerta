@@ -17,6 +17,7 @@ from .utils import generate_seating
 from django.conf import settings
 from django.db import models
 from .utils import generate_invitation_token, generate_seating, calculate_final_places, calculate_tournament_statistics
+from django.db.models import Count, Sum
 
 @login_required
 def profile(request):
@@ -1509,3 +1510,21 @@ def recalculate_tournament_stats(request, tournament_id):
     
     messages.success(request, 'Статистика турнира успешно пересчитана!')
     return redirect('tournament_detail', tournament_id=tournament.id)
+
+def home(request):
+    """Главная страница"""
+    # Получаем все турниры, кроме черновиков, сортируем по дате
+    tournaments = Tournament.objects.exclude(status='draft').order_by('-start_date')[:9]
+    
+    # Для каждого турнира добавляем дополнительную информацию
+    for tournament in tournaments:
+        if tournament.status == 'active':
+            total_games = tournament.games.count()
+            completed_games = tournament.games.exclude(winning_team__isnull=True).count()
+            tournament.completed_games = completed_games
+            tournament.completed_percent = int(completed_games / total_games * 100) if total_games > 0 else 0
+    
+    context = {
+        'tournaments': tournaments,
+    }
+    return render(request, 'tournament/home.html', context)

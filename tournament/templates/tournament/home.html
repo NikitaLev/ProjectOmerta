@@ -1,5 +1,6 @@
 {% extends 'tournament/base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Project Omerta — платформа для турниров по спортивной мафии{% endblock %}
 
@@ -21,8 +22,16 @@
                     Статистика, рейтинги, аналитика.
                 </p>
                 <div class="hero-buttons">
-                    <a href="#" class="btn btn-primary btn-large">Начать игру</a>
-                    <a href="#" class="btn btn-outline btn-large">Узнать больше</a>
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'host' and user.is_approved_host %}
+                            <a href="{% url 'create_tournament' %}" class="btn btn-primary btn-large">Создать турнир</a>
+                        {% else %}
+                            <a href="{% url 'my_tournaments' %}" class="btn btn-primary btn-large">Мои турниры</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-large">Начать игру</a>
+                    {% endif %}
+                    <a href="#how-it-works" class="btn btn-outline btn-large">Узнать больше</a>
                 </div>
             </div>
             <div class="hero-visual">
@@ -56,7 +65,7 @@
                     <li><i class="fas fa-trophy"></i> История игр</li>
                     <li><i class="fas fa-ranking-star"></i> Рейтинг</li>
                 </ul>
-                <a href="#" class="btn btn-outline card-btn">Войти как игрок</a>
+                <a href="{% url 'my_tournaments' %}" class="btn btn-outline card-btn">Мои турниры</a>
             </div>
             
             <!-- Карточка организатора -->
@@ -74,14 +83,14 @@
                     <li><i class="fas fa-users"></i> Управление игроками</li>
                     <li><i class="fas fa-chart-pie"></i> Статистика в реальном времени</li>
                 </ul>
-                <a href="#" class="btn btn-primary card-btn">Панель организатора</a>
+                <a href="{% url 'create_tournament' %}" class="btn btn-primary card-btn">Создать турнир</a>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Секция "Как это работает" -->
-<section class="how-it-works">
+<section id="how-it-works" class="how-it-works">
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Как это работает</h2>
@@ -127,69 +136,78 @@
         </div>
         
         <div class="tournaments-grid">
-            <!-- Карточка-заглушка 1 -->
-            <div class="tournament-card placeholder">
-                <div class="tournament-status status-upcoming">
-                    <span class="status-dot"></span> Скоро
+            {% for tournament in tournaments %}
+            <div class="tournament-card {% if tournament.status == 'active' %}status-live{% elif tournament.status == 'completed' %}status-completed{% else %}status-upcoming{% endif %}">
+                <div class="tournament-status">
+                    <span class="status-dot"></span> 
+                    {% if tournament.status == 'active' %}
+                        В процессе
+                    {% elif tournament.status == 'completed' %}
+                        Завершён
+                    {% else %}
+                        Черновик
+                    {% endif %}
                 </div>
-                <div class="tournament-name">Турнир #1</div>
+                <div class="tournament-name">{{ tournament.name }}</div>
                 <div class="tournament-meta">
-                    <span><i class="far fa-calendar"></i> Март 2026</span>
-                    <span><i class="far fa-user"></i> Организатор</span>
+                    <span><i class="far fa-calendar"></i> {{ tournament.start_date|date:"d.m.Y" }}</span>
+                    <span><i class="far fa-user"></i> {{ tournament.host.username }}</span>
                 </div>
+                
+                {% if tournament.status == 'completed' and tournament.completed_stats.winner %}
+                <div class="tournament-winner">
+                    <i class="fas fa-crown"></i> 
+                    <span>
+                        Победитель: {{ tournament.completed_stats.winner.player_name }}
+                        {% if not tournament.completed_stats.winner.is_unique %}
+                            <span class="tie-indicator" title="Разделил первое место">(разделил победу)</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="winner-score">
+                    <i class="fas fa-star"></i> {{ tournament.completed_stats.winner.total_score }} очков
+                </div>
+                {% elif tournament.status == 'active' %}
+                <div class="tournament-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:0%"></div>
+                    </div>
+                    <span class="progress-text">{{ tournament.completed_games|default:0 }}/{{ tournament.total_games }} игр</span>
+                </div>
+                {% endif %}
+                
                 <div class="tournament-players">
                     <div class="player-avatars">
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar more">+7</span>
+                        {% for tp in tournament.players.all|slice:":3" %}
+                        <span class="avatar" title="{{ tp.user.player_nickname|default:tp.user.username }}">
+                            {{ tp.user.player_nickname|default:tp.user.username|slice:":1"|upper }}
+                        </span>
+                        {% endfor %}
+                        {% if tournament.players.count > 3 %}
+                        <span class="avatar more">+{{ tournament.players.count|add:"-3" }}</span>
+                        {% endif %}
                     </div>
+                    <span class="players-count">{{ tournament.players.count }} участников</span>
                 </div>
+                
+                <a href="{% url 'tournament_public' tournament.id %}" class="btn btn-outline tournament-btn">
+                    Подробнее <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-            
-            <!-- Карточка-заглушка 2 -->
-            <div class="tournament-card placeholder">
-                <div class="tournament-status status-live">
-                    <span class="status-dot"></span> В процессе
-                </div>
-                <div class="tournament-name">Турнир #2</div>
-                <div class="tournament-meta">
-                    <span><i class="far fa-calendar"></i> Март 2026</span>
-                    <span><i class="far fa-user"></i> Организатор</span>
-                </div>
-                <div class="tournament-players">
-                    <div class="player-avatars">
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar more">+12</span>
-                    </div>
-                </div>
+            {% empty %}
+            <div class="empty-state tournaments-empty">
+                <i class="fas fa-trophy"></i>
+                <h3>Пока нет турниров</h3>
+                <p>Будьте первым, кто создаст турнир на платформе!</p>
+                {% if user.role == 'host' and user.is_approved_host %}
+                <a href="{% url 'create_tournament' %}" class="btn btn-primary">Создать турнир</a>
+                {% endif %}
             </div>
-            
-            <!-- Карточка-заглушка 3 -->
-            <div class="tournament-card placeholder">
-                <div class="tournament-status status-completed">
-                    <span class="status-dot"></span> Завершён
-                </div>
-                <div class="tournament-name">Турнир #3</div>
-                <div class="tournament-meta">
-                    <span><i class="far fa-calendar"></i> Февраль 2026</span>
-                    <span><i class="far fa-user"></i> Организатор</span>
-                </div>
-                <div class="tournament-players">
-                    <div class="player-avatars">
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar"></span>
-                        <span class="avatar more">+10</span>
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
         
         <div class="section-footer">
-            <a href="#" class="btn btn-outline">Все турниры <i class="fas fa-arrow-right"></i></a>
+            <a href="{% url 'my_tournaments' %}" class="btn btn-outline">Все турниры <i class="fas fa-arrow-right"></i></a>
         </div>
     </div>
 </section>
