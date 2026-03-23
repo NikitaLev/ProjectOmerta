@@ -136,13 +136,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 statusBadge.innerHTML = '<i class="fas fa-clock"></i> Ожидает';
             }
             
+            // Находим максимальный total_score для этой игры (MVP)
+            let maxTotal = 0;
+            game.seating.forEach(seat => {
+                if (seat.total_score > maxTotal) {
+                    maxTotal = seat.total_score;
+                }
+            });
+            
             // Рассадка
             const seatingList = cardTemplate.querySelector('#seating-list');
             seatingList.innerHTML = '';
             
             game.seating.forEach(seat => {
                 const seatItem = document.createElement('div');
-                seatItem.className = 'seat-item';
+                
+                // Формируем классы для seat-item
+                let seatClasses = 'seat-item';
+                
+                // Жёлтые/красные карточки
+                if (seat.yellow_cards === 1) {
+                    seatClasses += ' has-yellow';
+                } else if (seat.yellow_cards >= 2) {
+                    seatClasses += ' has-red';
+                }
+                
+                // MVP (если у игрока максимальный балл в игре и он > 0)
+                if (seat.total_score === maxTotal && maxTotal > 0) {
+                    seatClasses += ' mvp';
+                }
+                
+                seatItem.className = seatClasses;
                 
                 // Строим HTML для баллов
                 let statsHtml = '<div class="player-stats">';
@@ -170,13 +194,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 statsHtml += '</div>';
                 
+                // HTML с иконкой роли
+                let roleIconHtml = '';
+                if (seat.role) {
+                    const roleMap = {
+                        'don': '<i class="ph-fill ph-crown-simple" style="color: #d4af37;"></i>',
+                        'mafia': '<i class="bi bi-hand-thumbs-down-fill" style="color: #6b21a5;"></i>',
+                        'sheriff': '<i class="mdi mdi-police-badge" style="color: #fbbf24;"></i>',
+                        'civil': '<i class="bi bi-hand-thumbs-up-fill" style="color: #ef4444;"></i>'
+                    };
+                    roleIconHtml = `<span class="player-role-badge" title="${getRoleName(seat.role)}">${roleMap[seat.role] || ''}</span>`;
+                }
+                
                 seatItem.innerHTML = `
                     <span class="seat-number">${seat.position}</span>
                     <div class="player-info">
-                        <span class="player-nickname">${seat.nickname}</span>
+                        <span class="player-nickname">${escapeHtml(seat.nickname)}</span>
+                        ${roleIconHtml}
                     </div>
                     ${statsHtml}
                 `;
+                
                 seatingList.appendChild(seatItem);
             });
             
@@ -203,6 +241,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         container.appendChild(template);
+    }
+
+    // Вспомогательная функция для получения имени роли
+    function getRoleName(role) {
+        const roleNames = {
+            'don': 'Дон',
+            'mafia': 'Мафия',
+            'sheriff': 'Шериф',
+            'civil': 'Мирный'
+        };
+        return roleNames[role] || role;
+    }
+
+    // Вспомогательная функция для экранирования HTML (безопасность)
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     function renderStats(data) {
         const template = document.getElementById('player-stats-template').content.cloneNode(true);

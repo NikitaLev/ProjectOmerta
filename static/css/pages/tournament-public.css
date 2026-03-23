@@ -794,3 +794,210 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ОДНА ДИАГОНАЛЬНАЯ ПОЛОСКА НА НИКНЕЙМЕ */
+.seat-item.has-yellow .player-nickname {
+    position: relative;
+    display: inline-block;
+}
+
+.seat-item.has-yellow .player-nickname::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -90px;
+    right: 50px;
+    bottom: -110px;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 215, 0, 0.5) 40%,
+        rgba(255, 215, 0, 0.5) 60%,
+        transparent 60%,
+        transparent 100%
+    );
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.seat-item.has-red .player-nickname {
+    position: relative;
+    display: inline-block;
+}
+
+.seat-item.has-red .player-nickname::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -90px;
+    right: 50px;
+    bottom: -110px;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 0, 0, 0.5) 40%,
+        rgba(239, 68, 68, 0.5) 60%,
+        transparent 60%,
+        transparent 100%
+    );
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ЕДИНЫЙ БЛОК БАЛЛОВ - ВСЁ В ОДНУ СТРОКУ */
+.player-stats {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    min-width: 32px;
+    height: 24px;
+    white-space: nowrap;
+}
+
+.stat-badge i {
+    font-size: 0.7rem;
+    margin-right: 2px;
+}
+
+.stat-badge.main {
+    color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.stat-badge.bonus {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.stat-badge.penalty {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.stat-badge.total {
+    color: var(--gold);
+    border-color: rgba(212, 175, 55, 0.3);
+    background: rgba(212, 175, 55, 0.1);
+    min-width: 40px;
+}
+
+/* Убираем отдельный контейнер для итога */
+.total-score-container {
+    display: contents;  /* Игнорируем этот div */
+}
+.stat-badge.ci {
+    color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.stat-badge.ci i {
+    color: #a78bfa;
+}
+
+
+/* MVP подсветка - вертикальная плашка слева */
+.seat-item.mvp {
+    position: relative;
+    border: 1px solid var(--gold);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+}
+
+.seat-item.mvp::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background: linear-gradient(to bottom, var(--gold), #b8860b);
+    box-shadow: 0 0 30px var(--gold);
+    border-radius: 2px 0 0 2px;
+    z-index: 5;
+}
+.seat-item.mvp .player-nickname::after {
+    content: '--MVP--';
+    font-size: 0.8rem;
+    margin-left: 10px;
+    color: var(--gold);
+    opacity: 0.9;
+}
+
+
+@media (max-width: 768px) {
+    
+    .seat-item.has-yellow .player-nickname::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -110px;
+        right: 50px;
+        bottom: -130px;
+        background: linear-gradient(
+            45deg,
+            transparent 0%,
+            transparent 40%,
+            rgba(255, 215, 0, 0.5) 40%,
+            rgba(255, 215, 0, 0.5) 60%,
+            transparent 60%,
+            transparent 100%
+        );
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .seat-item.has-red .player-nickname::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -110px;
+        right: 50px;
+        bottom: -130px;
+        background: linear-gradient(
+            45deg,
+            transparent 0%,
+            transparent 40%,
+            rgba(255, 0, 0, 0.5) 40%,
+            rgba(239, 68, 68, 0.5) 60%,
+            transparent 60%,
+            transparent 100%
+        );
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .public-game-card .seating-title {
+        display: flex;
+        flex-direction: column;
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin-bottom: 5px;
+        padding-bottom: 2px;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    .public-game-card .seating-title i {
+        display:none;
+        color: var(--gold);
+    }
+}
