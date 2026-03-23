@@ -103,6 +103,9 @@ def calculate_tournament_statistics(tournament):
     """
     Рассчитывает дополнительную статистику для завершённого турнира
     """
+    # Импортируем модели внутри функции
+    from .models import PlayerGameStats, TournamentPlayer, Game
+    
     stats = {}
     
     # Получаем всех игроков турнира
@@ -116,23 +119,15 @@ def calculate_tournament_statistics(tournament):
     
     if first_kill_stats:
         most_killed_user_id = max(first_kill_stats, key=first_kill_stats.get)
-        stats['most_killed'] = {
-            'player': players.get(user_id=most_killed_user_id).user,
-            'count': first_kill_stats[most_killed_user_id]
-        }
-    
-    # 2. Кто чаще всего стрелял (первый убитый сам)
-    shooter_stats = defaultdict(int)
-    for game in tournament.games.filter(winning_team__isnull=False):
-        for stat in game.player_stats.filter(first_shot__isnull=False).exclude(first_shot=''):
-            shooter_stats[stat.user_id] += 1
-    
-    if shooter_stats:
-        most_shooter_user_id = max(shooter_stats, key=shooter_stats.get)
-        stats['most_shooter'] = {
-            'player': players.get(user_id=most_shooter_user_id).user,
-            'count': shooter_stats[most_shooter_user_id]
-        }
+        try:
+            player = players.get(user_id=most_killed_user_id).user
+            stats['most_killed'] = {
+                'player_id': player.id,
+                'player_name': player.player_nickname or player.username,
+                'count': first_kill_stats[most_killed_user_id]
+            }
+        except TournamentPlayer.DoesNotExist:
+            pass
     
     # 3. Лучший на каждой роли (по сумме дополнительных баллов)
     roles = ['don', 'mafia', 'sheriff', 'civil']
@@ -152,9 +147,10 @@ def calculate_tournament_statistics(tournament):
             
             if role_data['games_played'] > 0:
                 role_players.append({
-                    'player': player.user,
-                    'total_bonus': role_data['total_bonus'] or 0,
-                    'total_main': role_data['total_main'] or 0,
+                    'player_id': player.user.id,
+                    'player_name': player.user.player_nickname or player.user.username,
+                    'total_bonus': float(role_data['total_bonus'] or 0),
+                    'total_main': float(role_data['total_main'] or 0),
                     'games_played': role_data['games_played']
                 })
         
@@ -162,7 +158,8 @@ def calculate_tournament_statistics(tournament):
         if role_players:
             role_players.sort(key=lambda x: (-x['total_bonus'], x['games_played']))
             role_stats[role] = {
-                'player': role_players[0]['player'],
+                'player_id': role_players[0]['player_id'],
+                'player_name': role_players[0]['player_name'],
                 'total_bonus': role_players[0]['total_bonus'],
                 'games_played': role_players[0]['games_played']
             }
@@ -176,11 +173,13 @@ def calculate_tournament_statistics(tournament):
             tournament_player=player
         ).values_list('total_score', flat=True)
         
-        if len(scores) > 1:
-            avg = sum(scores) / len(scores)
-            variance = sum((s - avg) ** 2 for s in scores) / len(scores)
+        scores_list = [float(s) for s in scores]
+        if len(scores_list) > 1:
+            avg = sum(scores_list) / len(scores_list)
+            variance = sum((s - avg) ** 2 for s in scores_list) / len(scores_list)
             stability_stats.append({
-                'player': player.user,
+                'player_id': player.user.id,
+                'player_name': player.user.player_nickname or player.user.username,
                 'variance': variance,
                 'avg_score': avg
             })
@@ -188,7 +187,8 @@ def calculate_tournament_statistics(tournament):
     if stability_stats:
         stability_stats.sort(key=lambda x: x['variance'])
         stats['most_stable'] = {
-            'player': stability_stats[0]['player'],
+            'player_id': stability_stats[0]['player_id'],
+            'player_name': stability_stats[0]['player_name'],
             'variance': round(stability_stats[0]['variance'], 2),
             'avg_score': round(stability_stats[0]['avg_score'], 2)
         }
@@ -198,10 +198,11 @@ def calculate_tournament_statistics(tournament):
         total_main=Sum('game_stats__main_score')
     ).order_by('-total_main').first()
     
-    if top_main and top_main.total_main > 0:
+    if top_main and top_main.total_main and float(top_main.total_main) > 0:
         stats['top_main'] = {
-            'player': top_main.user,
-            'total_main': round(top_main.total_main, 2)
+            'player_id': top_main.user.id,
+            'player_name': top_main.user.player_nickname or top_main.user.username,
+            'total_main': round(float(top_main.total_main), 2)
         }
     
     # 6. Самый бонусный игрок (максимум бонусных баллов)
@@ -209,10 +210,11 @@ def calculate_tournament_statistics(tournament):
         total_bonus=Sum('game_stats__bonus_score')
     ).order_by('-total_bonus').first()
     
-    if top_bonus and top_bonus.total_bonus > 0:
+    if top_bonus and top_bonus.total_bonus and float(top_bonus.total_bonus) > 0:
         stats['top_bonus'] = {
-            'player': top_bonus.user,
-            'total_bonus': round(top_bonus.total_bonus, 2)
+            'player_id': top_bonus.user.id,
+            'player_name': top_bonus.user.player_nickname or top_bonus.user.username,
+            'total_bonus': round(float(top_bonus.total_bonus), 2)
         }
     
     # 7. Самый штрафной игрок (максимум штрафов)
@@ -220,10 +222,11 @@ def calculate_tournament_statistics(tournament):
         total_penalty=Sum('game_stats__penalty_score')
     ).order_by('-total_penalty').first()
     
-    if top_penalty and top_penalty.total_penalty > 0:
+    if top_penalty and top_penalty.total_penalty and float(top_penalty.total_penalty) > 0:
         stats['top_penalty'] = {
-            'player': top_penalty.user,
-            'total_penalty': round(top_penalty.total_penalty, 2)
+            'player_id': top_penalty.user.id,
+            'player_name': top_penalty.user.player_nickname or top_penalty.user.username,
+            'total_penalty': round(float(top_penalty.total_penalty), 2)
         }
     
     # 8. Рекордсмен по жёлтым карточкам
@@ -231,25 +234,24 @@ def calculate_tournament_statistics(tournament):
         total_yellow=Sum('game_stats__yellow_cards')
     ).order_by('-total_yellow').first()
     
-    if top_yellow and top_yellow.total_yellow > 0:
+    if top_yellow and top_yellow.total_yellow and top_yellow.total_yellow > 0:
         stats['top_yellow'] = {
-            'player': top_yellow.user,
+            'player_id': top_yellow.user.id,
+            'player_name': top_yellow.user.player_nickname or top_yellow.user.username,
             'total_yellow': top_yellow.total_yellow
         }
     
     # 9. Статистика по командам
+    total_completed = tournament.games.filter(winning_team__isnull=False).count()
     mafia_wins = tournament.games.filter(winning_team='mafia').count()
     peace_wins = tournament.games.filter(winning_team='peace').count()
     
-    stats['team_stats'] = {
-        'mafia_wins': mafia_wins,
-        'peace_wins': peace_wins,
-        'total_games': tournament.games.filter(winning_team__isnull=False).count()
-    }
-    
-    # 10. Сохраняем статистику в поле JSON (нужно добавить поле в модель)
-    tournament.completed_stats = stats
-    tournament.save()
+    if total_completed > 0:
+        stats['team_stats'] = {
+            'mafia_wins': mafia_wins,
+            'peace_wins': peace_wins,
+            'total_games': total_completed
+        }
     
     return stats
 

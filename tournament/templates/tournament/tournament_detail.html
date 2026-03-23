@@ -74,7 +74,114 @@
                     {{ tournament.description|default:"У этого турнира пока нет описания."|linebreaks }}
                 </div>
             </div>
+            {% if tournament.completed_stats %}
+<div class="completed-stats">
+    <!-- Статистика команд -->
+    {% if tournament.completed_stats.team_stats %}
+    <div class="stats-category">
+        <h3>Статистика команд</h3>
+        <div class="team-stats">
+            <div class="team-card mafia">
+                <i class="fas fa-skull"></i>
+                <div class="team-name">Мафия</div>
+                <div class="team-wins">{{ tournament.completed_stats.team_stats.mafia_wins }} побед</div>
+            </div>
+            <div class="team-card peace">
+                <i class="fas fa-users"></i>
+                <div class="team-name">Мирные</div>
+                <div class="team-wins">{{ tournament.completed_stats.team_stats.peace_wins }} побед</div>
+            </div>
+        </div>
+    </div>
+    <!-- Топ по ролям -->
+    <div class="stats-category">
+        <h3>Лучшие по ролям</h3>
+        <div class="stats-grid">
+            {% for role, data in tournament.completed_stats.best_per_role.items %}
+            <div class="stat-card">
+                <div class="role-icon">
+                    {% if role == 'don' %}
+                        <i class="ph-fill ph-crown-simple"></i>
+                    {% elif role == 'mafia' %}
+                        <i class="bi bi-hand-thumbs-down-fill"></i>
+                    {% elif role == 'sheriff' %}
+                        <i class="mdi mdi-police-badge"></i>
+                    {% else %}
+                        <i class="bi bi-hand-thumbs-up-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="role-name">
+                    {% if role == 'don' %}Дон
+                    {% elif role == 'mafia' %}Мафия
+                    {% elif role == 'sheriff' %}Шериф
+                    {% else %}Мирный
+                    {% endif %}
+                </div>
+                <div class="player-name">{{ data.player_name }}</div>
+                <div class="stats-detail">
+                    <span>Бонус: {{ data.total_bonus|floatformat:2 }}</span>
+                    <span>Игр: {{ data.games_played }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Рекорды -->
+    <div class="stats-category">
+        <h3>Рекорды турнира</h3>
+        <div class="records-grid">
+            {% if tournament.completed_stats.most_killed %}
+            <div class="record-card">
+                <i class="fas fa-skull"></i>
+                <div class="record-label">Чаще всех убивали</div>
+                <div class="record-value">{{ tournament.completed_stats.most_killed.player_name }}</div>
+                <div class="record-count">{{ tournament.completed_stats.most_killed.count }} раз</div>
+            </div>
+            {% endif %}
             
+            {% if tournament.completed_stats.most_stable %}
+            <div class="record-card">
+                <i class="fas fa-chart-line"></i>
+                <div class="record-label">Самый стабильный</div>
+                <div class="record-value">{{ tournament.completed_stats.most_stable.player_name }}</div>
+                <div class="record-count">Отклонение: {{ tournament.completed_stats.most_stable.variance }}</div>
+            </div>
+            {% endif %}
+            
+            {% if tournament.completed_stats.top_main %}
+            <div class="record-card">
+                <i class="fas fa-star"></i>
+                <div class="record-label">Самый результативный</div>
+                <div class="record-value">{{ tournament.completed_stats.top_main.player_name }}</div>
+                <div class="record-count">Основных баллов: {{ tournament.completed_stats.top_main.total_main }}</div>
+            </div>
+            {% endif %}
+            
+            {% if tournament.completed_stats.top_bonus %}
+            <div class="record-card">
+                <i class="fas fa-plus-circle"></i>
+                <div class="record-label">Самый бонусный</div>
+                <div class="record-value">{{ tournament.completed_stats.top_bonus.player_name }}</div>
+                <div class="record-count">Бонусов: {{ tournament.completed_stats.top_bonus.total_bonus }}</div>
+            </div>
+            {% endif %}
+            
+            {% if tournament.completed_stats.top_yellow %}
+            <div class="record-card">
+                <i class="fas fa-square"></i>
+                <div class="record-label">Больше всех карточек</div>
+                <div class="record-value">{{ tournament.completed_stats.top_yellow.player_name }}</div>
+                <div class="record-count">{{ tournament.completed_stats.top_yellow.total_yellow }} шт</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    
+    {% endif %}
+</div>
+{% endif %}
             <!-- Действия для ведущего -->
             {% if can_edit %}
             <div class="tournament-section">
@@ -141,29 +248,61 @@
                         </a>
                     {% endif %}
                 </div>
-                <div class="tournament-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-cog"></i>
-                        Управление турниром
-                    </h2>
-                    <div class="action-buttons">
-                        <!-- ... существующие кнопки ... -->
-                        
-                        <!-- Новая кнопка для управления видимостью данных -->
-                        <a href="{% url 'toggle_data_visibility' tournament.id %}" 
-                        class="action-btn {% if tournament.data_visible %}warning{% else %}success{% endif %}"
-                        onclick="return confirm('{% if tournament.data_visible %}Скрыть данные турнира от игроков?{% else %}Сделать данные турнира видимыми для всех?{% endif %}')">
-                            <i class="fas {% if tournament.data_visible %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
-                            <span>
-                                {% if tournament.data_visible %}
-                                    Скрыть данные
-                                {% else %}
-                                    Показать данные
-                                {% endif %}
-                            </span>
-                        </a>
-                    </div>
+            </div>
+            {% if tournament.status == 'completed' %}
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Итоговая статистика
+                </h2>
+                
+                <!-- Кнопка пересчёта статистики (только для ведущего) -->
+                {% if can_edit %}
+                <div class="action-buttons" style="margin-bottom: 20px;">
+                    <a href="{% url 'recalculate_tournament_stats' tournament.id %}" 
+                    class="action-btn info"
+                    onclick="return confirm('Пересчитать статистику турнира? Это может занять некоторое время.')">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Пересчитать статистику</span>
+                    </a>
                 </div>
+                {% endif %}
+                
+                <!-- Отображение статистики -->
+                {% if tournament.completed_stats %}
+                    <!-- ... ваш код отображения статистики ... -->
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Статистика ещё не рассчитана</h3>
+                        <p>Нажмите кнопку "Пересчитать статистику" для расчёта итоговых показателей</p>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="tournament-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Управление турниром
+                </h2>
+                <div class="action-buttons">
+                    <!-- ... существующие кнопки ... -->
+                    
+                    <!-- Новая кнопка для управления видимостью данных -->
+                    <a href="{% url 'toggle_data_visibility' tournament.id %}" 
+                    class="action-btn {% if tournament.data_visible %}warning{% else %}success{% endif %}"
+                    onclick="return confirm('{% if tournament.data_visible %}Скрыть данные турнира от игроков?{% else %}Сделать данные турнира видимыми для всех?{% endif %}')">
+                        <i class="fas {% if tournament.data_visible %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                        <span>
+                            {% if tournament.data_visible %}
+                                Скрыть данные
+                            {% else %}
+                                Показать данные
+                            {% endif %}
+                        </span>
+                    </a>
+                </div>
+            </div>
             </div>
             {% endif %}
 
@@ -188,19 +327,6 @@
                         </div>
                     </div>
                     
-                    <div class="preview-grid">
-                        {% for game in tournament.games.all|slice:":3" %}
-                        <div class="preview-card">
-                            <div class="preview-header">
-                                <span class="game-number">Игра {{ game.round_number }}</span>
-                                <span class="game-status {% if game.winning_team %}completed{% else %}pending{% endif %}">
-                                    {% if game.winning_team %}✅{% else %}⏳{% endif %}
-                                </span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    
                     <a href="{% url 'tournament_games' tournament.id %}" class="btn btn-outline btn-block">
                         Посмотреть все игры <i class="fas fa-arrow-right"></i>
                     </a>
@@ -219,12 +345,18 @@
                 {% if tournament.players.exists %}
                 <div class="players-table">
                     <div class="players-table-header">
-                        <div class="player-cell">Игрок</div>
-                        <div class="player-cell">Никнейм</div>
+                        <div class="player-cell">
+                            <i class="fas fa-user"></i> Никнейм
+                        </div>
                         <div class="player-cell">Статус</div>
-                        <div class="player-cell">Всего баллов</div>  <!-- Новая колонка -->
+                        <div class="player-cell sortable" data-sort="score">
+                            <i class="fas fa-trophy"></i> Всего баллов
+                            <i class="fas fa-sort"></i>
+                        </div>
                         {% if can_edit %}
-                        <div class="player-cell actions">Действия</div>
+                        <div class="player-cell actions">
+                            <i class="fas fa-cog"></i> Действия
+                        </div>
                         {% endif %}
                     </div>
                     
@@ -232,9 +364,6 @@
                     <div class="players-table-row">
                         <div class="player-cell">
                             <i class="fas fa-user"></i>
-                            {{ tp.user.username }}
-                        </div>
-                        <div class="player-cell">
                             {{ tp.user.player_nickname|default:"Не указан" }}
                         </div>
                         <div class="player-cell">
@@ -410,134 +539,7 @@
         </div>
     </div>
 </div>
-<!-- После блока с играми, добавим блок статистики завершённого турнира -->
-{% if tournament.status == 'completed' and tournament.completed_stats %}
-<div class="tournament-section">
-    <h2 class="section-title">
-        <i class="fas fa-chart-line"></i>
-        Итоговая статистика турнира
-    </h2>
-    
-    <div class="completed-stats">
-        <!-- Топ по ролям -->
-        <div class="stats-category">
-            <h3>Лучшие по ролям</h3>
-            <div class="stats-grid">
-                {% for role, data in tournament.completed_stats.best_per_role.items %}
-                <div class="stat-card">
-                    <div class="role-icon">
-                        {% if role == 'don' %}
-                            <i class="ph-fill ph-crown-simple"></i>
-                        {% elif role == 'mafia' %}
-                            <i class="bi bi-hand-thumbs-down-fill"></i>
-                        {% elif role == 'sheriff' %}
-                            <i class="mdi mdi-police-badge"></i>
-                        {% else %}
-                            <i class="bi bi-hand-thumbs-up-fill"></i>
-                        {% endif %}
-                    </div>
-                    <div class="role-name">
-                        {% if role == 'don' %}Дон
-                        {% elif role == 'mafia' %}Мафия
-                        {% elif role == 'sheriff' %}Шериф
-                        {% else %}Мирный
-                        {% endif %}
-                    </div>
-                    <div class="player-name">{{ data.player.player_nickname|default:data.player.username }}</div>
-                    <div class="stats-detail">
-                        <span>Бонус: {{ data.total_bonus|floatformat:2 }}</span>
-                        <span>Игр: {{ data.games_played }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Рекорды -->
-        <div class="stats-category">
-            <h3>Рекорды турнира</h3>
-            <div class="records-grid">
-                {% if tournament.completed_stats.most_killed %}
-                <div class="record-card">
-                    <i class="fas fa-skull"></i>
-                    <div class="record-label">Чаще всех убивали</div>
-                    <div class="record-value">{{ tournament.completed_stats.most_killed.player.player_nickname|default:tournament.completed_stats.most_killed.player.username }}</div>
-                    <div class="record-count">{{ tournament.completed_stats.most_killed.count }} раз</div>
-                </div>
-                {% endif %}
-                
-                {% if tournament.completed_stats.most_shooter %}
-                <div class="record-card">
-                    <i class="fas fa-crosshairs"></i>
-                    <div class="record-label">Чаще всех стрелял</div>
-                    <div class="record-value">{{ tournament.completed_stats.most_shooter.player.player_nickname|default:tournament.completed_stats.most_shooter.player.username }}</div>
-                    <div class="record-count">{{ tournament.completed_stats.most_shooter.count }} раз</div>
-                </div>
-                {% endif %}
-                
-                {% if tournament.completed_stats.most_stable %}
-                <div class="record-card">
-                    <i class="fas fa-chart-line"></i>
-                    <div class="record-label">Самый стабильный</div>
-                    <div class="record-value">{{ tournament.completed_stats.most_stable.player.player_nickname|default:tournament.completed_stats.most_stable.player.username }}</div>
-                    <div class="record-count">Отклонение: {{ tournament.completed_stats.most_stable.variance }}</div>
-                </div>
-                {% endif %}
-                
-                {% if tournament.completed_stats.top_main %}
-                <div class="record-card">
-                    <i class="fas fa-star"></i>
-                    <div class="record-label">Самый результативный</div>
-                    <div class="record-value">{{ tournament.completed_stats.top_main.player.player_nickname|default:tournament.completed_stats.top_main.player.username }}</div>
-                    <div class="record-count">Основных баллов: {{ tournament.completed_stats.top_main.total_main }}</div>
-                </div>
-                {% endif %}
-                
-                {% if tournament.completed_stats.top_bonus %}
-                <div class="record-card">
-                    <i class="fas fa-plus-circle"></i>
-                    <div class="record-label">Самый бонусный</div>
-                    <div class="record-value">{{ tournament.completed_stats.top_bonus.player.player_nickname|default:tournament.completed_stats.top_bonus.player.username }}</div>
-                    <div class="record-count">Бонусов: {{ tournament.completed_stats.top_bonus.total_bonus }}</div>
-                </div>
-                {% endif %}
-                
-                {% if tournament.completed_stats.top_yellow %}
-                <div class="record-card">
-                    <i class="fas fa-square"></i>
-                    <div class="record-label">Больше всех карточек</div>
-                    <div class="record-value">{{ tournament.completed_stats.top_yellow.player.player_nickname|default:tournament.completed_stats.top_yellow.player.username }}</div>
-                    <div class="record-count">{{ tournament.completed_stats.top_yellow.total_yellow }} шт</div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Статистика команд -->
-        <div class="stats-category">
-            <h3>Статистика команд</h3>
-            <div class="team-stats">
-                <div class="team-card mafia">
-                    <i class="fas fa-skull"></i>
-                    <div class="team-name">Мафия</div>
-                    <div class="team-wins">{{ tournament.completed_stats.team_stats.mafia_wins }} побед</div>
-                    <div class="team-percent">
-                        {{ tournament.completed_stats.team_stats.mafia_wins|divisibleby:tournament.completed_stats.team_stats.total_games|floatformat:0 }}%
-                    </div>
-                </div>
-                <div class="team-card peace">
-                    <i class="fas fa-users"></i>
-                    <div class="team-name">Мирные</div>
-                    <div class="team-wins">{{ tournament.completed_stats.team_stats.peace_wins }} побед</div>
-                    <div class="team-percent">
-                        {{ tournament.completed_stats.team_stats.peace_wins|divisibleby:tournament.completed_stats.team_stats.total_games|floatformat:0 }}%
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -695,7 +697,54 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('newPlayerForm').submit();
     });
 });
-
+// Сортировка таблицы по баллам
+document.addEventListener('DOMContentLoaded', function() {
+    const sortHeader = document.querySelector('.player-cell.sortable');
+    if (sortHeader) {
+        let currentSort = {
+            column: 'score',
+            order: 'desc'
+        };
+        
+        function updateSortIcon(order) {
+            const icon = sortHeader.querySelector('i.fa-sort, i.fa-sort-up, i.fa-sort-down');
+            icon.classList.remove('fa-sort', 'fa-sort-up', 'fa-sort-down');
+            
+            if (order === 'desc') {
+                icon.classList.add('fa-sort-down');
+                sortHeader.classList.remove('asc');
+                sortHeader.classList.add('desc');
+            } else {
+                icon.classList.add('fa-sort-up');
+                sortHeader.classList.remove('desc');
+                sortHeader.classList.add('asc');
+            }
+        }
+        
+        function sortTable(order) {
+            const table = document.querySelector('.players-table');
+            const rows = Array.from(document.querySelectorAll('.players-table-row'));
+            
+            rows.sort((a, b) => {
+                const scoreA = parseFloat(a.querySelector('.player-total-score').textContent) || 0;
+                const scoreB = parseFloat(b.querySelector('.player-total-score').textContent) || 0;
+                return order === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+            });
+            
+            rows.forEach(row => table.appendChild(row));
+            currentSort.order = order;
+            updateSortIcon(order);
+        }
+        
+        // Начальная сортировка
+        sortTable('desc');
+        
+        sortHeader.addEventListener('click', function() {
+            const newOrder = currentSort.order === 'desc' ? 'asc' : 'desc';
+            sortTable(newOrder);
+        });
+    }
+});
 
 </script>
 {% endblock %}

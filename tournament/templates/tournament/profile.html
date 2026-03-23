@@ -143,11 +143,6 @@
                             <a href="{% url 'tournament_public' tournament.id %}" class="btn-icon" title="Просмотреть">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            {% if tournament.games.exists %}
-                            <a href="{% url 'tournament_games' tournament.id %}" class="btn-icon" title="Игры">
-                                <i class="fas fa-gamepad"></i>
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}

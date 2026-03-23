@@ -839,17 +839,26 @@ def update_player_tournament_stats(tournament_player):
 
 
 def check_tournament_completion(tournament):
-    """Проверяет, все ли игры турнира завершены"""
+    """Проверяет, все ли игры турнира завершены, и если да - завершает турнир"""
     total_games = tournament.games.count()
     completed_games = tournament.games.exclude(winning_team__isnull=True).count()
     
     if total_games == completed_games and total_games > 0:
-        tournament.status = 'completed'
-        tournament.end_date = timezone.now()
-        tournament.save()
-        
-        # Рассчитываем итоговые места
-        calculate_final_places(tournament)
+        # Если турнир ещё не завершён
+        if tournament.status != 'completed':
+            tournament.status = 'completed'
+            tournament.end_date = timezone.now()
+            tournament.save()
+            
+            # Рассчитываем финальные места
+            calculate_final_places(tournament)
+            
+            # Рассчитываем дополнительную статистику
+            tournament_stats = calculate_tournament_statistics(tournament)
+            
+            # Сохраняем статистику в поле JSON
+            tournament.completed_stats = tournament_stats
+            tournament.save()
         
         return True
     return False
@@ -1469,4 +1478,30 @@ def complete_tournament(request, tournament_id):
     stats = tournament.complete()
     
     messages.success(request, f'Турнир "{tournament.name}" завершён! Статистика рассчитана.')
+    return redirect('tournament_detail', tournament_id=tournament.id)
+
+# tournament/views.py
+
+@login_required
+def recalculate_tournament_stats(request, tournament_id):
+    """Пересчитать статистику завершённого турнира"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host and not request.user.is_superuser:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Проверяем, что турнир завершён
+    if tournament.status != 'completed':
+        messages.error(request, 'Статистика доступна только для завершённых турниров')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Пересчитываем
+    calculate_final_places(tournament)
+    stats = calculate_tournament_statistics(tournament)
+    tournament.completed_stats = stats
+    tournament.save()
+    
+    messages.success(request, 'Статистика турнира успешно пересчитана!')
     return redirect('tournament_detail', tournament_id=tournament.id)
