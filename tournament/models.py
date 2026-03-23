@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 class User(AbstractUser):
     ROLE_CHOICES = [
@@ -107,6 +108,8 @@ class Tournament(models.Model):
         default=True,
         verbose_name="Данные турнира видны всем"
     )
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
+    completed_stats = models.JSONField(default=dict, blank=True, verbose_name="Статистика завершённого турнира")
     
     # Статистика ведущего по этому турниру
     host_rating_delta = models.FloatField(default=0.0)  # Изменение рейтинга ведущего
@@ -116,6 +119,27 @@ class Tournament(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.host.username})"
+    
+    def complete(self):
+        """Завершить турнир и рассчитать статистику"""
+        if self.status != 'active':
+            return False
+        
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save()
+        from .utils import calculate_final_places, calculate_tournament_statistics
+        
+        # Рассчитываем финальные места
+        calculate_final_places(self)
+        
+        # Рассчитываем дополнительную статистику
+        tournament_stats = calculate_tournament_statistics(self)
+        
+        self.completed_stats = tournament_stats
+        self.save()
+
+        return tournament_stats
 
 class TournamentPlayer(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='players')

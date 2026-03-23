@@ -26,4 +26,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/public/games/', views.tournament_public_games, name='tournament_public_games'),
     path('tournament/<int:tournament_id>/game/<int:game_round>/public-view/', views.public_game_view, name='public_game_view'),
     path('tournament/<int:tournament_id>/toggle-visibility/', views.toggle_data_visibility, name='toggle_data_visibility'),
+    path('tournament/<int:tournament_id>/complete/', views.complete_tournament, name='complete_tournament'),
 ]

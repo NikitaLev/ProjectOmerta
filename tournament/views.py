@@ -16,6 +16,7 @@ import secrets
 from .utils import generate_seating
 from django.conf import settings
 from django.db import models
+from .utils import generate_invitation_token, generate_seating, calculate_final_places, calculate_tournament_statistics
 
 @login_required
 def profile(request):
@@ -1444,4 +1445,28 @@ def toggle_data_visibility(request, tournament_id):
     status = "видны всем" if tournament.data_visible else "скрыты от игроков"
     messages.success(request, f'Данные турнира теперь {status}')
     
+    return redirect('tournament_detail', tournament_id=tournament.id)
+
+# tournament/views.py
+
+@login_required
+def complete_tournament(request, tournament_id):
+    """Завершить турнир и рассчитать статистику"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Проверяем, что все игры завершены
+    pending_games = tournament.games.filter(winning_team__isnull=True).count()
+    if pending_games > 0:
+        messages.error(request, f'Нельзя завершить турнир: осталось {pending_games} незавершённых игр')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Завершаем турнир
+    stats = tournament.complete()
+    
+    messages.success(request, f'Турнир "{tournament.name}" завершён! Статистика рассчитана.')
     return redirect('tournament_detail', tournament_id=tournament.id)
