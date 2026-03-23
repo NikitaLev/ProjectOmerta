@@ -1295,6 +1295,10 @@ def tournament_public_stats(request, tournament_id):
         'players': players_data,
     }
     
+    # Если турнир завершён, добавляем статистику из completed_stats
+    if tournament.status == 'completed' and tournament.completed_stats:
+        data['completed_stats'] = tournament.completed_stats
+    
     return JsonResponse(data)
 
 @login_required
