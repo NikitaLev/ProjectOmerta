@@ -1177,39 +1177,26 @@ def recalculate_ci(tournament):
             stat.ci = ci_value
             stat.save()  # save автоматически пересчитает total_score
 
-@login_required
 def tournament_public(request, tournament_id):
     """Публичная страница турнира с вкладками"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     
-    # Проверяем доступ
-    is_participant = tournament.players.filter(user=request.user).exists()
-    is_host = request.user == tournament.host
     
     # Если данные скрыты и пользователь не ведущий - показываем заглушку
-    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+    if not tournament.data_visible:
         return render(request, 'tournament/tournament_hidden.html', {'tournament': tournament})
     
-    # Обычная проверка доступа
-    if not is_host and not is_participant and not request.user.is_superuser:
-        messages.error(request, 'Нет доступа к этому турниру')
-        return redirect('home')
     
     context = {
         'tournament': tournament,
     }
     return render(request, 'tournament/tournament_public.html', context)
 
-@login_required
 def tournament_public_stats(request, tournament_id):
     """API для получения статистики игроков турнира"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     
-    # Проверка доступа
-    is_participant = tournament.players.filter(user=request.user).exists()
-    is_host = request.user == tournament.host
-    
-    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+    if not tournament.data_visible:
         return JsonResponse({
             'hidden': True,
             'message': 'Данные турнира скрыты ведущим'
@@ -1302,17 +1289,13 @@ def tournament_public_stats(request, tournament_id):
     
     return JsonResponse(data)
 
-@login_required
 def tournament_public_games(request, tournament_id):
     """API для получения списка игр турнира"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     
-    # Проверка доступа
-    is_participant = tournament.players.filter(user=request.user).exists()
-    is_host = request.user == tournament.host
     
     # Если данные скрыты и пользователь не ведущий - возвращаем пустые данные
-    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+    if not tournament.data_visible:
         return JsonResponse({
             'hidden': True,
             'message': 'Данные турнира скрыты ведущим'
@@ -1380,25 +1363,17 @@ def tournament_public_games(request, tournament_id):
     
     return JsonResponse(data)
 
-@login_required
 def public_game_view(request, tournament_id, game_round):
     """Публичная страница просмотра результатов игры (без редактирования)"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
     
-    is_participant = tournament.players.filter(user=request.user).exists()
-    is_host = (request.user == tournament.host)
     # Проверяем доступ (участник турнира или ведущий)
     # Если данные скрыты и пользователь не ведущий - показываем заглушку
-    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+    if not tournament.data_visible:
         return render(request, 'tournament/game_hidden.html', {'tournament': tournament, 'game': game})
     
-    # Обычная проверка доступа
-    if not is_host and not is_participant and not request.user.is_superuser:
-        messages.error(request, 'Нет доступа к этой игре')
-        return redirect('tournament_public', tournament_id=tournament.id)
     
-    # Получаем статистику
     game_stats = {}
     player_stats = PlayerGameStats.objects.filter(game=game).select_related('user', 'tournament_player')
     

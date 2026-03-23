@@ -31,7 +31,7 @@
                     {% else %}
                         <a href="{% url 'register' %}" class="btn btn-primary btn-large">Начать игру</a>
                     {% endif %}
-                    <a href="#how-it-works" class="btn btn-outline btn-large">Узнать больше</a>
+                    <!--<a href="#how-it-works" class="btn btn-outline btn-large">Узнать больше</a>-->
                 </div>
             </div>
             <div class="hero-visual">
@@ -41,55 +41,7 @@
     </div>
 </section>
 
-<!-- Секция "Для кого это" -->
-<section class="roles-section">
-    <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">Выберите свою роль</h2>
-            <p class="section-subtitle">Project Omerta объединяет всех участников мафии</p>
-        </div>
-        
-        <div class="roles-grid">
-            <!-- Карточка игрока -->
-            <div class="role-card card-player">
-                <div class="card-icon">
-                    <i class="fas fa-user-secret"></i>
-                </div>
-                <h3 class="card-title">Я игрок</h3>
-                <p class="card-description">
-                    Участвуйте в турнирах, отслеживайте свою статистику, 
-                    улучшайте рейтинг и становитесь легендой.
-                </p>
-                <ul class="card-features">
-                    <li><i class="fas fa-chart-line"></i> Личная статистика</li>
-                    <li><i class="fas fa-trophy"></i> История игр</li>
-                    <li><i class="fas fa-ranking-star"></i> Рейтинг</li>
-                </ul>
-                <a href="{% url 'my_tournaments' %}" class="btn btn-outline card-btn">Мои турниры</a>
-            </div>
-            
-            <!-- Карточка организатора -->
-            <div class="role-card card-organizer">
-                <div class="card-icon">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <h3 class="card-title">Я организатор</h3>
-                <p class="card-description">
-                    Создавайте турниры, добавляйте игроков, ведите статистику 
-                    в реальном времени и управляйте процессом.
-                </p>
-                <ul class="card-features">
-                    <li><i class="fas fa-calendar-plus"></i> Создание турниров</li>
-                    <li><i class="fas fa-users"></i> Управление игроками</li>
-                    <li><i class="fas fa-chart-pie"></i> Статистика в реальном времени</li>
-                </ul>
-                <a href="{% url 'create_tournament' %}" class="btn btn-primary card-btn">Создать турнир</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Секция "Как это работает" -->
+<!-- Секция "Как это работает"
 <section id="how-it-works" class="how-it-works">
     <div class="container">
         <div class="section-header">
@@ -98,7 +50,7 @@
         </div>
         
         <div class="steps-grid">
-            <!-- Шаг 1: Участие -->
+            <!- Шаг 1: Участие ->
             <div class="step-card">
                 <div class="step-number">1</div>
                 <div class="step-icon">
@@ -111,7 +63,7 @@
                 </p>
             </div>
             
-            <!-- Шаг 2: Рост -->
+            <!- Шаг 2: Рост ->
             <div class="step-card">
                 <div class="step-number">2</div>
                 <div class="step-icon">
@@ -126,7 +78,7 @@
         </div>
     </div>
 </section>
-
+ -->
 <!-- Секция "Последние турниры" -->
 <section class="recent-tournaments">
     <div class="container">
@@ -206,9 +158,58 @@
             {% endfor %}
         </div>
         
-        <div class="section-footer">
+        <!--div class="section-footer">
             <a href="{% url 'my_tournaments' %}" class="btn btn-outline">Все турниры <i class="fas fa-arrow-right"></i></a>
+        </div-->
+    </div>
+</section>
+
+<!-- Секция "Для кого это" -->
+<section class="roles-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Выберите свою роль</h2>
+            <p class="section-subtitle">Project Omerta объединяет всех участников мафии</p>
+        </div>
+        
+        <div class="roles-grid">
+            <!-- Карточка игрока -->
+            <div class="role-card card-player">
+                <div class="card-icon">
+                    <i class="fas fa-user-secret"></i>
+                </div>
+                <h3 class="card-title">Я игрок</h3>
+                <p class="card-description">
+                    Участвуйте в турнирах, отслеживайте свою статистику, 
+                    улучшайте рейтинг и становитесь легендой.
+                </p>
+                <ul class="card-features">
+                    <li><i class="fas fa-chart-line"></i> Личная статистика</li>
+                    <li><i class="fas fa-trophy"></i> История игр</li>
+                    <li><i class="fas fa-ranking-star"></i> Рейтинг</li>
+                </ul>
+                <a href="{% url 'my_tournaments' %}" class="btn btn-outline card-btn">Мои турниры</a>
+            </div>
+            
+            <!-- Карточка организатора -->
+            <div class="role-card card-organizer">
+                <div class="card-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="card-title">Я организатор</h3>
+                <p class="card-description">
+                    Создавайте турниры, добавляйте игроков, ведите статистику 
+                    в реальном времени и управляйте процессом.
+                </p>
+                <ul class="card-features">
+                    <li><i class="fas fa-calendar-plus"></i> Создание турниров</li>
+                    <li><i class="fas fa-users"></i> Управление игроками</li>
+                    <li><i class="fas fa-chart-pie"></i> Статистика в реальном времени</li>
+                </ul>
+                <a href="{% url 'create_tournament' %}" class="btn btn-primary card-btn">Создать турнир</a>
+            </div>
         </div>
     </div>
 </section>
+
 {% endblock %}
