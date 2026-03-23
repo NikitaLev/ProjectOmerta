@@ -381,12 +381,12 @@
                         </div>
                         {% if can_edit and tp.user != tournament.host %}
                         <div class="player-cell actions">
-                            <a href="{% url 'remove_player_from_tournament' tournament.id tp.user.id %}" 
+                                <i class="fas fa-times"></i>
+                            <!--a href="{% url 'remove_player_from_tournament' tournament.id tp.user.id %}" 
                             class="btn-icon delete"
                             onclick="return confirm('Удалить игрока из турнира?')"
                             title="Удалить">
-                                <i class="fas fa-times"></i>
-                            </a>
+                            </a-->
                         </div>
                         {% endif %}
                     </div>
