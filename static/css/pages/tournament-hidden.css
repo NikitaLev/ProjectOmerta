@@ -1,0 +1,65 @@
+.hidden-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.hidden-card {
+    background: linear-gradient(145deg, var(--bg-card), #1E1E1E);
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    padding: 50px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.hidden-icon {
+    font-size: 5rem;
+    color: var(--gold);
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.hidden-icon i {
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+}
+
+.hidden-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.hidden-message {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.hidden-footer {
+    margin-top: 20px;
+}
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 30px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateY(-2px);
+}

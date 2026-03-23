@@ -1,0 +1,29 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Игра {{ game.round_number }} - Данные скрыты{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/tournament-hidden.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="hidden-page">
+    <div class="hidden-card">
+        <div class="hidden-icon">
+            <i class="fas fa-eye-slash"></i>
+        </div>
+        <h1 class="hidden-title">{{ tournament.name }}</h1>
+        <p class="hidden-subtitle">Игра {{ game.round_number }}</p>
+        <p class="hidden-message">
+            Данные этой игры скрыты ведущим турнира.<br>
+            Результаты временно недоступны для просмотра.
+        </p>
+        <div class="hidden-footer">
+            <a href="{% url 'tournament_public' tournament.id %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Вернуться к турниру
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

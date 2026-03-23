@@ -103,6 +103,10 @@ class Tournament(models.Model):
         default='BMF',
         verbose_name='Правила турнира'
     )
+    data_visible = models.BooleanField(
+        default=True,
+        verbose_name="Данные турнира видны всем"
+    )
     
     # Статистика ведущего по этому турниру
     host_rating_delta = models.FloatField(default=0.0)  # Изменение рейтинга ведущего

@@ -49,6 +49,16 @@
                         {% endif %}
                     </span>
                 </div>
+                <div class="meta-item">
+                    <i class="fas {% if tournament.data_visible %}fa-eye{% else %}fa-eye-slash{% endif %}"></i>
+                    <span>
+                        {% if tournament.data_visible %}
+                            Данные видны всем
+                        {% else %}
+                            Данные скрыты
+                        {% endif %}
+                    </span>
+                </div>
             </div>
         </div>
         
@@ -123,6 +133,29 @@
                             <span>Редактировать</span>
                         </a>
                     {% endif %}
+                </div>
+                <div class="tournament-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-cog"></i>
+                        Управление турниром
+                    </h2>
+                    <div class="action-buttons">
+                        <!-- ... существующие кнопки ... -->
+                        
+                        <!-- Новая кнопка для управления видимостью данных -->
+                        <a href="{% url 'toggle_data_visibility' tournament.id %}" 
+                        class="action-btn {% if tournament.data_visible %}warning{% else %}success{% endif %}"
+                        onclick="return confirm('{% if tournament.data_visible %}Скрыть данные турнира от игроков?{% else %}Сделать данные турнира видимыми для всех?{% endif %}')">
+                            <i class="fas {% if tournament.data_visible %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                            <span>
+                                {% if tournament.data_visible %}
+                                    Скрыть данные
+                                {% else %}
+                                    Показать данные
+                                {% endif %}
+                            </span>
+                        </a>
+                    </div>
                 </div>
             </div>
             {% endif %}

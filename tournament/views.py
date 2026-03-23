@@ -1168,12 +1168,19 @@ def recalculate_ci(tournament):
 
 @login_required
 def tournament_public(request, tournament_id):
-    """Публичная страница турнира с вкладками (заглушка)"""
+    """Публичная страница турнира с вкладками"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
     
-    # Проверяем доступ (ведущий или участник)
+    # Проверяем доступ
     is_participant = tournament.players.filter(user=request.user).exists()
-    if request.user != tournament.host and not is_participant and not request.user.is_superuser:
+    is_host = request.user == tournament.host
+    
+    # Если данные скрыты и пользователь не ведущий - показываем заглушку
+    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+        return render(request, 'tournament/tournament_hidden.html', {'tournament': tournament})
+    
+    # Обычная проверка доступа
+    if not is_host and not is_participant and not request.user.is_superuser:
         messages.error(request, 'Нет доступа к этому турниру')
         return redirect('home')
     
@@ -1189,8 +1196,13 @@ def tournament_public_stats(request, tournament_id):
     
     # Проверка доступа
     is_participant = tournament.players.filter(user=request.user).exists()
-    if request.user != tournament.host and not is_participant and not request.user.is_superuser:
-        return JsonResponse({'error': 'Нет доступа'}, status=403)
+    is_host = request.user == tournament.host
+    
+    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+        return JsonResponse({
+            'hidden': True,
+            'message': 'Данные турнира скрыты ведущим'
+        }, status=403)
     
     # Собираем статистику по каждому игроку
     players_data = []
@@ -1282,8 +1294,14 @@ def tournament_public_games(request, tournament_id):
     
     # Проверка доступа
     is_participant = tournament.players.filter(user=request.user).exists()
-    if request.user != tournament.host and not is_participant and not request.user.is_superuser:
-        return JsonResponse({'error': 'Нет доступа'}, status=403)
+    is_host = request.user == tournament.host
+    
+    # Если данные скрыты и пользователь не ведущий - возвращаем пустые данные
+    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+        return JsonResponse({
+            'hidden': True,
+            'message': 'Данные турнира скрыты ведущим'
+        }, status=403)
     
     games_data = []
     games = tournament.games.all().order_by('round_number')
@@ -1353,9 +1371,15 @@ def public_game_view(request, tournament_id, game_round):
     tournament = get_object_or_404(Tournament, id=tournament_id)
     game = get_object_or_404(Game, tournament=tournament, round_number=game_round)
     
-    # Проверяем доступ (участник турнира или ведущий)
     is_participant = tournament.players.filter(user=request.user).exists()
-    if not (request.user == tournament.host or is_participant or request.user.is_superuser):
+    is_host = (request.user == tournament.host)
+    # Проверяем доступ (участник турнира или ведущий)
+    # Если данные скрыты и пользователь не ведущий - показываем заглушку
+    if not tournament.data_visible and not is_host and not request.user.is_superuser:
+        return render(request, 'tournament/game_hidden.html', {'tournament': tournament, 'game': game})
+    
+    # Обычная проверка доступа
+    if not is_host and not is_participant and not request.user.is_superuser:
         messages.error(request, 'Нет доступа к этой игре')
         return redirect('tournament_public', tournament_id=tournament.id)
     
@@ -1402,3 +1426,22 @@ def public_game_view(request, tournament_id, game_round):
         'total_score_sum': total_score_sum,
     }
     return render(request, 'tournament/public_game_view.html', context)
+
+@login_required
+def toggle_data_visibility(request, tournament_id):
+    """Переключение видимости данных турнира"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем, что пользователь - ведущий этого турнира
+    if request.user != tournament.host:
+        messages.error(request, 'У вас нет прав для изменения этого турнира')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    # Переключаем видимость
+    tournament.data_visible = not tournament.data_visible
+    tournament.save()
+    
+    status = "видны всем" if tournament.data_visible else "скрыты от игроков"
+    messages.success(request, f'Данные турнира теперь {status}')
+    
+    return redirect('tournament_detail', tournament_id=tournament.id)
