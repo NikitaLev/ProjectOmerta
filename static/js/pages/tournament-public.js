@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         template.querySelector('#total-games').textContent = data.tournament.total_games;
         template.querySelector('#completed-games').textContent = data.tournament.completed_games;
-        template.querySelector('#players-count').textContent = data.tournament.players_count;
         
         const tbody = template.querySelector('#players-stats-body');
         
@@ -186,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (game.winning_team) {
                 winnerInfo.style.display = 'flex';
                 winnerInfo.innerHTML = `
-                    <span class="winner-label">Победила:</span>
+                    <span class="winner-label">Победа:</span>
                     <span class="winner-team ${game.winning_team === 'mafia' ? 'mafia' : 'peace'}">
                         ${game.winning_team === 'mafia' ? '<i class="fas fa-skull"></i> Мафия' : '<i class="fas fa-users"></i> Мирные'}
                     </span>
@@ -214,7 +213,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         template.querySelector('#total-games').textContent = data.tournament.total_games;
         template.querySelector('#completed-games').textContent = data.tournament.completed_games;
-        template.querySelector('#players-count').textContent = data.tournament.players_count;
         
         const tbody = template.querySelector('#players-stats-body');
         

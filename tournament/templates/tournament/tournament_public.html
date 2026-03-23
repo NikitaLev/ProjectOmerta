@@ -82,10 +82,6 @@
                 <div class="summary-value" id="completed-games">0</div>
                 <div class="summary-label">Завершено</div>
             </div>
-            <div class="summary-card">
-                <div class="summary-value" id="players-count">0</div>
-                <div class="summary-label">Игроков</div>
-            </div>
         </div>
     </div>
     
@@ -129,9 +125,9 @@
 
 <!-- Шаблон для списка игр -->
 <template id="games-list-template">
-    <div class="games-stats-header">
-        <div class="games-stats-cards">
-            <div class="stat-card mini">
+    <div class="stats-summary">
+        <div class="summary-cards">
+            <div class="summary-card">
                 <span class="stat-value" id="games-total">0</span>
                 <span class="stat-label">Всего</span>
             </div>
@@ -158,6 +154,8 @@
             <span class="game-status-badge"></span>
         </div>
         
+        <!-- Победитель будет вставлен сюда -->
+        <div class="game-winner-info"></div>
         <div class="game-seating">
             <h4 class="seating-title">
                 <i class="fas fa-chair"></i>
@@ -166,8 +164,6 @@
             <div class="seating-list" id="seating-list"></div>
         </div>
         
-        <!-- Победитель будет вставлен сюда -->
-        <div class="game-winner-info"></div>
         
         <div class="game-actions">
             <a href="#" class="btn btn-outline btn-sm view-game-btn">

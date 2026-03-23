@@ -279,6 +279,7 @@
 
 .games-stats-cards {
     display: flex;
+    flex-direction: row;
     gap: 15px;
 }
 
@@ -291,7 +292,7 @@
     text-align: center;
 }
 
-.stat-card.mini .stat-value {
+.stat-value {
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--gold);
@@ -299,7 +300,7 @@
     line-height: 1.2;
 }
 
-.stat-card.mini .stat-label {
+.stat-label {
     color: var(--text-secondary);
     font-size: 0.8rem;
 }
@@ -598,7 +599,9 @@
     }
     
     .games-stats-cards {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
     }
     
     .public-games-grid {
@@ -628,7 +631,6 @@
     }
     
     .public-game-card .player-info {
-        min-width: 100%;
         margin-bottom: 5px;
     }
     
