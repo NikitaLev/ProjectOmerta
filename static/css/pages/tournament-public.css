@@ -385,6 +385,7 @@
 .public-game-card .seating-title {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     color: var(--text-secondary);
     font-size: 1rem;
@@ -509,8 +510,6 @@
 /* Победитель */
 .public-game-card .game-winner-info {
     padding: 10px 20px;
-    background: rgba(74, 222, 128, 0.05);
-    border-top: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     gap: 8px;
