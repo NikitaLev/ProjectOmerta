@@ -1,0 +1,640 @@
+.beta-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.beta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.beta-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.compact-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 45px 1fr;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-row.header {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--gold);
+    font-size: 0.75rem;
+}
+
+.table-cell {
+    padding: 8px;
+}
+
+.table-cell:first-child {
+    text-align: center;
+    font-weight: 600;
+    border-right: 1px solid var(--border-color);
+}
+
+.player-input {
+    width: 100%;
+    padding: 6px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+/* Карточки для раздачи ролей */
+.role-deal-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.role-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.role-card:hover {
+    transform: translateX(5px);
+}
+
+.role-card.selected-don {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.role-card.selected-sheriff {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.role-card.selected-mafia {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.role-card.selected-civil {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.role-number {
+    width: 40px;
+    font-weight: bold;
+    color: var(--gold);
+    font-size: 1rem;
+}
+
+.role-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.role-badge.don { background: #8b5cf6; color: white; }
+.role-badge.sheriff { background: #f59e0b; color: white; }
+.role-badge.mafia { background: #ef4444; color: white; }
+.role-badge.civil { background: #22c55e; color: white; }
+
+/* Статус бар раздачи */
+.deal-status {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.status-message {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.status-message i {
+    margin-right: 5px;
+}
+
+.status-counters {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+}
+
+.counter {
+    padding: 4px 8px;
+    border-radius: 20px;
+}
+
+.counter.don { background: #8b5cf6; color: white; }
+.counter.sheriff { background: #f59e0b; color: white; }
+.counter.mafia { background: #ef4444; color: white; }
+.counter.civil { background: #22c55e; color: white; }
+
+/* Игровая сетка */
+.game-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.game-player-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 5px 10px;
+}
+
+.player-num {
+    width: 32px;
+    font-weight: bold;
+    color: var(--gold);
+    font-size: 0.8rem;
+}
+
+.player-name {
+    flex: 1;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.player-role {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 55px;
+    text-align: center;
+}
+
+.role-don { background: #8b5cf6; color: white; }
+.role-mafia { background: #ef4444; color: white; }
+.role-sheriff { background: #f59e0b; color: white; }
+.role-civil { background: #22c55e; color: white; }
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.action-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.phase-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.phase-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.phase-btn.day {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.phase-btn.night {
+    background: #1e1b4b;
+    color: #a78bfa;
+}
+
+.phase-btn.active {
+    box-shadow: 0 0 0 2px var(--gold);
+}
+
+.quick-actions {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    flex: 1;
+    padding: 6px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.logs-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+}
+
+.log-line {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-family: monospace;
+}
+
+.log-time {
+    color: var(--gold);
+    margin-right: 6px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+    padding: 10px;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.text-center {
+    text-align: center;
+}
+.beta-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.beta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.beta-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* Режимы */
+.mode-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 30px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--gold);
+}
+
+.mode-btn.foul-mode.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.mode-btn.nominate-mode.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+.mode-btn.vote-mode.active { border-color: #ef4444; background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+/* Список игроков */
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.player-item:hover {
+    transform: translateX(5px);
+}
+
+.player-item.selected {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.player-number {
+    width: 40px;
+    font-weight: bold;
+    color: var(--gold);
+    font-size: 1rem;
+}
+
+.player-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.player-role {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 55px;
+    text-align: center;
+}
+
+.role-don { background: #8b5cf6; color: white; }
+.role-mafia { background: #ef4444; color: white; }
+.role-sheriff { background: #f59e0b; color: white; }
+.role-civil { background: #22c55e; color: white; }
+
+/* Фолы */
+.foul-indicators {
+    display: flex;
+    gap: 3px;
+    margin-right: 8px;
+}
+
+.foul-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-color);
+}
+
+.foul-dot.active {
+    background: #f59e0b;
+    box-shadow: 0 0 4px #f59e0b;
+}
+
+/* Номинации (выставления) */
+.nomination-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background: #3b82f6;
+    color: white;
+    margin-left: 5px;
+}
+
+/* Голосование */
+.vote-count {
+    font-size: 0.8rem;
+    font-weight: bold;
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 5px;
+}
+
+/* Логи */
+.logs-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+}
+
+.log-line {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-family: monospace;
+}
+
+.log-time {
+    color: var(--gold);
+    margin-right: 6px;
+}
+
+/* Текущий режим */
+.current-mode-info {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.player-item.selected {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+    transform: scale(1.01);
+}
+
+#undoBtn:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+}
+/* Исправление цвета текста на кнопках */
+.btn-primary,
+.btn-outline,
+.phase-btn,
+.mode-btn,
+.quick-btn,
+.action-icon,
+.vote-btn,
+.btn-back,
+#undoBtn {
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    color: #1a1a1a;
+}
+
+.btn-outline {
+    color: var(--text-primary);
+}
+
+.mode-btn.foul-mode.active {
+    color: #f59e0b;
+}
+
+.mode-btn.nominate-mode.active {
+    color: #3b82f6;
+}
+
+.mode-btn.vote-mode.active {
+    color: #ef4444;
+}
+
+.phase-btn.day {
+    color: #92400e;
+}
+
+.phase-btn.night {
+    color: #a78bfa;
+}
+
+.quick-btn {
+    color: var(--text-primary);
+}
+
+.action-icon {
+    color: var(--text-primary);
+}
+
+.vote-btn {
+    color: var(--text-primary);
+    background: var(--bg-card);
+}
+
+#undoBtn {
+    color: #ef4444;
+}
+
+/* Добавляем стили для выбывших игроков */
+.game-player-row.eliminated {
+    opacity: 0.5;
+    background: var(--bg-secondary);
+    border-color: #ef4444;
+    text-decoration: line-through;
+}
+
+.game-player-row.eliminated .action-icon {
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.eliminated-badge {
+    background: #ef4444;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    margin-left: 5px;
+}
+
+.next-phase-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+.next-phase-btn:hover {
+    transform: translateY(-2px);
+}
+/* Исправление цвета текста на кнопках */
+.btn-outline,
+.next-btn,
+.player-btn,
+.mode-btn,
+.vote-btn,
+.phase-btn,
+.action-icon {
+    color: var(--text-primary);
+}
+
+.next-btn {
+    color: white;
+}
+
+.player-btn {
+    color: var(--text-primary);
+}
+
+.player-btn.selected {
+    color: var(--gold);
+}
+
+.player-btn:hover {
+    color: white;
+}
+
+.btn-outline {
+    color: var(--text-primary);
+}

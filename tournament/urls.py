@@ -29,4 +29,9 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/complete/', views.complete_tournament, name='complete_tournament'),
     path('tournament/<int:tournament_id>/recalculate-stats/', views.recalculate_tournament_stats, name='recalculate_tournament_stats'),
     path('profile/stats/', views.player_stats_api, name='player_stats_api'),
+    # BETA модуль# BETA модуль
+    path('beta/game/', views.beta_game, name='beta_game'),
+    path('beta/day/<int:round_num>/', views.beta_day, name='beta_day'),
+    path('beta/night/<int:round_num>/', views.beta_night, name='beta_night'),
+    path('beta/vote/', views.beta_vote, name='beta_vote'),
 ]

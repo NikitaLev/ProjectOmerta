@@ -1,0 +1,139 @@
+.night-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.night-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.eliminated-info {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #ef4444;
+    font-size: 0.85rem;
+}
+
+.section {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.player-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.player-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.player-btn.selected {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+}
+
+.mafia-section .player-btn:hover { background: #ef4444; color: white; }
+.don-section .player-btn:hover { background: #8b5cf6; color: white; }
+.sheriff-section .player-btn:hover { background: #f59e0b; color: white; }
+
+.next-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.logs-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 8px;
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+}
+
+.log-line {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-family: monospace;
+}
+
+.log-time {
+    color: var(--gold);
+    margin-right: 6px;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+/* Исправление цвета текста на кнопках */
+.btn-outline,
+.next-btn,
+.player-btn,
+.mode-btn,
+.vote-btn,
+.phase-btn,
+.action-icon {
+    color: var(--text-primary);
+}
+
+.next-btn {
+    color: white;
+}
+
+.player-btn {
+    color: var(--text-primary);
+}
+
+.player-btn.selected {
+    color: var(--gold);
+}
+
+.player-btn:hover {
+    color: white;
+}
+
+.btn-outline {
+    color: var(--text-primary);
+}
+.hint {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    text-align: center;
+}

@@ -1,0 +1,50 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}BETA - Голосование{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/beta_vote.css' %}?v=2">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/pages/beta_vote.js' %}?v=3" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="vote-container">
+    <div class="vote-header">
+        <h2><i class="fas fa-vote-yea"></i> Голосование</h2>
+        <button onclick="goBack()" class="btn-outline" style="width: auto; padding: 6px 12px;">
+            ← Назад
+        </button>
+    </div>
+    
+    <div class="total-info">
+        <div class="total-label">Всего голосующих игроков</div>
+        <div class="total-value">
+            <span id="totalVoters">0</span>
+            <span class="remain-value">отдано <span id="totalGiven">0</span>, осталось <span id="remainVotes">0</span></span>
+        </div>
+    </div>
+    
+    <div id="winnerAlert"></div>
+    
+    <div id="nominatedList" class="nominated-list">
+        <div class="empty-state">Загрузка...</div>
+    </div>
+    
+    <div class="action-buttons">
+        <button onclick="resetVoting()" class="btn-outline">
+            <i class="fas fa-redo"></i> Сбросить
+        </button>
+        <button onclick="finishVoting()" class="btn-primary">
+            <i class="fas fa-check"></i> Завершить голосование
+        </button>
+    </div>
+    
+    <div class="vote-log">
+        <div id="voteLog"></div>
+    </div>
+</div>
+{% endblock %}

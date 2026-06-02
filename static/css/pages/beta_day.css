@@ -1,0 +1,239 @@
+.day-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 30px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.mode-btn.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--gold);
+}
+
+.mode-btn.foul-mode.active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.mode-btn.nominate-mode.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+
+.current-mode-info {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.vote-btn {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.phase-btn {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.player-item:hover {
+    transform: translateX(5px);
+}
+
+.player-item.selected {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.player-number {
+    width: 40px;
+    font-weight: bold;
+    color: var(--gold);
+}
+
+.player-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.player-role {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 55px;
+    text-align: center;
+}
+
+.role-don { background: #8b5cf6; color: white; }
+.role-mafia { background: #ef4444; color: white; }
+.role-sheriff { background: #f59e0b; color: white; }
+.role-civil { background: #22c55e; color: white; }
+
+.foul-indicators {
+    display: flex;
+    gap: 3px;
+    margin-right: 8px;
+}
+
+.foul-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-color);
+}
+
+.foul-dot.active {
+    background: #f59e0b;
+    box-shadow: 0 0 4px #f59e0b;
+}
+
+.nomination-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background: #3b82f6;
+    color: white;
+    margin-left: 5px;
+}
+
+.logs-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+}
+
+.log-line {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-family: monospace;
+}
+
+.log-time {
+    color: var(--gold);
+    margin-right: 6px;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+/* Исправление цвета текста на кнопках */
+.btn-outline,
+.next-btn,
+.player-btn,
+.mode-btn,
+.vote-btn,
+.phase-btn,
+.action-icon {
+    color: var(--text-primary);
+}
+
+.next-btn {
+    color: white;
+}
+
+.player-btn {
+    color: var(--text-primary);
+}
+
+.player-btn.selected {
+    color: var(--gold);
+}
+
+.player-btn:hover {
+    color: white;
+}
+
+.btn-outline {
+    color: var(--text-primary);
+}
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.vote-btn {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.night-skip-btn {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}

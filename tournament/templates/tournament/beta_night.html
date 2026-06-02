@@ -1,0 +1,49 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}BETA - Ночная фаза — Раунд {{ round_num }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/beta_night.css' %}?v=2">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/pages/beta_night.js' %}?v=2" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="night-container">
+    <div class="night-header">
+        <h2><i class="fas fa-moon"></i> Ночная фаза — Раунд {{ round_num }}</h2>
+        <button onclick="resetToSetup()" class="btn-outline">
+            <i class="fas fa-home"></i> Новая игра
+        </button>
+    </div>
+    
+    <div class="eliminated-info" id="eliminatedInfo"></div>
+    
+    <div class="section mafia-section">
+        <div class="section-title">💀 МАФИЯ — КОГО УБИВАЕМ?</div>
+        <div class="player-buttons" id="mafiaButtons"></div>
+        <div class="hint">🔹 Выберите игрока для убийства или нажмите «ПРОМАХ»</div>
+    </div>
+    
+    <div class="section don-section">
+        <div class="section-title">👑 ДОН — КОГО ПРОВЕРЯЕМ?</div>
+        <div class="player-buttons" id="donButtons"></div>
+    </div>
+    
+    <div class="section sheriff-section">
+        <div class="section-title">⭐ ШЕРИФ — КОГО ПРОВЕРЯЕМ?</div>
+        <div class="player-buttons" id="sheriffButtons"></div>
+    </div>
+    
+    <button onclick="nextPhase()" id="nextBtn" class="next-btn">
+        <i class="fas fa-sun"></i> Перейти в ДЕНЬ
+    </button>
+    
+    <div class="logs-box">
+        <div id="logsList"></div>
+    </div>
+</div>
+{% endblock %}

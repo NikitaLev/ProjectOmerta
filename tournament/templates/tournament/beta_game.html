@@ -1,0 +1,63 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}BETA - Настройка игры{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/beta_game.css' %}?v=5">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/pages/beta_game.js' %}?v=5" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="beta-container">
+    <div class="beta-header">
+        <h2 style="font-size: 1.2rem;">
+            <i class="fas fa-dice-d6"></i> 
+            Настройка игры
+            <span class="beta-badge"><i class="fas fa-flask"></i> BETA</span>
+        </h2>
+        <button onclick="resetGame()" class="btn-outline">
+            <i class="fas fa-refresh"></i> Сброс
+        </button>
+    </div>
+    
+    <!-- Шаг 1: Игроки -->
+    <div id="setupScreen">
+        <div class="compact-table">
+            <div class="table-row header">
+                <div class="table-cell">№</div>
+                <div class="table-cell">Игрок</div>
+            </div>
+            <div id="playersList"></div>
+        </div>
+        <button onclick="startGame()" class="btn-primary">
+            <i class="fas fa-arrow-right"></i> Далее: раздача ролей
+        </button>
+    </div>
+    
+    <!-- Шаг 2: Раздача ролей -->
+    <div id="roleDealScreen" style="display: none;">
+        <div class="deal-status">
+            <div class="status-message" id="dealMessage">
+                <i class="fas fa-hand-point-up"></i> Укажите ШЕРИФА города
+            </div>
+            <div class="status-counters">
+                <span class="counter sheriff">⭐ Шериф: <span id="sheriffCount">0</span>/1</span>
+                <span class="counter don">👑 Дон: <span id="donCount">0</span>/1</span>
+                <span class="counter mafia">💀 Мафия: <span id="mafiaCount">0</span>/2</span>
+            </div>
+        </div>
+        
+        <div class="role-deal-grid" id="roleDealList"></div>
+        
+        <div class="logs-box" style="margin: 10px 0; max-height: 150px;" id="dealLogs"></div>
+        
+        <button onclick="confirmStart()" id="confirmDealBtn" class="btn-primary" style="display: none;">
+            <i class="fas fa-play"></i> Начать игру
+        </button>
+    </div>
+</div>
+{% endblock %}
