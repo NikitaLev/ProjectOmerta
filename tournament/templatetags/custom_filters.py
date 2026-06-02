@@ -7,7 +7,7 @@ def get_item(dictionary, key):
     """Получить значение из словаря по ключу"""
     if dictionary is None:
         return None
-    return dictionary.get(key)
+    return dictionary.get(key, {}) if dictionary else {}
 
 @register.filter
 def get_role_icon(role):

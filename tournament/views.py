@@ -23,64 +23,67 @@ from django.db.models import Count, Sum, Max
 def profile(request):
     user = request.user
     
-    # Получаем турниры, в которых участвует игрок
-    if user.role == 'host' and user.is_approved_host:
-        # Сначала получаем все турниры, потом обрезаем до 5
-        all_tournaments = Tournament.objects.filter(
-            players__user=user
-        ).distinct().order_by('-created_at')
-        
-        # Для статистики используем полный список
-        tournaments_stats = {
-            'total': all_tournaments.count(),
-            'active': all_tournaments.filter(status='active').count(),
-            'completed': all_tournaments.filter(status='completed').count(),
-        }
-        
-        # Для отображения берём только первые 5
-        participated_tournaments = all_tournaments[:5]
-    else:
-        # Для игрока просто все турниры
-        participated_tournaments = Tournament.objects.filter(
-            players__user=user
-        ).order_by('-created_at')
-        
-        tournaments_stats = {
-            'total': participated_tournaments.count(),
-            'active': participated_tournaments.filter(status='active').count(),
-            'completed': participated_tournaments.filter(status='completed').count(),
-        }
+    # Турниры где участвует игроком — РАБОТАЛО РАНЬШЕ
+    player_tournaments = Tournament.objects.filter(
+        players__user=user
+    ).distinct().order_by('-created_at')
     
-    # Собираем статистику по каждому турниру для игрока
+    player_stats = {
+        'total': player_tournaments.count(),
+        'active': player_tournaments.filter(status='active').count(),
+        'completed': player_tournaments.filter(status='completed').count(),
+    }
+    
+    # Статистика по каждому турниру
     tournament_stats = {}
-    for tournament in participated_tournaments:
+    for tournament in player_tournaments:
         try:
-            tp = TournamentPlayer.objects.get(
-                tournament=tournament,
-                user=user
-            )
-            # Сумма баллов игрока в этом турнире
-            total_score = PlayerGameStats.objects.filter(
-                tournament_player=tp
-            ).aggregate(total=models.Sum('total_score'))['total'] or 0
-            
+            tp = TournamentPlayer.objects.get(tournament=tournament, user=user)
+            total_score = PlayerGameStats.objects.filter(tournament_player=tp).aggregate(total=models.Sum('total_score'))['total'] or 0
             tournament_stats[tournament.id] = {
                 'total_score': round(total_score, 2),
                 'games_played': PlayerGameStats.objects.filter(tournament_player=tp).count(),
             }
         except TournamentPlayer.DoesNotExist:
-            tournament_stats[tournament.id] = {
-                'total_score': 0,
-                'games_played': 0,
-            }
+            tournament_stats[tournament.id] = {'total_score': 0, 'games_played': 0}
+    
+    # Проведённые турниры (для ведущего)
+    hosted_tournaments_data = []
+    hosted_stats = None
+    
+    if user.role == 'host' and user.is_approved_host:
+        hosted_tournaments = Tournament.objects.filter(host=user).order_by('-created_at')
+        hosted_stats = {
+            'total': hosted_tournaments.count(),
+            'active': hosted_tournaments.filter(status='active').count(),
+            'completed': hosted_tournaments.filter(status='completed').count(),
+            'draft': hosted_tournaments.filter(status='draft').count(),
+        }
+        
+        for tournament in hosted_tournaments[:5]:
+            completed_games = tournament.games.exclude(winning_team__isnull=True).count()
+            hosted_tournaments_data.append({
+                'id': tournament.id,
+                'name': tournament.name,
+                'status': tournament.status,
+                'status_display': tournament.get_status_display(),
+                'start_date': tournament.start_date,
+                'host_username': tournament.host.username,
+                'players_count': tournament.players.count(),
+                'max_players': tournament.max_players,
+                'total_games': tournament.games.count(),
+                'completed_games': completed_games,
+            })
     
     context = {
         'user': user,
         'role_display': dict(user.ROLE_CHOICES).get(user.role, 'Игрок'),
         'is_host': user.role == 'host' and user.is_approved_host,
-        'participated_tournaments': participated_tournaments,
-        'tournaments_stats': tournaments_stats,
+        'player_tournaments': player_tournaments[:5],
+        'player_stats': player_stats,
         'tournament_stats': tournament_stats,
+        'hosted_tournaments': hosted_tournaments_data,
+        'hosted_stats': hosted_stats,
     }
     return render(request, 'tournament/profile.html', context)
 

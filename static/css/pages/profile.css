@@ -795,3 +795,22 @@
         gap: 8px;
     }
 }
+/* Блок проведённых турниров */
+.profile-tournaments.hosted {
+    border-left: 3px solid var(--gold);
+    margin-top: 30px;
+}
+
+.profile-tournaments.hosted h2 i {
+    color: var(--gold);
+}
+
+.tournament-players {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tournament-players i {
+    color: var(--gold);
+    margin-right: 4px;
+}
