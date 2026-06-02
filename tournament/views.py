@@ -1518,8 +1518,10 @@ def player_stats_api(request):
     # --- Общая статистика ---
     total_games = all_stats.count()
     if total_games == 0:
-        return JsonResponse({'error': 'Нет сыгранных игр'}, status=404)
-    
+        return JsonResponse({
+            'has_stats': False,
+            'message': 'У вас пока нет сыгранных игр. Примите участие в турнирах, чтобы статистика появилась.'
+        })
     total_score = all_stats.aggregate(total=Sum('total_score'))['total'] or 0
     avg_score = total_score / total_games if total_games > 0 else 0
     
@@ -1598,6 +1600,7 @@ def player_stats_api(request):
     best_lh_bonus = all_stats.aggregate(max=Max('lh_bonus'))['max'] or 0
     
     data = {
+        'has_stats': True,
         'total_games': total_games,
         'total_score': round(total_score, 2),
         'avg_score': round(avg_score, 2),

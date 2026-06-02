@@ -48,29 +48,7 @@
     <form method="post" class="game-form" id="gameForm">
         {% csrf_token %}
         
-        <!-- Блок выбора победителя -->
-        <div class="form-section winner-section">
-            <h2 class="section-title">
-                <i class="fas fa-trophy"></i>
-                Победитель игры
-            </h2>
-            <div class="winner-options">
-                <label class="winner-option {% if game.winning_team == 'mafia' %}selected{% endif %}">
-                    <input type="radio" name="winning_team" value="mafia" {% if game.winning_team == 'mafia' %}checked{% endif %} required>
-                    <div class="winner-card mafia">
-                        <i class="fas fa-skull"></i>
-                        <span>Мафия</span>
-                    </div>
-                </label>
-                <label class="winner-option {% if game.winning_team == 'peace' %}selected{% endif %}">
-                    <input type="radio" name="winning_team" value="peace" {% if game.winning_team == 'peace' %}checked{% endif %} required>
-                    <div class="winner-card peace">
-                        <i class="fas fa-users"></i>
-                        <span>Мирные</span>
-                    </div>
-                </label>
-            </div>
-        </div>
+        
         
         <!-- Таблица игроков -->
         <div class="form-section players-section">
@@ -189,6 +167,29 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+        <!-- Блок выбора победителя -->
+        <div class="form-section winner-section">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                Победитель игры
+            </h2>
+            <div class="winner-options">
+                <label class="winner-option {% if game.winning_team == 'mafia' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="mafia" {% if game.winning_team == 'mafia' %}checked{% endif %} required>
+                    <div class="winner-card mafia">
+                        <i class="fas fa-skull"></i>
+                        <span>Мафия</span>
+                    </div>
+                </label>
+                <label class="winner-option {% if game.winning_team == 'peace' %}selected{% endif %}">
+                    <input type="radio" name="winning_team" value="peace" {% if game.winning_team == 'peace' %}checked{% endif %} required>
+                    <div class="winner-card peace">
+                        <i class="fas fa-users"></i>
+                        <span>Мирные</span>
+                    </div>
+                </label>
             </div>
         </div>
         

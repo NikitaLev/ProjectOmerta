@@ -8,12 +8,18 @@ async function loadPlayerStats() {
         
         // Обновляем бейдж с общим количеством игр
         document.getElementById('totalGamesBadge').textContent = data.total_games || 0;
+
+        if (!data.has_stats) {
+            showEmptyState(data.message || 'Нет данных для отображения');
+            return;
+        }
         
         // Рендерим все вкладки
         renderOverallStats(data);
         renderRolesStats(data);
         renderPlacesStats(data);
         renderRecordsStats(data);
+        hideLoaders();
         
     } catch (error) {
         console.error('Ошибка загрузки статистики:', error);
@@ -133,7 +139,13 @@ function renderPlacesStats(data) {
     const totalPlaces = Object.values(distribution).reduce((a, b) => a + b, 0);
     
     if (places.length === 0) {
-        document.getElementById('placesContent').innerHTML = '<div class="empty-state"><i class="fas fa-chart-simple"></i><p>Нет данных о местах в турнирах</p></div>';
+         document.getElementById('placesContent').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-chart-simple"></i>
+                <p>Нет данных о местах в турнирах</p>
+                <small>Завершённые турниры появятся здесь</small>
+            </div>
+        `;
         document.getElementById('loadingPlaces').style.display = 'none';
         document.getElementById('placesContent').style.display = 'block';
         return;
@@ -168,6 +180,16 @@ function renderPlacesStats(data) {
 
 function renderRecordsStats(data) {
     let html = `<div class="stats-grid">`;
+    
+    if (!data.best_tournament && data.tournaments_count === 0) {
+        document.getElementById('recordsContent').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-trophy"></i>
+                <p>Рекорды появятся после участия в турнирах</p>
+            </div>
+        `;
+        return;
+    }
     
     if (data.best_tournament) {
         html += `
@@ -275,4 +297,47 @@ window.copyInviteLink = function(elementId) {
     } catch (err) {
         console.error('Ошибка копирования:', err);
     }
+}
+function showEmptyState(message) {
+    const emptyHtml = `
+        <div class="empty-state">
+            <i class="fas fa-chart-simple"></i>
+            <h3>Статистика отсутствует</h3>
+            <p>${message}</p>
+            <a href="/" class="btn btn-outline btn-sm" style="margin-top: 15px;">
+                <i class="fas fa-trophy"></i> Найти турнир
+            </a>
+        </div>
+    `;
+    
+    // Показываем заглушку во всех вкладках
+    const contents = ['overallContent', 'rolesContent', 'placesContent', 'recordsContent'];
+    contents.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = emptyHtml;
+            el.style.display = 'block';
+        }
+    });
+    
+    // Обновляем бейдж
+    const badge = document.getElementById('totalGamesBadge');
+    if (badge) badge.textContent = '0';
+    
+    // Скрываем лоадеры
+    hideLoaders();
+}
+
+function hideLoaders() {
+    const loaders = ['loadingOverall', 'loadingRoles', 'loadingPlaces', 'loadingRecords'];
+    loaders.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    
+    const contents = ['overallContent', 'rolesContent', 'placesContent', 'recordsContent'];
+    contents.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'block';
+    });
 }
