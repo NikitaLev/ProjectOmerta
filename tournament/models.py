@@ -216,3 +216,16 @@ class PlayerGameStats(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - Игра {self.game.round_number} - {self.get_role_display()}"
+    
+def update_player_stats(self):
+    """Обновляет агрегированную статистику игрока"""
+    from django.db.models import Sum, Count
+    
+    total_stats = PlayerGameStats.objects.filter(user=self, game__winning_team__isnull=False)
+    
+    self.games_played = total_stats.count()
+    
+    total_score = total_stats.aggregate(total=Sum('total_score'))['total'] or 0
+    self.player_rating = round(total_score / self.games_played, 2) if self.games_played > 0 else 0
+    
+    self.save()

@@ -28,4 +28,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/toggle-visibility/', views.toggle_data_visibility, name='toggle_data_visibility'),
     path('tournament/<int:tournament_id>/complete/', views.complete_tournament, name='complete_tournament'),
     path('tournament/<int:tournament_id>/recalculate-stats/', views.recalculate_tournament_stats, name='recalculate_tournament_stats'),
+    path('profile/stats/', views.player_stats_api, name='player_stats_api'),
 ]

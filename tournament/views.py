@@ -17,7 +17,7 @@ from .utils import generate_seating
 from django.conf import settings
 from django.db import models
 from .utils import generate_invitation_token, generate_seating, calculate_final_places, calculate_tournament_statistics
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Max
 
 @login_required
 def profile(request):
@@ -1503,3 +1503,128 @@ def home(request):
         'tournaments': tournaments,
     }
     return render(request, 'tournament/home.html', context)
+
+@login_required
+def player_stats_api(request):
+    """API для получения расширенной статистики игрока"""
+    user = request.user
+    
+    # Получаем все TournamentPlayer записи пользователя
+    tournament_players = TournamentPlayer.objects.filter(user=user)
+    
+    # Все статистики игр
+    all_stats = PlayerGameStats.objects.filter(user=user, game__winning_team__isnull=False)
+    
+    # --- Общая статистика ---
+    total_games = all_stats.count()
+    if total_games == 0:
+        return JsonResponse({'error': 'Нет сыгранных игр'}, status=404)
+    
+    total_score = all_stats.aggregate(total=Sum('total_score'))['total'] or 0
+    avg_score = total_score / total_games if total_games > 0 else 0
+    
+    # Победы
+    wins = 0
+    for stat in all_stats:
+        if (stat.game.winning_team == 'mafia' and stat.role in ['mafia', 'don']) or \
+           (stat.game.winning_team == 'peace' and stat.role in ['civil', 'sheriff']):
+            wins += 1
+    winrate = (wins / total_games * 100) if total_games > 0 else 0
+    
+    # Первые убийства (игрок был первым убитым)
+    first_kills = all_stats.filter(first_shot__isnull=False).exclude(first_shot='').count()
+    
+    # Жёлтые и красные карточки
+    yellow_cards = all_stats.filter(yellow_cards=1).count()
+    red_cards = all_stats.filter(yellow_cards__gte=2).count()
+    
+    # Суммарные баллы
+    total_main = all_stats.aggregate(total=Sum('main_score'))['total'] or 0
+    total_bonus = all_stats.aggregate(total=Sum('bonus_score'))['total'] or 0
+    total_penalty = all_stats.aggregate(total=Sum('penalty_score'))['total'] or 0
+    total_ci = all_stats.aggregate(total=Sum('ci'))['total'] or 0
+    
+    # --- Статистика по ролям ---
+    roles_stats = {}
+    for role, role_name in [('don', 'Дон'), ('mafia', 'Мафия'), ('sheriff', 'Шериф'), ('civil', 'Мирный')]:
+        role_stats = all_stats.filter(role=role)
+        role_count = role_stats.count()
+        if role_count > 0:
+            role_total_score = role_stats.aggregate(total=Sum('total_score'))['total'] or 0
+            role_wins = 0
+            for stat in role_stats:
+                if (stat.game.winning_team == 'mafia' and stat.role in ['mafia', 'don']) or \
+                   (stat.game.winning_team == 'peace' and stat.role in ['civil', 'sheriff']):
+                    role_wins += 1
+            roles_stats[role] = {
+                'name': role_name,
+                'count': role_count,
+                'total_score': round(role_total_score, 2),
+                'avg_score': round(role_total_score / role_count, 2),
+                'wins': role_wins,
+                'winrate': round(role_wins / role_count * 100, 1),
+                'icon': get_role_icon(role)
+            }
+    
+    # --- Распределение мест в турнирах ---
+    # Получаем финальные места игрока во всех турнирах
+    places = []
+    for tp in tournament_players:
+        if tp.final_place:
+            places.append(tp.final_place)
+    
+    place_distribution = {}
+    for place in places:
+        place_distribution[place] = place_distribution.get(place, 0) + 1
+    
+    # Лучшее место
+    best_place = min(places) if places else None
+    
+    # --- Достижения / рекорды ---
+    # Лучший результат в одном турнире
+    tournament_scores = []
+    for tp in tournament_players:
+        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
+        tournament_scores.append({
+            'tournament_id': tp.tournament.id,
+            'tournament_name': tp.tournament.name,
+            'score': round(total, 2),
+            'place': tp.final_place
+        })
+    tournament_scores.sort(key=lambda x: x['score'], reverse=True)
+    best_tournament = tournament_scores[0] if tournament_scores else None
+    
+    # Лучший бонус за ЛХ в одной игре
+    best_lh_bonus = all_stats.aggregate(max=Max('lh_bonus'))['max'] or 0
+    
+    data = {
+        'total_games': total_games,
+        'total_score': round(total_score, 2),
+        'avg_score': round(avg_score, 2),
+        'wins': wins,
+        'winrate': round(winrate, 1),
+        'first_kills': first_kills,
+        'yellow_cards': yellow_cards,
+        'red_cards': red_cards,
+        'total_main': round(total_main, 2),
+        'total_bonus': round(total_bonus, 2),
+        'total_penalty': round(total_penalty, 2),
+        'total_ci': round(total_ci, 2),
+        'roles': roles_stats,
+        'place_distribution': place_distribution,
+        'best_place': best_place,
+        'best_tournament': best_tournament,
+        'best_lh_bonus': best_lh_bonus,
+        'tournaments_count': tournament_players.count(),
+    }
+    
+    return JsonResponse(data)
+
+def get_role_icon(role):
+    icons = {
+        'don': 'fas fa-crown',
+        'mafia': 'fas fa-skull',
+        'sheriff': 'fas fa-star',
+        'civil': 'fas fa-hand-peace'
+    }
+    return icons.get(role, 'fas fa-user')

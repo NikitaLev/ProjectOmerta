@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let roleIconHtml = '';
                 if (seat.role) {
                     const roleMap = {
-                        'don': '<i class="ph-fill ph-crown-simple" style="color: #d4af37;"></i>',
+                        'don': '<i class="ph-fill ph-crown-simple" style="color: #6b21a5;"></i>',
                         'mafia': '<i class="bi bi-hand-thumbs-down-fill" style="color: #6b21a5;"></i>',
                         'sheriff': '<i class="mdi mdi-police-badge" style="color: #fbbf24;"></i>',
                         'civil': '<i class="bi bi-hand-thumbs-up-fill" style="color: #ef4444;"></i>'

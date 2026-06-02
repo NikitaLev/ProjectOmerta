@@ -1,0 +1,160 @@
+/* Дополнительные стили для статистики в профиле */
+.stats-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.stats-tab {
+    padding: 8px 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 30px;
+}
+
+.stats-tab:hover {
+    color: var(--gold);
+}
+
+.stats-tab.active {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+}
+
+.stats-tab-content {
+    display: none;
+}
+
+.stats-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.role-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.role-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 15px;
+    text-align: center;
+}
+
+.role-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.role-icon.don { color: #c084fc; }
+.role-icon.mafia { color: #ef4444; }
+.role-icon.sheriff { color: #fbbf24; }
+.role-icon.civil { color: #4ade80; }
+
+.role-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.role-stats {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.role-stats span {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.place-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.place-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.place-label {
+    width: 60px;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.bar-container {
+    flex: 1;
+    height: 30px;
+    background: var(--bg-secondary);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    color: var(--bg-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-radius: 15px;
+    transition: width 0.5s ease;
+}
+
+.record-card {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    padding: 15px;
+    text-align: center;
+}
+
+.record-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.record-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-spinner i {
+    font-size: 2rem;
+    color: var(--gold);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

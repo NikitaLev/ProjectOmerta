@@ -1,11 +1,16 @@
 {% extends 'tournament/base.html' %}
 {% load static %}
-
 {% load custom_filters %}
+
 {% block title %}Профиль - {{ user.username }} - Project Omerta{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/pages/profile.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/pages/profile.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/pages/profile_stats.css' %}?v=1">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/pages/profile_stats.js' %}?v=1" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -53,6 +58,7 @@
                         {% endif %}
                     </p>
                 </div>
+                
                 {% if user.role == 'player' and not user.is_approved_host %}
                 <div class="profile-apply-host">
                     <h2>Стать ведущим</h2>
@@ -62,6 +68,7 @@
                     </a>
                 </div>
                 {% endif %}
+                
                 {% if user.role == 'host' and user.is_approved_host %}
                 <div class="profile-host-actions">
                     <h2>Управление турнирами</h2>
@@ -81,17 +88,51 @@
                 {% endif %}
             </div>
             
-            <div class="profile-stats">
-                <h2>Статистика игрока</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">{{ user.games_played|default:0 }}</div>
-                        <div class="stat-label">Игр сыграно</div>
+            <!-- РАСШИРЕННАЯ СТАТИСТИКА ИГРОКА -->
+            <div class="profile-stats" id="playerStatsContainer">
+                <h2>
+                    <i class="fas fa-chart-line"></i> 
+                    Статистика игрока
+                    <span class="badge" id="totalGamesBadge">—</span>
+                </h2>
+                
+                <div class="stats-tabs">
+                    <button class="stats-tab active" data-tab="overall">Общая</button>
+                    <button class="stats-tab" data-tab="roles">По ролям</button>
+                    <button class="stats-tab" data-tab="places">Места в турнирах</button>
+                    <button class="stats-tab" data-tab="records">Рекорды</button>
+                </div>
+                
+                <div id="overallStats" class="stats-tab-content active">
+                    <div class="loading-spinner" id="loadingOverall">
+                        <i class="fas fa-spinner"></i>
+                        <p>Загрузка статистики...</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value">{{ user.player_rating|default:0|floatformat:2 }}</div>
-                        <div class="stat-label">Рейтинг</div>
+                    <div id="overallContent" style="display: none;"></div>
+                </div>
+                
+                <div id="rolesStats" class="stats-tab-content">
+                    <div class="loading-spinner" id="loadingRoles">
+                        <i class="fas fa-spinner"></i>
+                        <p>Загрузка статистики...</p>
                     </div>
+                    <div id="rolesContent" style="display: none;"></div>
+                </div>
+                
+                <div id="placesStats" class="stats-tab-content">
+                    <div class="loading-spinner" id="loadingPlaces">
+                        <i class="fas fa-spinner"></i>
+                        <p>Загрузка статистики...</p>
+                    </div>
+                    <div id="placesContent" style="display: none;"></div>
+                </div>
+                
+                <div id="recordsStats" class="stats-tab-content">
+                    <div class="loading-spinner" id="loadingRecords">
+                        <i class="fas fa-spinner"></i>
+                        <p>Загрузка статистики...</p>
+                    </div>
+                    <div id="recordsContent" style="display: none;"></div>
                 </div>
             </div>
 
@@ -195,6 +236,7 @@
         </div>
     </div>
 </div>
+
 <!-- Модальное окно для списка созданных игроков -->
 <div id="createdPlayersModal" class="modal">
     <div class="modal-content large">
@@ -221,10 +263,10 @@
             
             <div class="players-list-container">
                 <div class="players-list-header">
-                    <div class="player-cell">Никнейм</div>
-                    <div class="player-cell">Статус</div>
-                    <div class="player-cell">Дата создания</div>
-                    <div class="player-cell">Ссылка</div>
+                    <div>Никнейм</div>
+                    <div>Статус</div>
+                    <div>Дата создания</div>
+                    <div>Ссылка</div>
                 </div>
                 
                 <div class="players-list" id="createdPlayersList">
@@ -258,9 +300,6 @@
                                 <button class="copy-btn" onclick="copyInviteLink('invite-{{ player.id }}')">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                                <!--button class="delete-btn" onclick="deletePlayer('{{ player.id }}', '{{ player.player_nickname }}')" title="Удалить игрока">
-                                    <i class="fas fa-trash"></i>
-                                </button-->
                             </div>
                             {% else %}
                             <span class="text-muted">—</span>
@@ -283,74 +322,39 @@
         </div>
     </div>
 </div>
+
 <script>
+// Оставляем только функции для модального окна и копирования
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('createdPlayersModal');
     const showBtn = document.getElementById('showCreatedPlayersBtn');
     
-    if (!modal || !showBtn) return;
-    
-    // Убедимся, что модальное окно скрыто при загрузке
-    modal.style.display = 'none';
-    
-    // Открытие модального окна
-    showBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Запрещаем скролл фона
-    });
-    
-    // Функция закрытия
-    window.closePlayersModal = function() {
+    if (modal && showBtn) {
         modal.style.display = 'none';
-        document.body.style.overflow = ''; // Возвращаем скролл
-    };
-    
-    // Закрытие по крестику
-    const closeBtn = modal.querySelector('.close-modal');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function(e) {
+        
+        showBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            closePlayersModal();
+            e.stopPropagation();
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
         });
-    }
-    
-    // Закрытие по кнопке в футере
-    const closeFooterBtn = modal.querySelector('.btn-outline');
-    if (closeFooterBtn) {
-        closeFooterBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            closePlayersModal();
-        });
-    }
-    
-    // Закрытие по клику вне окна
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            closePlayersModal();
+        
+        window.closePlayersModal = function() {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+        
+        const closeBtn = modal.querySelector('.close-modal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closePlayersModal);
         }
-    });
-});
-function deletePlayer(playerId, nickname) {
-    if (confirm(`Удалить игрока ${nickname}? Это действие нельзя отменить.`)) {
-        // Создаем форму для POST запроса
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/delete-player/${playerId}/`;
         
-        const csrf = document.createElement('input');
-        csrf.type = 'hidden';
-        csrf.name = 'csrfmiddlewaretoken';
-        csrf.value = '{{ csrf_token }}';
-        
-        form.appendChild(csrf);
-        document.body.appendChild(form);
-        form.submit();
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) closePlayersModal();
+        });
     }
-}
+});
 
-// Функция копирования
 window.copyInviteLink = function(elementId) {
     const input = document.getElementById(elementId);
     if (!input) return;
@@ -360,13 +364,11 @@ window.copyInviteLink = function(elementId) {
     
     try {
         document.execCommand('copy');
-        
         const btn = event.target.closest('.copy-btn');
         if (btn) {
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check"></i>';
             btn.classList.add('copied');
-            
             setTimeout(() => {
                 btn.innerHTML = originalHtml;
                 btn.classList.remove('copied');
