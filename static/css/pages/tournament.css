@@ -1807,3 +1807,7 @@
         grid-template-columns: 1fr;
     }
 }
+.role-icon-stats{
+    font-size: 3rem;
+    margin-bottom: 10px;
+}

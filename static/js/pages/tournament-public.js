@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 rolesHtml += `
                     <div class="stat-card">
-                        <div class="role-icon">${roleIcon}</div>
+                        <div class="role-icon-stats">${roleIcon}</div>
                         <div class="role-name">${roleName}</div>
                         <div class="player-name">${data.player_name}</div>
                         <div class="stats-detail">

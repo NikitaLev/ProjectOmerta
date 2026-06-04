@@ -882,10 +882,6 @@
     margin-bottom: 10px;
 }
 
-.team-card.mafia i {
-    color: #ef4444;
-}
-
 .team-card.peace i {
     color: #4ade80;
 }
@@ -1128,10 +1124,24 @@
 }
  
 .ph-fill.ph-crown-simple {
+    color: #6b21a5; /* цвет иконки */
     background-color: #6b21a5; /* цвет иконки */
     mask-image: url('/static/images/don_3.svg');
     
-    width: 24px;
-    height: 24px;
+    font-size: 1.5rem;
     display: inline-block;
+}
+.fas.fa-skull{
+    font-size: 3rem;
+    color: #6b21a5; /* цвет иконки */
+    background-color: #6b21a5; /* цвет иконки */
+    mask-image: url('/static/images/don_2.svg');
+    
+    display: inline-block;
+}
+
+.role-icon-stats .ph-fill.ph-crown-simple{
+    mask-image: url('/static/images/don_2.svg');
+    font-size: 3rem;
+    margin-bottom: 10px;
 }
