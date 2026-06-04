@@ -433,7 +433,17 @@
 
 .role-icon .ph-skull,
 .role-icon .ph-crown-simple {
-    font-size: 1.3rem;
+    background-color: #6b21a5; /* цвет иконки */
+    mask-image: url('/static/images/don_3.svg');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    
+    /* Убираем старую иконку */
+    font-size: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
 }
 
 /* Эмодзи в выпадающем списке (опционально) */
@@ -589,4 +599,16 @@
 .yellow-card-select option {
     background: var(--bg-secondary);
     color: var(--text-primary);
+}
+
+.ph-fill.ph-crown-simple {
+    background-color: #6b21a5; /* цвет иконки */
+    background-image:url('/static/images/don_3.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-size: 0;
+    width: 1.2em;
+    height: 1.2em;
+    display: inline-block;
 }
