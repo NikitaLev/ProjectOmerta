@@ -883,7 +883,7 @@
 }
 
 .team-card.peace i {
-    color: #4ade80;
+    color: #ef4444;
 }
 
 .team-name {
@@ -1128,7 +1128,7 @@
     background-color: #6b21a5; /* цвет иконки */
     mask-image: url('/static/images/don_3.svg');
     
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     display: inline-block;
 }
 .fas.fa-skull{
@@ -1144,4 +1144,25 @@
     mask-image: url('/static/images/don_2.svg');
     font-size: 3rem;
     margin-bottom: 10px;
+}
+.bi.bi-hand-thumbs-up-fill{
+    color: #ef4444; /* цвет иконки */
+    background-color: #ef4444; /* цвет иконки */
+    mask-image: url('/static/images/civ_3.svg');
+    mask-repeat: no-repeat;
+    font-size: 1.8rem;
+    display: inline-block;
+}
+.role-icon-stats .bi.bi-hand-thumbs-up-fill{
+    mask-image: url('/static/images/civ_3.svg');
+    font-size: 3rem;
+}
+.fas.fa-users{
+    font-size: 3rem;
+    color: #ef4444; /* цвет иконки */
+    background-color: #ef4444; /* цвет иконки */
+    mask-image: url('/static/images/civ_3.svg');
+    mask-repeat: no-repeat;
+    
+    display: inline-block;
 }
