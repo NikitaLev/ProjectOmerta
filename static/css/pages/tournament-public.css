@@ -516,7 +516,6 @@
 }
 
 .public-game-card .seating-title i {
-    color: var(--gold);
 }
 
 .public-game-card .seating-list {
@@ -652,13 +651,13 @@
 }
 
 .public-game-card .winner-team.mafia {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    color: #6b21a5;
 }
 
 .public-game-card .winner-team.peace {
-    background: rgba(74, 222, 128, 0.1);
-    color: #4ade80;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    color: #ef4444;;
 }
 
 /* Действия */
@@ -1115,7 +1114,6 @@
 
     .public-game-card .seating-title i {
         display:none;
-        color: var(--gold);
     }
 }
 
@@ -1159,6 +1157,24 @@
 }
 .fas.fa-users{
     font-size: 3rem;
+    color: #ef4444; /* цвет иконки */
+    background-color: #ef4444; /* цвет иконки */
+    mask-image: url('/static/images/civ_3.svg');
+    mask-repeat: no-repeat;
+    
+    display: inline-block;
+}
+
+.winner-team.mafia .fas.fa-skull{
+    font-size: 1.5rem;
+    color: #6b21a5; /* цвет иконки */
+    background-color: #6b21a5; /* цвет иконки */
+    mask-image: url('/static/images/don_2.svg');
+    
+    display: inline-block;
+}
+.winner-team.peace .fas.fa-users{
+    font-size: 1.5rem;
     color: #ef4444; /* цвет иконки */
     background-color: #ef4444; /* цвет иконки */
     mask-image: url('/static/images/civ_3.svg');

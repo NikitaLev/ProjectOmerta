@@ -101,3 +101,11 @@
     height: 24px;
     display: inline-block;
 }
+.bi.bi-hand-thumbs-up-fill{
+    color: #ef4444; /* цвет иконки */
+    background-color: #ef4444; /* цвет иконки */
+    mask-image: url('/static/images/civ_3.svg');
+    mask-repeat: no-repeat;
+    margin-top: 9px;
+    display: inline-block;
+}

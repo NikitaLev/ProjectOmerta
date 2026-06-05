@@ -95,7 +95,7 @@ function renderPlayers() {
             <div class="player-item" onclick="handlePlayerClick(${num})">
                 <div class="player-number">${num}</div>
                 <div class="player-name">${player}</div>
-                <div class="player-role ${roleClass[role]}">${roleNames[role]}</div>
+                <!--div class="player-role ${roleClass[role]}">${roleNames[role]}</div--!>
                 <div class="foul-indicators">${foulDots}</div>
                 ${nominationHtml}
             </div>
