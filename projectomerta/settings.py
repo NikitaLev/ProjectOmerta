@@ -17,8 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # Для разработки
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -40,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tournament',  
+    'tournament',
 ]
 
 MIDDLEWARE = [
@@ -134,3 +133,4 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Куда перенаправлять неавторизованных пользователей
 LOGIN_URL = '/accounts/login/'
+ALLOWED_HOSTS = ['ezionik.pythonanywhere.com', 'www.ezionik.pythonanywhere.com', '127.0.0.1', 'localhost']
