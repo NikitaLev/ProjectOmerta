@@ -79,7 +79,7 @@
     color: var(--gold);
 }
 
-/* Выбор победителя */
+/* ========== БЛОК ВЫБОРА ПОБЕДИТЕЛЯ ========== */
 .winner-options {
     display: flex;
     gap: 20px;
@@ -88,55 +88,43 @@
 }
 
 .winner-option {
-    flex: 1;
-    min-width: 200px;
-    max-width: 300px;
     cursor: pointer;
 }
 
-.winner-option input[type="radio"] {
+.winner-option input {
     display: none;
+}
+
+.winner-option input:checked + .winner-card {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 0 2px var(--gold);
 }
 
 .winner-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    padding: 30px;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 80px;
+    border-radius: 20px;
     background: var(--bg-secondary);
     border: 2px solid var(--border-color);
-    border-radius: 30px;
-    transition: all 0.3s ease;
+    transition: all 0.2s;
 }
 
-.winner-option input[type="radio"]:checked + .winner-card {
+.winner-card:hover {
     border-color: var(--gold);
-    box-shadow: var(--shadow-gold);
-    transform: scale(1.02);
+    transform: translateY(-2px);
 }
 
-.winner-card.mafia i {
-    font-size: 3rem;
-    color: #ef4444;
-}
-
-.winner-card.peace i {
-    font-size: 3rem;
-    color: #4ade80;
-}
-
-.winner-card span {
-    font-size: 1.3rem;
+.winner-card span:last-child {
+    font-size: 1.1rem;
     font-weight: 600;
 }
 
-.winner-option.selected .winner-card {
-    border-color: var(--gold);
-    background: rgba(212, 175, 55, 0.05);
-}
-
-/* Таблица игроков */
+/* ========== ТАБЛИЦА ИГРОКОВ ========== */
 .players-table-wrapper {
     overflow-x: auto;
     border-radius: 20px;
@@ -154,7 +142,7 @@
     background: var(--bg-card);
     color: var(--gold);
     font-weight: 600;
-    padding: 15px 10px;
+    padding: 15px 8px;
     text-align: center;
     border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
@@ -197,147 +185,24 @@
     color: var(--text-muted);
 }
 
-.role-select {
-    width: 100%;
-    padding: 8px 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-
-.role-select:focus {
-    outline: none;
-    border-color: var(--gold);
-}
-
-.score-cell {
-    font-weight: 600;
-    color: var(--gold);
-    font-size: 1.1rem;
-}
-
-.score-input {
-    width: 80px;
-    padding: 8px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    text-align: center;
-    font-size: 0.95rem;
-}
-
-.score-input:focus {
-    outline: none;
-    border-color: var(--gold);
-}
-
-.score-input.bonus-input {
-    color: #4ade80;
-}
-
-.score-input.penalty-input {
-    color: #f87171;
-}
-
-.first-kill-checkbox {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--gold);
-}
-
-.best-shot-input {
-    width: 100px;
-    padding: 8px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.best-shot-input:focus {
-    outline: none;
-    border-color: var(--gold);
-}
-
-/* Кнопки действий */
-.form-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 30px;
-}
-
-.btn-large {
-    padding: 14px 32px;
-    font-size: 1.1rem;
-    min-width: 200px;
-    justify-content: center;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .game-input-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .game-badge {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    
-    .winner-options {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .winner-option {
-        width: 100%;
-        max-width: none;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .btn-large {
-        width: 100%;
-    }
-}
-
-/* Стили для выбора роли с иконкой */
+/* ========== ВЫБОР РОЛИ ========== */
 .role-select-wrapper {
-    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .role-select {
-    width: 100%;
+    width: 110px;
     padding: 8px 12px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px;
-    padding-right: 32px;
 }
 
 .role-select:focus {
@@ -345,140 +210,7 @@
     border-color: var(--gold);
 }
 
-.role-icon {
-    position: absolute;
-    left: -25px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    width: 20px;
-    text-align: center;
-    display: none;
-}
-
-/* Убираем цвета из выпадающего списка */
-.role-select option {
-    background-color: var(--bg-card);
-    color: var(--text-primary);
-}
-
-/* Стили для колонки суммы */
-.total-cell {
-    font-weight: 700;
-}
-
-.total-score {
-    color: var(--gold);
-    font-size: 1.1rem;
-}
-
-/* Подсветка MVP - без смещения */
-.mvp-row {
-    position: relative;
-    background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
-    border-left: 3px solid var(--gold);
-}
-
-.mvp-row::after {
-    content: "🏆 MVP";
-    position: absolute;
-    left: 0;
-    top: 0;
-    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-    color: var(--bg-primary);
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    border-radius: 0 0 10px 0;
-    letter-spacing: 0.5px;
-    box-shadow: var(--shadow-gold);
-    z-index: 5;
-    line-height: 1.4;
-}
-
-/* Адаптивность для MVP на мобильных */
-@media (max-width: 768px) {
-    .mvp-row::after {
-        font-size: 0.6rem;
-        padding: 2px 6px;
-    }
-}
-
-/* Стили для иконок ролей */
-.role-icon {
-    position: absolute;
-    left: -35px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.3rem;
-    width: 28px;
-    text-align: center;
-    display: none;
-    line-height: 1;
-}
-
-.role-icon i {
-    font-size: 1.3rem;
-    vertical-align: middle;
-}
-
-/* Специальные корректировки для разных иконок */
-.role-icon .bi-hand-thumbs-up {
-    font-size: 1.2rem;
-}
-
-.role-icon .mdi-police-badge {
-    font-size: 1.4rem;
-}
-
-.role-icon .ph-skull,
-.role-icon .ph-crown-simple {
-    background-color: #6b21a5; /* цвет иконки */
-    mask-image: url('/static/images/don_3.svg');
-    mask-size: contain;
-    mask-repeat: no-repeat;
-    mask-position: center;
-    
-    /* Убираем старую иконку */
-    font-size: 0;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
-}
-
-/* Эмодзи в выпадающем списке (опционально) */
-.role-select option {
-    padding: 8px;
-}
-
-.role-select option[value="civil"]::before {
-    content: "👍 ";
-}
-
-.role-select option[value="sheriff"]::before {
-    content: "⭐ ";
-}
-
-.role-select option[value="mafia"]::before {
-    content: "💀 ";
-}
-
-.role-select option[value="don"]::before {
-    content: "👑 ";
-}
-.best-shot-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
-}
-
-.best-shot-input:disabled::placeholder {
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-/* Контрол для ввода баллов */
+/* ========== КОНТРОЛЫ БАЛЛОВ ========== */
 .score-control {
     display: flex;
     align-items: center;
@@ -498,7 +230,6 @@
     box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
 }
 
-/* Кнопки + и - */
 .score-btn {
     width: 32px;
     height: 32px;
@@ -521,11 +252,6 @@
     color: var(--bg-primary);
 }
 
-.score-btn:active {
-    transform: scale(0.95);
-}
-
-/* Поле ввода */
 .score-input {
     width: 60px;
     height: 32px;
@@ -553,7 +279,7 @@
     -moz-appearance: textfield;
 }
 
-/* Специфичные цвета для бонусов */
+/* Цвета для бонусов и штрафов */
 .score-control:has(.bonus-input) {
     border-color: rgba(74, 222, 128, 0.3);
 }
@@ -563,7 +289,6 @@
     color: white;
 }
 
-/* Специфичные цвета для штрафов */
 .score-control:has(.penalty-input) {
     border-color: rgba(248, 113, 113, 0.3);
 }
@@ -573,19 +298,7 @@
     color: white;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .score-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 1.2rem;
-    }
-    
-    .score-input {
-        width: 50px;
-        font-size: 0.9rem;
-    }
-}
+/* ========== ЖЁЛТЫЕ КАРТОЧКИ ========== */
 .yellow-card-select {
     width: 60px;
     padding: 6px;
@@ -596,19 +309,173 @@
     text-align: center;
 }
 
-.yellow-card-select option {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+/* ========== ПЕРВЫЙ УБИТЫЙ И ЛУЧШИЙ ХОД ========== */
+.first-kill-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--gold);
 }
 
-.ph-fill.ph-crown-simple {
-    background-color: #6b21a5; /* цвет иконки */
-    background-image:url('/static/images/don_3.svg');
+.best-shot-input {
+    width: 100px;
+    padding: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.best-shot-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+}
+
+.best-shot-input:disabled::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.best-shot-input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+/* ========== СУММА БАЛЛОВ ========== */
+.total-cell {
+    font-weight: 700;
+}
+
+.total-score {
+    color: var(--gold);
+    font-size: 1.1rem;
+}
+
+/* ========== ПОДСВЕТКА MVP ========== */
+.mvp-row {
+    position: relative;
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+    border-left: 3px solid var(--gold);
+}
+
+.mvp-row::after {
+    content: "🏆 MVP";
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 0 0 10px 0;
+    letter-spacing: 0.5px;
+    z-index: 5;
+}
+
+/* ========== ИКОНКИ РОЛЕЙ (единый стандарт) ========== */
+.role-icon {
+    display: inline-block;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    font-size: 0;
-    width: 1.2em;
-    height: 1.2em;
-    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* Размеры */
+.role-icon-xs { width: 1rem; height: 1rem; }
+.role-icon-sm { width: 1.2rem; height: 1.2rem; }
+.role-icon-md { width: 1.5rem; height: 1.5rem; }
+.role-icon-lg { width: 2rem; height: 2rem; }
+.role-icon-xl { width: 2.5rem; height: 2.5rem; }
+
+/* Цвета для иконок (маски в role-icons.css) */
+.role-icon-don,
+.role-icon-mafia {
+    background-color: #6b21a5;
+}
+
+.role-icon-sheriff {
+    background-color: #fbbf24;
+}
+
+.role-icon-civil {
+    background-color: #ef4444;
+}
+
+/* Иконка в строке с выбором роли */
+.role-select-wrapper .role-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
+/* Иконка в карточке победителя */
+.winner-card .role-icon {
+    width: 4rem;
+    height: 4rem;
+}
+
+/* ========== КНОПКИ ДЕЙСТВИЙ ========== */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn-large {
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    min-width: 200px;
+    justify-content: center;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 768px) {
+    .game-input-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .game-badge {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .winner-options {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .winner-option {
+        width: 100%;
+    }
+    
+    .winner-card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-large {
+        width: 100%;
+    }
+    
+    .score-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1.2rem;
+    }
+    
+    .score-input {
+        width: 50px;
+        font-size: 0.9rem;
+    }
 }

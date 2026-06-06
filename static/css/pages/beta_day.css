@@ -119,11 +119,17 @@
     min-width: 55px;
     text-align: center;
 }
-
-.role-don { background: #8b5cf6; color: white; }
-.role-mafia { background: #ef4444; color: white; }
-.role-sheriff { background: #f59e0b; color: white; }
-.role-civil { background: #22c55e; color: white; }
+/* Единые иконки для BETA Day */
+.player-role {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+}
+.player-role .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+}
 
 .foul-indicators {
     display: flex;

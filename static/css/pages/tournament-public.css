@@ -797,7 +797,6 @@
 
 .role-icon {
     font-size: 2rem;
-    margin-bottom: 10px;
     color: var(--gold);
 }
 
@@ -1120,65 +1119,79 @@
 .completed-stats-container{
     padding-top: 10px;
 }
- 
-.ph-fill.ph-crown-simple {
-    color: #6b21a5; /* цвет иконки */
-    background-color: #6b21a5; /* цвет иконки */
-    mask-image: url('/static/images/don_3.svg');
-    
-    font-size: 1.8rem;
-    display: inline-block;
-}
-.fas.fa-skull{
-    font-size: 3rem;
-    color: #6b21a5; /* цвет иконки */
-    background-color: #6b21a5; /* цвет иконки */
-    mask-image: url('/static/images/don_2.svg');
-    
-    display: inline-block;
+/* Размеры иконок в публичной странице */
+.role-icon-stats .role-icon {
+    width: 4rem;
+    height: 4rem;
+    margin-top: 10px;
 }
 
-.role-icon-stats .ph-fill.ph-crown-simple{
-    mask-image: url('/static/images/don_2.svg');
-    font-size: 3rem;
+.winner-team .role-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+    margin-right: 5px;
+}
+
+/* Для team-card */
+.team-card .role-icon {
+    width: 2rem;
+    height: 2rem;
+}
+/* ========== ИКОНКИ РОЛЕЙ В КАРТОЧКАХ ИГР (публичная страница) ========== */
+.public-game-card .player-role-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.public-game-card .role-icon {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+}
+
+/* Принудительное выравнивание иконок */
+.public-game-card .player-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.public-game-card .player-nickname {
+    line-height: 1.4;
+}
+
+/* Убираем лишние отступы у строки игрока */
+.public-game-card .seat-item {
+    align-items: center;
+}
+/* Иконки команд в статистике */
+.team-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 10px;
 }
-.bi.bi-hand-thumbs-up-fill{
-    color: #ef4444; /* цвет иконки */
-    background-color: #ef4444; /* цвет иконки */
-    mask-image: url('/static/images/civ_3.svg');
-    mask-repeat: no-repeat;
-    font-size: 1.8rem;
-    display: inline-block;
-}
-.role-icon-stats .bi.bi-hand-thumbs-up-fill{
-    mask-image: url('/static/images/civ_3.svg');
-    font-size: 3rem;
-}
-.fas.fa-users{
-    font-size: 3rem;
-    color: #ef4444; /* цвет иконки */
-    background-color: #ef4444; /* цвет иконки */
-    mask-image: url('/static/images/civ_3.svg');
-    mask-repeat: no-repeat;
-    
+
+.team-card .role-icon {
+    width: 5rem;
+    height: 5rem;
     display: inline-block;
 }
 
-.winner-team.mafia .fas.fa-skull{
-    font-size: 1.5rem;
-    color: #6b21a5; /* цвет иконки */
-    background-color: #6b21a5; /* цвет иконки */
-    mask-image: url('/static/images/don_2.svg');
-    
-    display: inline-block;
-}
-.winner-team.peace .fas.fa-users{
-    font-size: 1.5rem;
-    color: #ef4444; /* цвет иконки */
-    background-color: #ef4444; /* цвет иконки */
-    mask-image: url('/static/images/civ_3.svg');
-    mask-repeat: no-repeat;
-    
-    display: inline-block;
+/* Если хотите круглую обёртку как в карточках игр */
+.team-icon-wrapper {
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px auto;
+    border: 1px solid var(--border-color);
 }

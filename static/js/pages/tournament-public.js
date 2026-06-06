@@ -194,16 +194,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 statsHtml += '</div>';
                 
-                // HTML с иконкой роли
+                // HTML с иконкой роли (через единый CSS-класс)
                 let roleIconHtml = '';
                 if (seat.role) {
-                    const roleMap = {
-                        'don': '<i class="ph-fill ph-crown-simple" style="color: #6b21a5;"></i>',
-                        'mafia': '<i class="bi bi-hand-thumbs-down-fill" style="color: #6b21a5;"></i>',
-                        'sheriff': '<i class="mdi mdi-police-badge" style="color: #fbbf24;"></i>',
-                        'civil': '<i class="bi bi-hand-thumbs-up-fill" style="color: #ef4444;"></i>'
+                    const roleIconClass = {
+                        'don': 'role-icon role-icon-don role-icon-sm',
+                        'mafia': 'role-icon role-icon-mafia role-icon-sm',
+                        'sheriff': 'role-icon role-icon-sheriff role-icon-sm',
+                        'civil': 'role-icon role-icon-civil role-icon-sm'
                     };
-                    roleIconHtml = `<span class="player-role-badge" title="${getRoleName(seat.role)}">${roleMap[seat.role] || ''}</span>`;
+                    roleIconHtml = `<span class="player-role-badge" title="${getRoleName(seat.role)}"><span class="${roleIconClass[seat.role]}"></span></span>`;
                 }
                 
                 seatItem.innerHTML = `
@@ -354,12 +354,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h3>Статистика команд</h3>
                     <div class="team-stats">
                         <div class="team-card mafia">
-                            <i class="fas fa-skull"></i>
+                            <div class="team-icon-wrapper">
+                                <span class="role-icon role-icon-mafia role-icon-xl"></span>
+                            </div>
                             <div class="team-name">Мафия</div>
                             <div class="team-wins">${stats.team_stats.mafia_wins} побед</div>
                         </div>
                         <div class="team-card peace">
-                            <i class="fas fa-users"></i>
+                            <div class="team-icon-wrapper">
+                                <span class="role-icon role-icon-civil role-icon-xl"></span>
+                            </div>
                             <div class="team-name">Мирные</div>
                             <div class="team-wins">${stats.team_stats.peace_wins} побед</div>
                         </div>
@@ -368,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             container.insertAdjacentHTML('beforeend', teamStatsHtml);
         }
-        
+                
         // Лучшие по ролям
         if (stats.best_per_role) {
             let rolesHtml = `
@@ -383,20 +387,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 switch(role) {
                     case 'don':
-                        roleIcon = '<i class="ph-fill ph-crown-simple"></i>';
-                        roleName = 'Дон';
+                        roleIcon = '<span class="role-icon role-icon-don role-icon-xl"></span>';
                         break;
                     case 'mafia':
-                        roleIcon = '<i class="bi bi-hand-thumbs-down-fill"></i>';
-                        roleName = 'Мафия';
+                        roleIcon = '<span class="role-icon role-icon-mafia role-icon-xl"></span>';
                         break;
                     case 'sheriff':
-                        roleIcon = '<i class="mdi mdi-police-badge"></i>';
-                        roleName = 'Шериф';
+                        roleIcon = '<span class="role-icon role-icon-sheriff role-icon-xl"></span>';
                         break;
-                    default:
-                        roleIcon = '<i class="bi bi-hand-thumbs-up-fill"></i>';
-                        roleName = 'Мирный';
+                    case 'civil':
+                        roleIcon = '<span class="role-icon role-icon-civil role-icon-xl"></span>';
+                        break;
                 }
                 
                 rolesHtml += `

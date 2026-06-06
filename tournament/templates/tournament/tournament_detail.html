@@ -96,12 +96,16 @@
                     <h3>Статистика команд</h3>
                     <div class="team-stats">
                         <div class="team-card mafia">
-                            <i class="fas fa-skull"></i>
+                            <div class="team-icon-wrapper">
+                                <span class="role-icon role-icon-mafia role-icon-xl"></span>
+                            </div>
                             <div class="team-name">Мафия</div>
                             <div class="team-wins">{{ tournament.completed_stats.team_stats.mafia_wins }} побед</div>
                         </div>
                         <div class="team-card peace">
-                            <i class="fas fa-users"></i>
+                            <div class="team-icon-wrapper">
+                                <span class="role-icon role-icon-civil role-icon-xl"></span>
+                            </div>
                             <div class="team-name">Мирные</div>
                             <div class="team-wins">{{ tournament.completed_stats.team_stats.peace_wins }} побед</div>
                         </div>
@@ -115,13 +119,13 @@
                         <div class="stat-card">
                             <div class="role-icon-stats">
                                 {% if role == 'don' %}
-                                    <i class="ph-fill ph-crown-simple"></i>
+                                    <span class="role-icon role-icon-don role-icon-xl"></span>
                                 {% elif role == 'mafia' %}
-                                    <i class="bi bi-hand-thumbs-down-fill"></i>
+                                    <span class="role-icon role-icon-mafia role-icon-xl"></span>
                                 {% elif role == 'sheriff' %}
-                                    <i class="mdi mdi-police-badge"></i>
+                                    <span class="role-icon role-icon-sheriff role-icon-xl"></span>
                                 {% else %}
-                                    <i class="bi bi-hand-thumbs-up-fill"></i>
+                                    <span class="role-icon role-icon-civil role-icon-xl"></span>
                                 {% endif %}
                             </div>
                             <div class="role-name">
@@ -457,16 +461,11 @@
                         </div>
                         
                         {% if game.winning_team %}
-                        <div class="game-winner">
-                            <span class="winner-label">Победила:</span>
-                            <span class="winner-team {% if game.winning_team == 'mafia' %}mafia{% else %}peace{% endif %}">
-                                {% if game.winning_team == 'mafia' %}
-                                    <i class="fas fa-skull"></i> Мафия
-                                {% else %}
-                                    <i class="fas fa-users"></i> Мирные
-                                {% endif %}
-                            </span>
-                        </div>
+                            <div class="game-winner winner-team {% if game.winning_team == 'mafia' %}mafia{% else %}peace{% endif %}">
+                                <span class="winner-label">Победила:</span>
+                                <span class="role-icon role-icon-{% if game.winning_team == 'mafia' %}mafia{% else %}civil{% endif %} role-icon-sm"></span>
+                                <span class="winner-team-name">{% if game.winning_team == 'mafia' %}Мафия{% else %}Мирные{% endif %}</span>
+                            </div>
                         {% endif %}
                         
                         <a href="{% url 'game_input' tournament.id game.round_number %}" class="btn btn-outline btn-sm">

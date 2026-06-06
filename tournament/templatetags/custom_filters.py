@@ -13,10 +13,10 @@ def get_item(dictionary, key):
 def get_role_icon(role):
     """Возвращает иконку для роли"""
     icons = {
-        'don': '<i class="ph-fill ph-crown-simple" style="color: #6b21a5;"></i>',
-        'sheriff': '<i class="mdi mdi-police-badge" style="color: #fbbf24;"></i>',
-        'mafia': '<i class="bi bi-hand-thumbs-down-fill" style="color: #6b21a5;"></i>',
-        'civil': '<i class="bi bi-hand-thumbs-up-fill" style="color: #ef4444;"></i>',
+        'don': '<span class="role-icon role-icon-don role-icon-md"></span>',
+        'mafia': '<span class="role-icon role-icon-mafia role-icon-md"></span>',
+        'sheriff': '<span class="role-icon role-icon-sheriff role-icon-md"></span>',
+        'civil': '<span class="role-icon role-icon-civil role-icon-md"></span>'
     }
     return icons.get(role, '')
 

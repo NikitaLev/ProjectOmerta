@@ -1811,3 +1811,116 @@
     font-size: 3rem;
     margin-bottom: 10px;
 }
+
+ /* ========== ИКОНКИ РОЛЕЙ (через единый role-icons.css) ========== */
+/* Переопределение размеров для конкретных мест в tournament.css */
+
+.role-icon-stats .role-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.winner-team .role-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 5px;
+}
+
+/* Для таблицы участников, если есть иконки */
+.player-cell .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    vertical-align: middle;
+}
+/* ========== ИКОНКИ РОЛЕЙ НА СТРАНИЦЕ УПРАВЛЕНИЯ ТУРНИРОМ ========== */
+
+/* Для блока "Лучшие по ролям" */
+.role-icon-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.role-icon-stats .role-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Для победителя в карточке игры */
+.winner-team .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    vertical-align: middle;
+}
+
+/* Для иконок в таблице участников (если есть) */
+.player-cell .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    vertical-align: middle;
+}
+
+/* ========== ИКОНКИ КОМАНД В СТАТИСТИКЕ ========== */
+.team-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.team-card .role-icon {
+    width: 5rem;
+    height: 5rem;
+    display: inline-block;
+}
+
+/* Опционально: круглая обёртка как в карточках игр */
+.team-icon-wrapper {
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px auto;
+    border: 1px solid var(--border-color);
+}
+
+/* ========== БЛОК ПОБЕДИТЕЛЯ В КАРТОЧКЕ ИГРЫ ========== */
+.game-winner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 8px 12px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.winner-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.winner-team {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.winner-team.mafia {
+    color: #6b21a5;
+}
+
+.winner-team.peace {
+    color: #ef4444;
+}
+
+.winner-team .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.winner-team-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}

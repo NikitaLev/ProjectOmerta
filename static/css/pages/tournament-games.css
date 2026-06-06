@@ -643,11 +643,8 @@
 .stat-badge.ci i {
     color: #a78bfa;
 }
-.ph-fill.ph-crown-simple {
-    background-color: #6b21a5; 
-    mask-image: url('/static/images/don_3.svg');
-    
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+/* Переопределение размеров иконок в карточках игр */
+.seat-item .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
 }

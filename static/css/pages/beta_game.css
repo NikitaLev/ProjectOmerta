@@ -205,10 +205,20 @@
     text-align: center;
 }
 
-.role-don { background: #8b5cf6; color: white; }
-.role-mafia { background: #ef4444; color: white; }
-.role-sheriff { background: #f59e0b; color: white; }
-.role-civil { background: #22c55e; color: white; }
+/* Роли в BETA используют единые иконки, текст роли скрыт */
+.player-role {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.player-role .role-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+/* Скрываем текст роли (если он есть) */
+.player-role span:not(.role-icon) {
+    display: none;
+}
 
 .action-buttons {
     display: flex;
@@ -420,10 +430,6 @@
     text-align: center;
 }
 
-.role-don { background: #8b5cf6; color: white; }
-.role-mafia { background: #ef4444; color: white; }
-.role-sheriff { background: #f59e0b; color: white; }
-.role-civil { background: #22c55e; color: white; }
 
 /* Фолы */
 .foul-indicators {

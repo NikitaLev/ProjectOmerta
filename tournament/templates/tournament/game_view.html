@@ -57,9 +57,9 @@
                 <span class="info-label">Победитель:</span>
                 <span class="info-value winner-badge {% if game.winning_team == 'mafia' %}mafia{% else %}peace{% endif %}">
                     {% if game.winning_team == 'mafia' %}
-                        <i class="fas fa-skull"></i> Мафия
+                        <span class="role-icon role-icon-mafia role-icon-sm" style="margin-right: 5px;"></span> Мафия
                     {% else %}
-                        <i class="fas fa-users"></i> Мирные
+                        <span class="role-icon role-icon-civil role-icon-sm" style="margin-right: 5px;"></span> Мирные
                     {% endif %}
                 </span>
             </div>

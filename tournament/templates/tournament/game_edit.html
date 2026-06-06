@@ -17,17 +17,6 @@
             margin-left: 15px;
         }
         
-.ph-fill.ph-crown-simple {
-    background-color: #6b21a5; /* цвет иконки */
-    background-image:url('/static/images/don_3.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    font-size: 0;
-    width: 1.2em;
-    height: 1.2em;
-    display: inline-block;
-}
     </style>
 {% endblock %}
 
@@ -188,17 +177,17 @@
                 Победитель игры
             </h2>
             <div class="winner-options">
-                <label class="winner-option {% if game.winning_team == 'mafia' %}selected{% endif %}">
-                    <input type="radio" name="winning_team" value="mafia" {% if game.winning_team == 'mafia' %}checked{% endif %} required>
+                <label class="winner-option">
+                    <input type="radio" name="winning_team" value="mafia" required>
                     <div class="winner-card mafia">
-                        <i class="fas fa-skull"></i>
+                        <span class="role-icon role-icon-mafia role-icon-lg"></span>
                         <span>Мафия</span>
                     </div>
                 </label>
-                <label class="winner-option {% if game.winning_team == 'peace' %}selected{% endif %}">
-                    <input type="radio" name="winning_team" value="peace" {% if game.winning_team == 'peace' %}checked{% endif %} required>
+                <label class="winner-option">
+                    <input type="radio" name="winning_team" value="peace" required>
                     <div class="winner-card peace">
-                        <i class="fas fa-users"></i>
+                        <span class="role-icon role-icon-civil role-icon-lg"></span>
                         <span>Мирные</span>
                     </div>
                 </label>
@@ -232,19 +221,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Карта ролей для иконок
     const roleMap = {
         'civil': { 
-            icon: '<i class="bi bi-hand-thumbs-up-fill"></i>',
+            icon: '<span class="role-icon role-icon-civil role-icon-sm"></span>',
             color: '#ef4444'
         },
         'sheriff': { 
-            icon: '<i class="mdi mdi-police-badge"></i>', 
+            icon: '<span class="role-icon role-icon-sheriff role-icon-sm"></span>', 
             color: '#fbbf24'
         },
         'mafia': { 
-            icon: '<i class="bi bi-hand-thumbs-down-fill"></i>',
+            icon: '<span class="role-icon role-icon-mafia role-icon-sm"></span>',
             color: '#6b21a5'
         },
         'don': { 
-            icon: '<i class="ph-fill ph-crown-simple"></i>', 
+            icon: '<span class="role-icon role-icon-don role-icon-sm"></span>', 
             color: '#6b21a5'
         }
     };

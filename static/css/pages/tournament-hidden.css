@@ -63,11 +63,3 @@
     color: var(--gold);
     transform: translateY(-2px);
 }
-.ph-fill.ph-crown-simple {
-    background-color: #6b21a5; 
-    mask-image: url('/static/images/don_3.svg');
-    
-    width: 24px;
-    height: 24px;
-    display: inline-block;
-}
