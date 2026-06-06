@@ -56,15 +56,17 @@
     text-align: center;
 }
 
-.role-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
+.role-stat-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-.role-icon.don { color: #c084fc; }
-.role-icon.mafia { color: #ef4444; }
-.role-icon.sheriff { color: #fbbf24; }
-.role-icon.civil { color: #4ade80; }
+.role-stat-icon .role-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+}
 
 .role-name {
     font-weight: 600;
@@ -80,6 +82,20 @@
 .role-stats span {
     color: var(--gold);
     font-weight: 600;
+}
+
+/* Цвета для иконок ролей */
+.role-stat-icon .role-icon-don,
+.role-stat-icon .role-icon-mafia {
+    background-color: #6b21a5;
+}
+
+.role-stat-icon .role-icon-sheriff {
+    background-color: #fbbf24;
+}
+
+.role-stat-icon .role-icon-civil {
+    background-color: #ef4444;
 }
 
 .place-bars {
@@ -158,6 +174,7 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
 /* Заглушка при отсутствии данных */
 .empty-state {
     text-align: center;

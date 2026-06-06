@@ -92,9 +92,25 @@ function renderOverallStats(data) {
     document.getElementById('overallContent').style.display = 'block';
 }
 
+function getRoleIconHtml(roleKey) {
+    const icons = {
+        'don': '<span class="role-icon role-icon-don role-icon-lg"></span>',
+        'mafia': '<span class="role-icon role-icon-mafia role-icon-lg"></span>',
+        'sheriff': '<span class="role-icon role-icon-sheriff role-icon-lg"></span>',
+        'civil': '<span class="role-icon role-icon-civil role-icon-lg"></span>'
+    };
+    return icons[roleKey] || icons['civil'];
+}
+
 function renderRolesStats(data) {
     const roles = data.roles || {};
     const roleList = ['don', 'mafia', 'sheriff', 'civil'];
+    const roleNames = {
+        'don': 'Дон',
+        'mafia': 'Мафия',
+        'sheriff': 'Шериф',
+        'civil': 'Мирный'
+    };
     
     let html = '<div class="role-stats-grid">';
     for (const roleKey of roleList) {
@@ -102,8 +118,8 @@ function renderRolesStats(data) {
         if (role) {
             html += `
                 <div class="role-card">
-                    <div class="role-icon ${roleKey}">
-                        <i class="${role.icon}"></i>
+                    <div class="role-stat-icon">
+                        ${getRoleIconHtml(roleKey)}
                     </div>
                     <div class="role-name">${role.name}</div>
                     <div class="role-stats">
@@ -117,10 +133,10 @@ function renderRolesStats(data) {
         } else {
             html += `
                 <div class="role-card">
-                    <div class="role-icon ${roleKey}">
-                        <i class="${roleKey === 'don' ? 'fas fa-crown' : roleKey === 'mafia' ? 'fas fa-skull' : roleKey === 'sheriff' ? 'fas fa-star' : 'fas fa-hand-peace'}"></i>
+                    <div class="role-stat-icon">
+                        ${getRoleIconHtml(roleKey)}
                     </div>
-                    <div class="role-name">${roleKey === 'don' ? 'Дон' : roleKey === 'mafia' ? 'Мафия' : roleKey === 'sheriff' ? 'Шериф' : 'Мирный'}</div>
+                    <div class="role-name">${roleNames[roleKey]}</div>
                     <div class="role-stats">Нет игр</div>
                 </div>
             `;
@@ -298,6 +314,7 @@ window.copyInviteLink = function(elementId) {
         console.error('Ошибка копирования:', err);
     }
 }
+
 function showEmptyState(message) {
     const emptyHtml = `
         <div class="empty-state">

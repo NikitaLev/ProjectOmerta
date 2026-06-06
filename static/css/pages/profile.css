@@ -814,3 +814,31 @@
     color: var(--gold);
     margin-right: 4px;
 }
+/* ========== ИКОНКИ РОЛЕЙ В СТАТИСТИКЕ ПРОФИЛЯ ========== */
+.profile-stats .role-icon {
+    width: 2rem;
+    height: 2rem;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Для карточек ролей в статистике */
+.role-stat-card .role-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 10px;
+}
+
+/* Цвета для иконок (маски уже в role-icons.css) */
+.profile-stats .role-icon-don,
+.profile-stats .role-icon-mafia {
+    background-color: #6b21a5;
+}
+
+.profile-stats .role-icon-sheriff {
+    background-color: #fbbf24;
+}
+
+.profile-stats .role-icon-civil {
+    background-color: #ef4444;
+}
