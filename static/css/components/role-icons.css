@@ -11,7 +11,7 @@
 /* === Дон (Don) === */
 .role-icon-don,
 .role-icon.don {
-    background-color: #6b21a5;
+    background-color: #312e81;
     mask-image: url('/static/images/don_2.svg');
     -webkit-mask-image: url('/static/images/don_2.svg');
     mask-repeat: no-repeat;
