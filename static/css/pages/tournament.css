@@ -1690,7 +1690,6 @@
 
 .role-icon {
     font-size: 2rem;
-    margin-bottom: 10px;
     color: var(--gold);
 }
 
@@ -1870,8 +1869,8 @@
 }
 
 .team-card .role-icon {
-    width: 5rem;
-    height: 5rem;
+    width: 4.5rem;
+    height: 4.5rem;
     display: inline-block;
 }
 
@@ -1883,6 +1882,7 @@
     height: 70px;
     margin: 0 auto 15px auto;
     border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 /* ========== БЛОК ПОБЕДИТЕЛЯ В КАРТОЧКЕ ИГРЫ ========== */
