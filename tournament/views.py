@@ -128,23 +128,6 @@ def profile(request):
                 'created_at': player.invitation_created.strftime('%d.%m.%Y') if player.invitation_created else None,
                 'invitation_token': player.invitation_token if not player.is_active else None,
             })
-    # Логирование мест в турнирах
-    
-    logger.info(f"=== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ: {user.username} ===")
-    logger.info(f"Всего турниров в которых участвует: {player_tournaments.count()}")
-
-    for tournament in player_tournaments[:10]:
-        try:
-            tp = TournamentPlayer.objects.get(tournament=tournament, user=user)
-            total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
-            logger.info(f"  Турнир: {tournament.name} | статус: {tournament.status} | место: {tp.final_place} | очки: {total}")
-            
-            # ПОДРОБНАЯ СТАТИСТИКА ДЛЯ ЭТОГО ТУРНИРА
-            log_tournament_details(tournament, user)
-            
-        except TournamentPlayer.DoesNotExist:
-            logger.info(f"  Турнир: {tournament.name} | статус: {tournament.status} | место: НЕ УЧАСТНИК")
-
     context = {
         'user': user,
         'role_display': dict(user.ROLE_CHOICES).get(user.role, 'Игрок'),
@@ -171,8 +154,8 @@ def log_tournament_details(tournament, user):
     logger.info("--- ВСЕ ИГРОКИ ТУРНИРА ---")
     all_players = TournamentPlayer.objects.filter(tournament=tournament).select_related('user')
     for tp in all_players:
-        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
-        logger.info(f"  {tp.user.username} | main: {tp.total_main_score} | bonus: {tp.total_bonus_score} | ci: {tp.total_ci} | ИТОГО: {total} | место: {tp.final_place}")
+        total = tp.get_total_score() 
+        logger.info(f"  {tp.user.username} | main: {tp.get_total_main_score()} | bonus: {tp.total_bonus_score} | ci: {tp.total_ci} | ИТОГО: {total} | место: {tp.final_place}")
     
     # Конкретный игрок
     try:
@@ -733,7 +716,7 @@ def game_input(request, tournament_id, game_round):
                         pass
                 
                 # Создаём запись
-                PlayerGameStats.objects.create(
+                stats = PlayerGameStats(
                     game=game,
                     tournament_player=tp,
                     user=tp.user,
@@ -742,13 +725,14 @@ def game_input(request, tournament_id, game_round):
                     main_score=main_score,
                     bonus_score=manual_bonus + lh_bonus,
                     yellow_cards=yellow_cards,
-                    manual_penalty=manual_penalty,  # Сохраняем ручной штраф отдельно
-                    penalty_score=0,  # Временное значение
+                    manual_penalty=manual_penalty,
                     lh_bonus=lh_bonus,
                     first_shot=best_shot if first_kill else '',
                     ci=0.0,
                 )
-
+                # Не сохраняем penalty_score отдельно, он пересчитается при save() через calculate_penalty()
+                stats.save()
+            
             
             recalculate_yellow_card_penalties(tournament)
             recalculate_ci(tournament)
@@ -911,6 +895,7 @@ def game_edit(request, tournament_id, game_round):
                         ci=0.0,
                         penalty_score=0,  # Временное значение
                     )
+                    stats.save()
             
             # После обновления всех игроков, пересчитываем штрафы за ЖК для всех игр
             recalculate_yellow_card_penalties(tournament)
@@ -941,21 +926,19 @@ def game_edit(request, tournament_id, game_round):
 
 def update_player_tournament_stats(tournament_player):
     """Обновляет общую статистику игрока в турнире"""
-    # Получаем все статистики игрока в этом турнире
-    all_stats = PlayerGameStats.objects.filter(
-        tournament_player=tournament_player
-    )
+    all_stats = PlayerGameStats.objects.filter(tournament_player=tournament_player)
     
-    # Суммируем все баллы
     total_main = sum(stat.main_score for stat in all_stats)
     total_bonus = sum(stat.bonus_score for stat in all_stats)
     total_ci = sum(stat.ci for stat in all_stats)
     
-    # Обновляем запись
     tournament_player.total_main_score = total_main
     tournament_player.total_bonus_score = total_bonus
     tournament_player.total_ci = total_ci
     tournament_player.save()
+    
+    # Вызываем метод модели для обновления денормализованных полей (если нужно)
+    tournament_player.update_denormalized_fields()
     
     return tournament_player
 
@@ -987,33 +970,21 @@ def check_tournament_completion(tournament):
 
 def calculate_final_places(tournament):
     """Рассчитывает итоговые места игроков в турнире"""
-    logger.info(f"=== РАСЧЁТ МЕСТ ДЛЯ ТУРНИРА: {tournament.name} (ID: {tournament.id}) ===")
+    players = list(TournamentPlayer.objects.filter(tournament=tournament))
     
-    players = TournamentPlayer.objects.filter(
-        tournament=tournament
-    ).order_by('-total_main_score', '-total_bonus_score')
+    # Получаем актуальные очки через методы
+    for player in players:
+        player._cached_total = player.get_total_score()
     
-    logger.info(f"Всего игроков: {players.count()}")
+    # Сортируем по очкам
+    players.sort(key=lambda x: x._cached_total, reverse=True)
     
     for i, player in enumerate(players):
-        total_score = player.total_main_score + player.total_bonus_score + player.total_ci
-        if i > 0:
-            prev_player = players[i-1]
-            prev_total = prev_player.total_main_score + prev_player.total_bonus_score + prev_player.total_ci
-            
-            if total_score == prev_total:
-                player.final_place = prev_player.final_place
-                logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place} (совпадает с предыдущим)")
-            else:
-                player.final_place = i + 1
-                logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place}")
+        if i > 0 and player._cached_total == players[i-1]._cached_total:
+            player.final_place = players[i-1].final_place
         else:
-            player.final_place = 1
-            logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place} (ПОБЕДИТЕЛЬ)")
-        
+            player.final_place = i + 1
         player.save()
-    
-    logger.info("=== КОНЕЦ РАСЧЁТА ===")
 
 def calculate_yellow_card_penalty(tournament_player, current_game_yellow_cards):
     """
@@ -1719,7 +1690,7 @@ def player_stats_api(request):
     # --- ЛУЧШИЙ ТУРНИР ---
     tournament_scores = []
     for tp in tournament_players:
-        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
+        total = tp.get_total_score() 
         tournament_scores.append({
             'tournament_id': tp.tournament.id,
             'tournament_name': tp.tournament.name,

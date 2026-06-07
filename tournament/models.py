@@ -1,7 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.utils import timezone
 
 class User(AbstractUser):
@@ -33,14 +31,6 @@ class User(AbstractUser):
     @property
     def created_players(self):
         return User.objects.filter(created_by=self)
-    
-    @property
-    def active(self):
-        return self.filter(is_active=True)
-    
-    @property
-    def pending(self):
-        return self.filter(is_active=False)
     
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
@@ -78,7 +68,6 @@ class Tournament(models.Model):
         ('cancelled', 'Отменен'),
     ]
 
-    # Добавляем выбор правил
     RULES_CHOICES = [
         ('BMF', 'БМФ'),
         ('KSL', 'КСЛ'),
@@ -111,8 +100,7 @@ class Tournament(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
     completed_stats = models.JSONField(default=dict, blank=True, verbose_name="Статистика завершённого турнира")
     
-    # Статистика ведущего по этому турниру
-    host_rating_delta = models.FloatField(default=0.0)  # Изменение рейтинга ведущего
+    host_rating_delta = models.FloatField(default=0.0)
     
     class Meta:
         ordering = ['-created_at']
@@ -128,12 +116,10 @@ class Tournament(models.Model):
         self.status = 'completed'
         self.completed_at = timezone.now()
         self.save()
+        
         from .utils import calculate_final_places, calculate_tournament_statistics
         
-        # Рассчитываем финальные места
         calculate_final_places(self)
-        
-        # Рассчитываем дополнительную статистику
         tournament_stats = calculate_tournament_statistics(self)
         
         self.completed_stats = tournament_stats
@@ -147,10 +133,10 @@ class TournamentPlayer(models.Model):
     registered_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     
-    # Итоговая статистика по турниру
-    total_main_score = models.FloatField(default=0.0)
-    total_bonus_score = models.FloatField(default=0.0)
-    total_ci = models.FloatField(default=0.0)
+    # ВРЕМЕННО: оставляем поля для обратной совместимости, но помечаем как deprecated
+    total_main_score = models.FloatField(default=0.0)  # DEPRECATED: использовать метод get_total_main_score()
+    total_bonus_score = models.FloatField(default=0.0)  # DEPRECATED: использовать метод get_total_bonus_score()
+    total_ci = models.FloatField(default=0.0)  # DEPRECATED: использовать метод get_total_ci()
     final_place = models.IntegerField(null=True, blank=True)
     
     class Meta:
@@ -158,14 +144,46 @@ class TournamentPlayer(models.Model):
     
     def __str__(self):
         return f"{self.user.username} в {self.tournament.name}"
+    
+    # ========== НОВЫЕ СВОЙСТВА (вместо полей) ==========
+    
+    @property
+    def all_stats(self):
+        """Все статистики игрока в этом турнире"""
+        return PlayerGameStats.objects.filter(tournament_player=self)
+    
+    def get_total_main_score(self):
+        """Сумма основных баллов за все игры"""
+        return self.all_stats.aggregate(total=models.Sum('main_score'))['total'] or 0.0
+    
+    def get_total_bonus_score(self):
+        """Сумма бонусных баллов за все игры"""
+        return self.all_stats.aggregate(total=models.Sum('bonus_score'))['total'] or 0.0
+    
+    def get_total_ci(self):
+        """Сумма Ci за все игры"""
+        return self.all_stats.aggregate(total=models.Sum('ci'))['total'] or 0.0
+    
+    def get_total_penalty(self):
+        """Сумма штрафов за все игры"""
+        return self.all_stats.aggregate(total=models.Sum('penalty_score'))['total'] or 0.0
+    
+    def get_total_score(self):
+        """Общая сумма очков за турнир"""
+        return self.all_stats.aggregate(total=models.Sum('total_score'))['total'] or 0.0
+    
+    def update_denormalized_fields(self):
+        """Обновляет денормализованные поля (для обратной совместимости)"""
+        self.total_main_score = self.get_total_main_score()
+        self.total_bonus_score = self.get_total_bonus_score()
+        self.total_ci = self.get_total_ci()
+        self.save()
 
 class Game(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='games')
     round_number = models.IntegerField(verbose_name="Номер игры")
     winning_team = models.CharField(max_length=20, choices=[('mafia', 'Мафия'), ('peace', 'Мирные')], blank=True, null=True)
     played_at = models.DateTimeField(auto_now_add=True)
-    
-    # Новое поле для хранения рассадки
     seating = models.JSONField(default=dict, blank=True, verbose_name="Рассадка")
     
     class Meta:
@@ -185,47 +203,43 @@ class PlayerGameStats(models.Model):
     
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='player_stats')
     tournament_player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE, related_name='game_stats')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Для быстрого доступа
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     place = models.IntegerField(verbose_name="Место в игре")
+    
+    # БАЗОВЫЕ ПОЛЯ
     main_score = models.FloatField(default=0.0, verbose_name="Основные баллы")
     bonus_score = models.FloatField(default=0.0, verbose_name="Бонусные баллы")
     manual_penalty = models.FloatField(default=0.0, verbose_name="Ручной штраф")
-
-    penalty_score = models.FloatField(default=0.0, verbose_name="Штрафные баллы")
+    yellow_cards = models.IntegerField(default=0, verbose_name="Жёлтые карточки")
     first_shot = models.CharField(max_length=50, blank=True, verbose_name="Первый отстрел")
     lh_bonus = models.FloatField(default=0.0, verbose_name="Бонус за лучший ход")
     
-    yellow_cards = models.IntegerField(default=0, verbose_name="Жёлтые карточки")
-    yellow_penalty = models.FloatField(default=0.0, verbose_name="Штраф за ЖК")
-    # Вычисляемые поля
-    total_score = models.FloatField(default=0.0)  # main + bonus - penalty
+    # ВЫЧИСЛЯЕМЫЕ ПОЛЯ (заполняются при пересчёте)
     ci = models.FloatField(default=0.0, verbose_name="Ci коэффициент")
+    yellow_penalty = models.FloatField(default=0.0, verbose_name="Штраф за ЖК")
+    penalty_score = models.FloatField(default=0.0, verbose_name="Штрафные баллы (ручной + ЖК)")
+    total_score = models.FloatField(default=0.0)
     
     class Meta:
         unique_together = ['game', 'tournament_player']
     
+    def calculate_penalty(self):
+        """Пересчитывает penalty_score = manual_penalty + yellow_penalty"""
+        self.penalty_score = self.manual_penalty + self.yellow_penalty
+        return self.penalty_score
+    
+    def calculate_total(self):
+        """Пересчитывает total_score = main + bonus + ci - penalty"""
+        self.total_score = round(self.main_score + self.bonus_score + self.ci - self.penalty_score, 2)
+        return self.total_score
+    
     def save(self, *args, **kwargs):
-        # Явно пересчитываем total_score перед сохранением
-        self.total_score = round(
-            self.main_score + self.bonus_score + self.ci - self.penalty_score,
-            2
-        )
+        # Автоматически пересчитываем при сохранении
+        self.calculate_penalty()
+        self.calculate_total()
         super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.user.username} - Игра {self.game.round_number} - {self.get_role_display()}"
-    
-def update_player_stats(self):
-    """Обновляет агрегированную статистику игрока"""
-    from django.db.models import Sum, Count
-    
-    total_stats = PlayerGameStats.objects.filter(user=self, game__winning_team__isnull=False)
-    
-    self.games_played = total_stats.count()
-    
-    total_score = total_stats.aggregate(total=Sum('total_score'))['total'] or 0
-    self.player_rating = round(total_score / self.games_played, 2) if self.games_played > 0 else 0
-    
-    self.save()
