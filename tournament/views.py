@@ -18,12 +18,14 @@ from django.conf import settings
 from django.db import models
 from .utils import generate_invitation_token, generate_seating, calculate_final_places, calculate_tournament_statistics
 from django.db.models import Count, Sum, Max
+import logging
+logger = logging.getLogger('tournament')
 
 @login_required
 def profile(request):
     user = request.user
     
-    # Турниры где участвует игроком — РАБОТАЛО РАНЬШЕ
+    # Турниры где участвует игроком
     player_tournaments = Tournament.objects.filter(
         players__user=user
     ).distinct().order_by('-created_at')
@@ -34,7 +36,7 @@ def profile(request):
         'completed': player_tournaments.filter(status='completed').count(),
     }
     
-    # Статистика по каждому турниру
+    # Статистика по каждому турниру для игрока
     tournament_stats = {}
     for tournament in player_tournaments:
         try:
@@ -47,8 +49,29 @@ def profile(request):
         except TournamentPlayer.DoesNotExist:
             tournament_stats[tournament.id] = {'total_score': 0, 'games_played': 0}
     
+    # Сериализация турниров где игрок участвует
+    player_tournaments_list = []
+    for tournament in player_tournaments[:5]:
+            # Получаем место игрока в этом турнире
+        final_place = None
+        try:
+            tp = TournamentPlayer.objects.get(tournament=tournament, user=user)
+            final_place = tp.final_place
+        except TournamentPlayer.DoesNotExist:
+            pass
+        player_tournaments_list.append({
+            'id': tournament.id,
+            'name': tournament.name,
+            'status': tournament.status,
+            'status_display': tournament.get_status_display(),
+            'start_date': tournament.start_date.strftime('%d.%m.%Y') if tournament.start_date else None,
+            'host_username': tournament.host.username,
+            'final_place': final_place,
+        })
+    
     # Проведённые турниры (для ведущего)
     hosted_tournaments_data = []
+    hosted_tournaments_list = []
     hosted_stats = None
     
     if user.role == 'host' and user.is_approved_host:
@@ -74,18 +97,113 @@ def profile(request):
                 'total_games': tournament.games.count(),
                 'completed_games': completed_games,
             })
+            
+            hosted_tournaments_list.append({
+                'id': tournament.id,
+                'name': tournament.name,
+                'status': tournament.status,
+                'status_display': tournament.get_status_display(),
+                'start_date': tournament.start_date.strftime('%d.%m.%Y') if tournament.start_date else None,
+                'total_games': tournament.games.count(),
+                'completed_games': completed_games,
+                'players_count': tournament.players.count(),
+                'max_players': tournament.max_players,
+            })
     
+    # Созданные игроки (для ведущего)
+    created_players_data = []
+    created_players_stats = {'active': 0, 'pending': 0, 'total': 0}
+    
+    if user.role == 'host' and user.is_approved_host:
+        created_players = user.created_players.all().order_by('is_active', '-invitation_created')
+        created_players_stats['total'] = created_players.count()
+        created_players_stats['active'] = created_players.filter(is_active=True).count()
+        created_players_stats['pending'] = created_players.filter(is_active=False).count()
+        
+        for player in created_players:
+            created_players_data.append({
+                'id': player.id,
+                'nickname': player.player_nickname,
+                'is_active': player.is_active,
+                'created_at': player.invitation_created.strftime('%d.%m.%Y') if player.invitation_created else None,
+                'invitation_token': player.invitation_token if not player.is_active else None,
+            })
+    # Логирование мест в турнирах
+    
+    logger.info(f"=== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ: {user.username} ===")
+    logger.info(f"Всего турниров в которых участвует: {player_tournaments.count()}")
+
+    for tournament in player_tournaments[:10]:
+        try:
+            tp = TournamentPlayer.objects.get(tournament=tournament, user=user)
+            total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
+            logger.info(f"  Турнир: {tournament.name} | статус: {tournament.status} | место: {tp.final_place} | очки: {total}")
+            
+            # ПОДРОБНАЯ СТАТИСТИКА ДЛЯ ЭТОГО ТУРНИРА
+            log_tournament_details(tournament, user)
+            
+        except TournamentPlayer.DoesNotExist:
+            logger.info(f"  Турнир: {tournament.name} | статус: {tournament.status} | место: НЕ УЧАСТНИК")
+
     context = {
         'user': user,
         'role_display': dict(user.ROLE_CHOICES).get(user.role, 'Игрок'),
         'is_host': user.role == 'host' and user.is_approved_host,
         'player_tournaments': player_tournaments[:5],
-        'player_stats': player_stats,
+        'player_tournaments_json': player_tournaments_list,
         'tournament_stats': tournament_stats,
         'hosted_tournaments': hosted_tournaments_data,
+        'hosted_tournaments_json': hosted_tournaments_list,
         'hosted_stats': hosted_stats,
+        'created_players_data': created_players_data,
+        'created_players_stats': created_players_stats,
     }
     return render(request, 'tournament/profile.html', context)
+
+def log_tournament_details(tournament, user):
+    """Подробное логирование статистики турнира для игрока"""
+    logger.info(f"=== ПОДРОБНАЯ СТАТИСТИКА ТУРНИРА: {tournament.name} (ID: {tournament.id}) ===")
+    logger.info(f"Статус турнира: {tournament.status}")
+    logger.info(f"Всего игр в турнире: {tournament.games.count()}")
+    logger.info(f"Завершённых игр: {tournament.games.exclude(winning_team__isnull=True).count()}")
+    
+    # Все игроки турнира с их очками
+    logger.info("--- ВСЕ ИГРОКИ ТУРНИРА ---")
+    all_players = TournamentPlayer.objects.filter(tournament=tournament).select_related('user')
+    for tp in all_players:
+        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
+        logger.info(f"  {tp.user.username} | main: {tp.total_main_score} | bonus: {tp.total_bonus_score} | ci: {tp.total_ci} | ИТОГО: {total} | место: {tp.final_place}")
+    
+    # Конкретный игрок
+    try:
+        tp_user = TournamentPlayer.objects.get(tournament=tournament, user=user)
+        logger.info(f"--- ДАННЫЕ ИГРОКА {user.username} ---")
+        logger.info(f"  total_main_score: {tp_user.total_main_score}")
+        logger.info(f"  total_bonus_score: {tp_user.total_bonus_score}")
+        logger.info(f"  total_ci: {tp_user.total_ci}")
+        logger.info(f"  ИТОГО: {tp_user.total_main_score + tp_user.total_bonus_score + tp_user.total_ci}")
+        logger.info(f"  final_place: {tp_user.final_place}")
+        
+        # Детали по играм
+        logger.info("--- ИГРЫ ИГРОКА ---")
+        all_stats = PlayerGameStats.objects.filter(
+            tournament_player=tp_user,
+            game__winning_team__isnull=False
+        ).order_by('game__round_number').select_related('game')
+        
+        for stat in all_stats:
+            logger.info(f"  Игра {stat.game.round_number} | роль: {stat.role} | main: {stat.main_score} | bonus: {stat.bonus_score} | ci: {stat.ci} | penalty: {stat.penalty_score} | total: {stat.total_score}")
+        
+        # Первые убийства
+        first_kills = all_stats.filter(first_shot__isnull=False).exclude(first_shot='')
+        logger.info(f"--- ПЕРВЫЕ УБИЙСТВА ({first_kills.count()}) ---")
+        for stat in first_kills:
+            logger.info(f"  Игра {stat.game.round_number}: {stat.first_shot} | бонус за ЛХ: {stat.lh_bonus}")
+        
+    except TournamentPlayer.DoesNotExist:
+        logger.info(f"Игрок {user.username} не найден в турнире")
+    
+    logger.info("=== КОНЕЦ ПОДРОБНОЙ СТАТИСТИКИ ===")
 
 def register(request):
     if request.method == 'POST':
@@ -867,26 +985,35 @@ def check_tournament_completion(tournament):
         return True
     return False
 
-
 def calculate_final_places(tournament):
     """Рассчитывает итоговые места игроков в турнире"""
+    logger.info(f"=== РАСЧЁТ МЕСТ ДЛЯ ТУРНИРА: {tournament.name} (ID: {tournament.id}) ===")
+    
     players = TournamentPlayer.objects.filter(
         tournament=tournament
     ).order_by('-total_main_score', '-total_bonus_score')
     
-    current_place = 1
+    logger.info(f"Всего игроков: {players.count()}")
+    
     for i, player in enumerate(players):
+        total_score = player.total_main_score + player.total_bonus_score + player.total_ci
         if i > 0:
             prev_player = players[i-1]
-            if (player.total_main_score == prev_player.total_main_score and 
-                player.total_bonus_score == prev_player.total_bonus_score):
+            prev_total = prev_player.total_main_score + prev_player.total_bonus_score + prev_player.total_ci
+            
+            if total_score == prev_total:
                 player.final_place = prev_player.final_place
+                logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place} (совпадает с предыдущим)")
             else:
                 player.final_place = i + 1
+                logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place}")
         else:
             player.final_place = 1
+            logger.info(f"  {i+1}. {player.user.username} | очки: {total_score} | место: {player.final_place} (ПОБЕДИТЕЛЬ)")
         
         player.save()
+    
+    logger.info("=== КОНЕЦ РАСЧЁТА ===")
 
 def calculate_yellow_card_penalty(tournament_player, current_game_yellow_cards):
     """
@@ -1511,22 +1638,61 @@ def home(request):
 def player_stats_api(request):
     """API для получения расширенной статистики игрока"""
     user = request.user
+
     
-    # Получаем все TournamentPlayer записи пользователя
     tournament_players = TournamentPlayer.objects.filter(user=user)
-    
-    # Все статистики игр
     all_stats = PlayerGameStats.objects.filter(user=user, game__winning_team__isnull=False)
     
-    # --- Общая статистика ---
     total_games = all_stats.count()
     if total_games == 0:
-        return JsonResponse({
-            'has_stats': False,
-            'message': 'У вас пока нет сыгранных игр. Примите участие в турнирах, чтобы статистика появилась.'
-        })
+        return JsonResponse({'has_stats': False, 'message': 'У вас пока нет сыгранных игр'})
+    
+    # ========== ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ==========
+    logger.info(f"=== РАСЧЁТ СТАТИСТИКИ ДЛЯ {user.username} ===")
+    logger.info(f"Всего игр: {total_games}")
+    
+    # Суммируем по каждой игре отдельно
+    total_score_calculated = 0
+    for stat in all_stats:
+        logger.info(f"  Игра {stat.game.id}: main={stat.main_score}, bonus={stat.bonus_score}, ci={stat.ci}, penalty={stat.penalty_score} -> total={stat.total_score}")
+        total_score_calculated += stat.total_score
+    
+    logger.info(f"Сумма total_score из БД: {total_score_calculated}")
+    
+    # А теперь посчитаем сами
+    total_main = sum(stat.main_score for stat in all_stats)
+    total_bonus = sum(stat.bonus_score for stat in all_stats)
+    total_ci = sum(stat.ci for stat in all_stats)
+    total_penalty = sum(stat.penalty_score for stat in all_stats)
+    
+    logger.info(f"Ручной подсчёт: main={total_main}, bonus={total_bonus}, ci={total_ci}, penalty={total_penalty}")
+    logger.info(f"Итого ручной: {total_main + total_bonus + total_ci - total_penalty}")
+    
+    # Проверка по каждому турниру
+    for tp in tournament_players:
+        tournament_stats = PlayerGameStats.objects.filter(tournament_player=tp)
+        tourney_total = sum(stat.total_score for stat in tournament_stats)
+        logger.info(f"Турнир '{tp.tournament.name}': total_score из БД={tourney_total}, final_place={tp.final_place}")
+        
+        # Детали по играм этого турнира
+        for stat in tournament_stats:
+            logger.info(f"    Игра {stat.game.round_number}: main={stat.main_score}, bonus={stat.bonus_score}, ci={stat.ci}, penalty={stat.penalty_score} -> total={stat.total_score}")
+    
+    logger.info("=== КОНЕЦ ЛОГА ===")
+    
+    tournament_players = TournamentPlayer.objects.filter(user=user)
+    all_stats = PlayerGameStats.objects.filter(user=user, game__winning_team__isnull=False)
+    
+    total_games = all_stats.count()
+    if total_games == 0:
+        return JsonResponse({'has_stats': False, 'message': 'У вас пока нет сыгранных игр'})
+    
+    # --- ОБЩАЯ СТАТИСТИКА (сырые числа) ---
     total_score = all_stats.aggregate(total=Sum('total_score'))['total'] or 0
-    avg_score = total_score / total_games if total_games > 0 else 0
+    total_main = all_stats.aggregate(total=Sum('main_score'))['total'] or 0
+    total_bonus = all_stats.aggregate(total=Sum('bonus_score'))['total'] or 0
+    total_penalty = all_stats.aggregate(total=Sum('penalty_score'))['total'] or 0
+    total_ci = all_stats.aggregate(total=Sum('ci'))['total'] or 0
     
     # Победы
     wins = 0
@@ -1534,22 +1700,36 @@ def player_stats_api(request):
         if (stat.game.winning_team == 'mafia' and stat.role in ['mafia', 'don']) or \
            (stat.game.winning_team == 'peace' and stat.role in ['civil', 'sheriff']):
             wins += 1
-    winrate = (wins / total_games * 100) if total_games > 0 else 0
     
-    # Первые убийства (игрок был первым убитым)
+    # Первые убийства
     first_kills = all_stats.filter(first_shot__isnull=False).exclude(first_shot='').count()
     
-    # Жёлтые и красные карточки
+    # Карточки
     yellow_cards = all_stats.filter(yellow_cards=1).count()
     red_cards = all_stats.filter(yellow_cards__gte=2).count()
     
-    # Суммарные баллы
-    total_main = all_stats.aggregate(total=Sum('main_score'))['total'] or 0
-    total_bonus = all_stats.aggregate(total=Sum('bonus_score'))['total'] or 0
-    total_penalty = all_stats.aggregate(total=Sum('penalty_score'))['total'] or 0
-    total_ci = all_stats.aggregate(total=Sum('ci'))['total'] or 0
+    # --- СРЕДНИЕ ПОКАЗАТЕЛИ (на игру) ---
+    avg_score = total_score / total_games if total_games > 0 else 0
+    winrate = (wins / total_games * 100) if total_games > 0 else 0
+    avg_bonus = total_bonus / total_games if total_games > 0 else 0
+    avg_ci = total_ci / total_games if total_games > 0 else 0
+    avg_penalty = total_penalty / total_games if total_games > 0 else 0
+    first_kill_rate = (first_kills / total_games * 100) if total_games > 0 else 0
     
-    # --- Статистика по ролям ---
+    # --- ЛУЧШИЙ ТУРНИР ---
+    tournament_scores = []
+    for tp in tournament_players:
+        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
+        tournament_scores.append({
+            'tournament_id': tp.tournament.id,
+            'tournament_name': tp.tournament.name,
+            'score': round(total, 2),
+            'place': tp.final_place
+        })
+    tournament_scores.sort(key=lambda x: x['score'], reverse=True)
+    best_tournament = tournament_scores[0] if tournament_scores else None
+    
+    # --- СТАТИСТИКА ПО РОЛЯМ ---
     roles_stats = {}
     for role, role_name in [('don', 'Дон'), ('mafia', 'Мафия'), ('sheriff', 'Шериф'), ('civil', 'Мирный')]:
         role_stats = all_stats.filter(role=role)
@@ -1571,44 +1751,48 @@ def player_stats_api(request):
                 'icon': get_role_icon(role)
             }
     
-    # --- Распределение мест в турнирах ---
-    # Получаем финальные места игрока во всех турнирах
+    # --- РАСПРЕДЕЛЕНИЕ МЕСТ ---
     places = []
     for tp in tournament_players:
         if tp.final_place:
             places.append(tp.final_place)
-    
     place_distribution = {}
     for place in places:
         place_distribution[place] = place_distribution.get(place, 0) + 1
-    
-    # Лучшее место
     best_place = min(places) if places else None
     
-    # --- Достижения / рекорды ---
-    # Лучший результат в одном турнире
-    tournament_scores = []
-    for tp in tournament_players:
-        total = tp.total_main_score + tp.total_bonus_score + tp.total_ci
-        tournament_scores.append({
-            'tournament_id': tp.tournament.id,
-            'tournament_name': tp.tournament.name,
-            'score': round(total, 2),
-            'place': tp.final_place
-        })
-    tournament_scores.sort(key=lambda x: x['score'], reverse=True)
-    best_tournament = tournament_scores[0] if tournament_scores else None
-    
-    # Лучший бонус за ЛХ в одной игре
+    # --- РЕКОРДЫ ---
     best_lh_bonus = all_stats.aggregate(max=Max('lh_bonus'))['max'] or 0
+    
+    # Лучшая серия побед (подряд)
+    best_streak = 0
+    current_streak = 0
+    # Сортируем игры по дате
+    sorted_stats = all_stats.select_related('game').order_by('game__played_at')
+    for stat in sorted_stats:
+        is_win = (stat.game.winning_team == 'mafia' and stat.role in ['mafia', 'don']) or \
+                 (stat.game.winning_team == 'peace' and stat.role in ['civil', 'sheriff'])
+        if is_win:
+            current_streak += 1
+            best_streak = max(best_streak, current_streak)
+        else:
+            current_streak = 0
+    
+    # Самая результативная роль (по среднему баллу)
+    best_role_avg = None
+    best_role_name = None
+    for role, data in roles_stats.items():
+        if data['count'] >= 3:  # минимум 3 игры для статистики
+            if best_role_avg is None or data['avg_score'] > best_role_avg:
+                best_role_avg = data['avg_score']
+                best_role_name = data['name']
     
     data = {
         'has_stats': True,
+        # Общая статистика
         'total_games': total_games,
         'total_score': round(total_score, 2),
-        'avg_score': round(avg_score, 2),
         'wins': wins,
-        'winrate': round(winrate, 1),
         'first_kills': first_kills,
         'yellow_cards': yellow_cards,
         'red_cards': red_cards,
@@ -1616,12 +1800,23 @@ def player_stats_api(request):
         'total_bonus': round(total_bonus, 2),
         'total_penalty': round(total_penalty, 2),
         'total_ci': round(total_ci, 2),
+        # Средние показатели
+        'avg_score': round(avg_score, 2),
+        'winrate': round(winrate, 1),
+        'avg_bonus': round(avg_bonus, 2),
+        'avg_ci': round(avg_ci, 2),
+        'avg_penalty': round(avg_penalty, 2),
+        'first_kill_rate': round(first_kill_rate, 1),
+        # Рекорды
+        'best_lh_bonus': best_lh_bonus,
+        'best_streak': best_streak,
+        'best_role': best_role_name,
+        'best_tournament': best_tournament,
+        'best_place': best_place,
+        # Остальное
+        'tournaments_count': tournament_players.count(),
         'roles': roles_stats,
         'place_distribution': place_distribution,
-        'best_place': best_place,
-        'best_tournament': best_tournament,
-        'best_lh_bonus': best_lh_bonus,
-        'tournaments_count': tournament_players.count(),
     }
     
     return JsonResponse(data)
