@@ -6,7 +6,15 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'projectomerta.settings')
+    # Определяем окружение: если файл settings_local.py существует и мы не на сервере
+    # На сервере PythonAnywhere есть переменная окружения PYTHONANYWHERE_DOMAIN
+    is_production = os.environ.get('PYTHONANYWHERE_DOMAIN') is not None
+    
+    if is_production:
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'projectomerta.settings')
+    else:
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'projectomerta.settings_local')
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

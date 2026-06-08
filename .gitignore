@@ -23,5 +23,12 @@ venv.bak/
 
 # Project specific
 staticfiles/
-local_settings.py
 *.local
+
+# .gitignore
+settings_local.py
+db.sqlite3
+__pycache__/
+*.pyc
+staticfiles/
+media/
