@@ -34,4 +34,5 @@ urlpatterns = [
     path('beta/day/<int:round_num>/', views.beta_day, name='beta_day'),
     path('beta/night/<int:round_num>/', views.beta_night, name='beta_night'),
     path('beta/vote/', views.beta_vote, name='beta_vote'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
 ]

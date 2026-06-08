@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordChangeForm
 from .models import User
 from .models import HostApplication
 from .models import Tournament
@@ -93,3 +94,35 @@ class TournamentCreateForm(forms.ModelForm):
             'total_games': 'Количество игр в турнире',
             'rules': 'Правила турнира',
         }
+class ProfileEditForm(forms.ModelForm):
+    """Форма редактирования профиля (без смены пароля)"""
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'})
+    )
+    player_nickname = forms.CharField(
+        required=False,
+        label='Никнейм в мафии',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Как к вам обращаться в игре'})
+    )
+    
+    class Meta:
+        model = User
+        fields = ['email', 'player_nickname']
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
+            raise forms.ValidationError('Пользователь с таким email уже существует')
+        return email
+
+
+class ProfilePasswordForm(PasswordChangeForm):
+    """Форма смены пароля на странице профиля"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ['old_password', 'new_password1', 'new_password2']:
+            self.fields[field_name].widget.attrs.update({'class': 'form-control'})
+        self.fields['old_password'].label = 'Текущий пароль'
+        self.fields['new_password1'].label = 'Новый пароль'
+        self.fields['new_password2'].label = 'Подтверждение пароля'

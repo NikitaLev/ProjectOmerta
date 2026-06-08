@@ -18,6 +18,10 @@ from django.conf import settings
 from django.db import models
 from .utils import generate_invitation_token, generate_seating, calculate_final_places, calculate_tournament_statistics
 from django.db.models import Count, Sum, Max
+from .forms import ProfileEditForm, ProfilePasswordForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
 import logging
 logger = logging.getLogger('tournament')
 
@@ -445,37 +449,50 @@ def activate_account(request, token):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
         
         errors = []
         
-        # Проверка username
+        # Валидация username
         if not username:
-            errors.append('Имя пользователя обязательно для заполнения')
+            errors.append('❌ Имя пользователя обязательно для заполнения')
+        elif len(username) < 3:
+            errors.append(f'❌ Имя пользователя должно содержать минимум 3 символа. Сейчас: {len(username)}')
+        elif len(username) > 30:
+            errors.append(f'❌ Имя пользователя не может превышать 30 символов. Сейчас: {len(username)}')
+        elif not username.replace('_', '').isalnum():
+            errors.append('❌ Имя пользователя может содержать только латинские буквы, цифры и знак подчеркивания (_)')
         elif User.objects.filter(username=username).exists():
-            errors.append('Пользователь с таким именем уже существует')
+            errors.append(f'❌ Имя пользователя "{username}" уже занято. Придумайте другое')
         
-        # Проверка email
+        # Валидация email
         if not email:
-            errors.append('Email обязателен для заполнения')
+            errors.append('❌ Email обязателен для заполнения')
+        elif '@' not in email or '.' not in email.split('@')[-1]:
+            errors.append('❌ Введите корректный email адрес. Пример: username@domain.ru')
         elif User.objects.filter(email=email).exists():
-            errors.append('Пользователь с таким email уже существует')
+            errors.append(f'❌ Пользователь с email "{email}" уже существует')
         
-        # Проверка паролей
-        if not password1 or not password2:
-            errors.append('Пароль обязателен для заполнения')
-        elif password1 != password2:
-            errors.append('Пароли не совпадают')
+        # Валидация пароля
+        if not password1:
+            errors.append('❌ Пароль обязателен для заполнения')
         elif len(password1) < 8:
-            errors.append('Пароль должен быть не менее 8 символов')
+            errors.append(f'❌ Пароль должен содержать минимум 8 символов. Сейчас: {len(password1)}')
+        elif password1 in ['12345678', 'qwerty123', 'password123', '11111111']:
+            errors.append('⚠️ Слишком простой пароль. Используйте комбинацию букв и цифр')
+        elif password1 != password2:
+            errors.append('❌ Пароли не совпадают')
         
         if errors:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': errors}, status=400)
+            
             for error in errors:
-                messages.error(request, error)
+                messages.error(request, error, extra_tags='activation')
             return redirect('activate_account', token=token)
         
-        # Обновляем пользователя
+        # Всё ок — активируем
         user.username = username
         user.email = email
         user.set_password(password1)
@@ -484,7 +501,10 @@ def activate_account(request, token):
         user.invitation_created = None
         user.save()
         
-        messages.success(request, 'Аккаунт активирован! Теперь вы можете войти.', extra_tags='activation')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect': '/accounts/login/'})
+        
+        messages.success(request, f'✅ Аккаунт "{username}" успешно активирован!', extra_tags='activation')
         return redirect('login')
     
     return render(request, 'registration/activate.html', {'user': user})
@@ -1858,3 +1878,102 @@ def beta_day(request, round_num):
 def beta_night(request, round_num):
     """Ночная фаза"""
     return render(request, 'tournament/beta_night.html', {'round_num': round_num})
+
+@login_required
+def profile_edit(request):
+    """Редактирование профиля (email, никнейм, пароль) - AJAX поддержка"""
+    
+    if request.method == 'POST':
+        # AJAX запрос
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            
+            # Смена пароля
+            if 'change_password' in request.POST:
+                old_password = request.POST.get('old_password', '')
+                new_password1 = request.POST.get('new_password1', '')
+                new_password2 = request.POST.get('new_password2', '')
+                
+                errors = []
+                
+                # Проверка текущего пароля
+                if not request.user.check_password(old_password):
+                    errors.append('❌ Неверный текущий пароль')
+                
+                # Проверка нового пароля
+                if not new_password1:
+                    errors.append('❌ Новый пароль не может быть пустым')
+                elif len(new_password1) < 8:
+                    errors.append('❌ Пароль должен содержать минимум 8 символов')
+                elif new_password1 in ['12345678', 'qwerty123', 'password123']:
+                    errors.append('⚠️ Слишком простой пароль')
+                elif new_password1 != new_password2:
+                    errors.append('❌ Пароли не совпадают')
+                
+                if errors:
+                    return JsonResponse({'success': False, 'errors': errors})
+                
+                # Смена пароля
+                request.user.set_password(new_password1)
+                request.user.save()
+                update_session_auth_hash(request, request.user)
+                
+                return JsonResponse({
+                    'success': True, 
+                    'message': '✅ Пароль успешно изменён!'
+                })
+            
+            # Редактирование профиля
+            else:
+                email = request.POST.get('email', '').strip()
+                player_nickname = request.POST.get('player_nickname', '').strip()
+                
+                errors = []
+                
+                # Валидация email
+                if not email:
+                    errors.append('❌ Email не может быть пустым')
+                elif '@' not in email or '.' not in email.split('@')[-1]:
+                    errors.append('❌ Введите корректный email адрес')
+                elif User.objects.exclude(id=request.user.id).filter(email=email).exists():
+                    errors.append(f'❌ Пользователь с email "{email}" уже существует')
+                
+                if errors:
+                    return JsonResponse({'success': False, 'errors': errors})
+                
+                # Обновление
+                request.user.email = email
+                request.user.player_nickname = player_nickname if player_nickname else ''
+                request.user.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': '✅ Профиль успешно обновлён!'
+                })
+        
+        # Обычный POST (без AJAX) — для обратной совместимости
+        if 'change_password' in request.POST:
+            password_form = ProfilePasswordForm(request.user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, '✅ Пароль успешно изменён!')
+                return redirect('profile_edit')
+            else:
+                for error in password_form.errors.values():
+                    messages.error(request, error)
+                return redirect('profile_edit')
+        else:
+            profile_form = ProfileEditForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, '✅ Профиль успешно обновлён!')
+                return redirect('profile_edit')
+            else:
+                for error in profile_form.errors.values():
+                    messages.error(request, error)
+                return redirect('profile_edit')
+    
+    # GET запрос
+    return render(request, 'tournament/profile_edit.html', {
+        'user': request.user,
+    })

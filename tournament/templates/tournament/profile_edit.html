@@ -1,0 +1,161 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Редактирование профиля - {{ user.username }} - Project Omerta{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/profile_edit.css' %}?v=1">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/pages/profile_edit.js' %}?v=1" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <!-- Основной профиль -->
+    <div class="edit-card">
+        <div class="edit-card-header">
+            <i class="fas fa-user-edit"></i>
+            <div>
+                <h2>Редактирование профиля</h2>
+                <p>Измените данные вашего аккаунта</p>
+            </div>
+        </div>
+        
+        <div class="edit-form">
+            <form id="profileForm" method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Имя пользователя</label>
+                    <input type="text" value="{{ user.username }}" disabled class="username-field">
+                    <div class="help-text">Имя пользователя нельзя изменить</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" 
+                           id="email"
+                           name="email" 
+                           class="form-control" 
+                           value="{{ user.email }}" 
+                           placeholder="your@email.com">
+                    <div class="help-text error-text" id="emailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-gamepad"></i> Никнейм в мафии</label>
+                    <input type="text" 
+                           id="player_nickname"
+                           name="player_nickname" 
+                           class="form-control" 
+                           value="{{ user.player_nickname|default:'' }}" 
+                           placeholder="Как к вам обращаться в игре">
+                    <div class="help-text">Необязательное поле. Будет отображаться в турнирах</div>
+                    <div class="help-text error-text" id="nicknameError"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="saveProfileBtn" class="btn-primary">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                    <a href="{% url 'profile' %}" class="btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Вернуться в профиль
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Смена пароля -->
+    <div class="edit-card">
+        <div class="edit-card-header">
+            <i class="fas fa-key"></i>
+            <div>
+                <h2>Смена пароля</h2>
+                <p>Обновите пароль для безопасности аккаунта</p>
+            </div>
+        </div>
+        
+        <div class="edit-form">
+            <form id="passwordForm" method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Текущий пароль</label>
+                    <input type="password" 
+                           id="old_password"
+                           name="old_password" 
+                           class="form-control" 
+                           placeholder="Введите текущий пароль">
+                    <div class="help-text error-text" id="oldPasswordError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> Новый пароль</label>
+                    <input type="password" 
+                           id="new_password1"
+                           name="new_password1" 
+                           class="form-control" 
+                           placeholder="Придумайте новый пароль">
+                    <div class="help-text">Минимум 8 символов, не должен быть слишком простым</div>
+                    <div class="help-text error-text" id="newPassword1Error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-check-circle"></i> Подтверждение пароля</label>
+                    <input type="password" 
+                           id="new_password2"
+                           name="new_password2" 
+                           class="form-control" 
+                           placeholder="Повторите новый пароль">
+                    <div class="help-text error-text" id="newPassword2Error"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="changePasswordBtn" class="btn-primary">
+                        <i class="fas fa-key"></i> Сменить пароль
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Заявка на ведущего (только для обычных игроков) -->
+    {% if user.role == 'player' or not user.is_approved_host %}
+    <div class="edit-card host-application-card">
+        <div class="edit-card-header">
+            <i class="fas fa-chalkboard-user"></i>
+            <div>
+                <h2>Стать ведущим</h2>
+                <p>Проводите собственные турниры и управляйте играми</p>
+            </div>
+        </div>
+        
+        <div class="edit-form">
+            {% if user.role == 'host' and not user.is_approved_host %}
+                <div class="info-note info-pending">
+                    <i class="fas fa-clock"></i>
+                    <p>Ваша заявка на ведущего уже подана и находится на рассмотрении. Ожидайте ответа администратора.</p>
+                </div>
+            {% else %}
+                <div class="info-note info-muted">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Став ведущим, вы сможете создавать турниры, приглашать игроков и управлять игровым процессом. После подачи заявки администратор рассмотрит её и свяжется с вами.</p>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'apply_host' %}" class="btn-host">
+                        <i class="fas fa-paper-plane"></i> Подать заявку на ведущего
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Контейнер для уведомлений -->
+<div id="notificationContainer"></div>
+{% endblock %}
