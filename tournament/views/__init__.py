@@ -1,5 +1,7 @@
 # views/__init__.py
-from .auth_views import register, activate_account, log_tournament_details
+from .auth_views import (register, activate_account, log_tournament_details, custom_password_reset,
+    custom_password_reset_done,custom_password_reset_confirm,custom_password_reset_complete,custom_login,custom_logout
+)
 from .profile_views import profile, profile_edit, player_stats_api, get_role_icon
 from .host_views import apply_host
 from .tournament_views import (
