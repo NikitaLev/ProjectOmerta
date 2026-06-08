@@ -26,24 +26,6 @@ import logging
 logger = logging.getLogger('tournament')
 
 
-def calculate_final_places(tournament):
-    """Рассчитывает итоговые места игроков в турнире"""
-    players = list(TournamentPlayer.objects.filter(tournament=tournament))
-    
-    # Получаем актуальные очки через методы
-    for player in players:
-        player._cached_total = player.get_total_score()
-    
-    # Сортируем по очкам
-    players.sort(key=lambda x: x._cached_total, reverse=True)
-    
-    for i, player in enumerate(players):
-        if i > 0 and player._cached_total == players[i-1]._cached_total:
-            player.final_place = players[i-1].final_place
-        else:
-            player.final_place = i + 1
-        player.save()
-
 def recalculate_all_penalties(tournament, game):
     """Пересчитывает штрафы за ЖК для всех игр турнира после редактирования"""
     

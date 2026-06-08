@@ -278,28 +278,23 @@ def calculate_tournament_statistics(tournament):
     return stats
 
 def calculate_final_places(tournament):
-    """
-    Рассчитывает итоговые места игроков в турнире
-    """
-    players = TournamentPlayer.objects.filter(
-        tournament=tournament
-    ).annotate(
-        total_main=Sum('game_stats__main_score'),
-        total_bonus=Sum('game_stats__bonus_score')
-    ).order_by('-total_main', '-total_bonus')
+    """Рассчитывает итоговые места игроков в турнире"""
+    players = list(TournamentPlayer.objects.filter(tournament=tournament))
     
-    current_place = 1
-    for i, player in enumerate(players):
-        if i > 0:
-            prev_player = players[i-1]
-            if (player.total_main == prev_player.total_main and 
-                player.total_bonus == prev_player.total_bonus):
-                player.final_place = prev_player.final_place
-            else:
-                player.final_place = i + 1
+    # Получаем актуальные очки напрямую через агрегацию
+    player_scores = []
+    for player in players:
+        total = player.get_total_score()
+        player_scores.append((player, total))
+    
+    # Сортируем по очкам (по убыванию)
+    player_scores.sort(key=lambda x: x[1], reverse=True)
+    
+    for i, (player, total) in enumerate(player_scores):
+        if i > 0 and total == player_scores[i-1][1]:
+            player.final_place = player_scores[i-1][0].final_place
         else:
-            player.final_place = 1
-        
+            player.final_place = i + 1
         player.save()
     
     return True
