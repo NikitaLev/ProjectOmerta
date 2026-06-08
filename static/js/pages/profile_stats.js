@@ -11,7 +11,7 @@ async function loadPlayerStats() {
         
         // Обновляем мини-статистику в левой колонке
         document.getElementById('miniTotalGames').textContent = profileData.total_games || 0;
-        document.getElementById('miniTotalScore').textContent = (profileData.total_score || 0).toFixed(1);
+        document.getElementById('miniTotalScore').textContent = (profileData.total_score || 0).toFixed(2);
         document.getElementById('miniWinrate').textContent = `${profileData.winrate || 0}%`;
         document.getElementById('miniBestPlace').textContent = profileData.best_place ? `${profileData.best_place}-е` : '—';
         
@@ -43,7 +43,7 @@ function renderOverallStats(data) {
             <div class="stat-label">Всего игр</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">${(data.total_score || 0).toFixed(1)}</div>
+            <div class="stat-value">${(data.total_score || 0).toFixed(2)}</div>
             <div class="stat-label">Всего очков</div>
         </div>
         <div class="stat-card">
@@ -99,19 +99,19 @@ function renderAvgStats(data) {
 function renderDetailsStats(data) {
     const html = `
         <div class="stat-card">
-            <div class="stat-value">${(data.total_main || 0).toFixed(1)}</div>
+            <div class="stat-value">${(data.total_main || 0).toFixed(2)}</div>
             <div class="stat-label">Основные баллы</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">${(data.total_bonus || 0).toFixed(1)}</div>
+            <div class="stat-value">${(data.total_bonus || 0).toFixed(2)}</div>
             <div class="stat-label">Бонусные баллы</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">${(data.total_penalty || 0).toFixed(1)}</div>
+            <div class="stat-value">${(data.total_penalty || 0).toFixed(2)}</div>
             <div class="stat-label">Штрафные баллы</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">${(data.total_ci || 0).toFixed(1)}</div>
+            <div class="stat-value">${(data.total_ci || 0).toFixed(2)}</div>
             <div class="stat-label">Компенсационные (Ci)</div>
         </div>
     `;
@@ -248,7 +248,7 @@ function renderCharts(data) {
                         callbacks: {
                             label: function(ctx) {
                                 const total = roleCounts.reduce((a, b) => a + b, 0);
-                                const percent = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                                const percent = total > 0 ? ((ctx.raw / total) * 100).toFixed(2) : 0;
                                 return `${ctx.label}: ${ctx.raw} игр (${percent}%)`;
                             }
                         }
@@ -264,11 +264,11 @@ function renderCharts(data) {
         if (performanceChart) performanceChart.destroy();
         
         // Нормализованные показатели (0-100)
-        const winPercent = (data.wins / totalGames * 100).toFixed(1);
-        const firstKillPercent = (data.first_kills / totalGames * 100).toFixed(1);
-        const avgBonusPerGame = (data.avg_bonus * 10).toFixed(1); // бонус до 10 = 100%
-        const avgCiPerGame = (data.avg_ci * 50).toFixed(1); // Ci до 0.4 = 100%
-        const cleanPercent = Math.max(0, 100 - (data.yellow_cards / totalGames * 25)).toFixed(1);
+        const winPercent = (data.wins / totalGames * 100).toFixed(2);
+        const firstKillPercent = (data.first_kills / totalGames * 100).toFixed(2);
+        const avgBonusPerGame = (data.avg_bonus * 10).toFixed(2); // бонус до 10 = 100%
+        const avgCiPerGame = (data.avg_ci * 50).toFixed(2); // Ci до 0.4 = 100%
+        const cleanPercent = Math.max(0, 100 - (data.yellow_cards / totalGames * 25)).toFixed(2);
         
         const metrics = {
             'Победы': Math.min(100, winPercent),
