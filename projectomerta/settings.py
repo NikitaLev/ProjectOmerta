@@ -94,9 +94,3 @@ LOGIN_URL = '/login/'
 
 # Email настройки для PythonAnywhere
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'nikita.leventev97@gmail.com'  # Ваш полный адрес Gmail
-EMAIL_HOST_PASSWORD = 'ewue knfw ciqf wlgt'  # Вставьте его сюда
-DEFAULT_FROM_EMAIL = 'nikita.leventev97@gmail.com'
