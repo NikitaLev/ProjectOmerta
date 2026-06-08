@@ -303,3 +303,168 @@ def calculate_final_places(tournament):
         player.save()
     
     return True
+
+
+def recalculate_yellow_card_penalties(tournament):
+    """
+    Пересчитывает штрафы за ЖК для ВСЕХ игр турнира
+    Вызывать после любого изменения ЖК в любой игре
+    """
+    # Получаем все завершённые игры по порядку
+    games = tournament.games.filter(winning_team__isnull=False).order_by('round_number')
+    
+    if not games:
+        return
+    
+    # Для каждого игрока в турнире
+    for tp in tournament.players.all():
+        cumulative_yellow = 0  # Счётчик ЖК на текущий момент
+        
+        # Проходим по всем играм по порядку
+        for game in games:
+            try:
+                stats = PlayerGameStats.objects.get(
+                    game=game,
+                    tournament_player=tp
+                )
+                
+                # Получаем ручной штраф из отдельного поля
+                manual_penalty = stats.manual_penalty
+                
+                # Сколько ЖК в этой игре
+                game_yellow = stats.yellow_cards
+                
+                # Рассчитываем штраф за ЖК для ЭТОЙ игры
+                if game_yellow >= 2:
+                    # Красная карточка - фиксированный штраф
+                    yellow_penalty = 0.5
+                    cumulative_yellow += game_yellow
+                elif game_yellow == 1:
+                    # Обычная ЖК - штраф зависит от номера
+                    cumulative_yellow += 1
+                    yellow_penalty = 0.15 * cumulative_yellow
+                else:
+                    yellow_penalty = 0
+                
+                # Сохраняем отдельно штраф за ЖК
+                stats.yellow_penalty = yellow_penalty
+                
+                # Общий штраф = ручной штраф + штраф за ЖК
+                stats.penalty_score = manual_penalty + yellow_penalty
+                
+                # Сохраняем (total_score пересчитается автоматически)
+                stats.save()
+                
+            except PlayerGameStats.DoesNotExist:
+                # Если статистики нет, значит игра не введена - пропускаем
+                pass
+    
+    return True
+
+def recalculate_ci(tournament):
+    """
+    Пересчитывает компенсационные баллы Ci для всех игроков турнира.
+    Вызывать после каждого изменения результатов игр.
+    """
+    # Получаем всех игроков турнира
+    tournament_players = TournamentPlayer.objects.filter(tournament=tournament)
+    
+    for tp in tournament_players:
+        # Все завершённые игры игрока в этом турнире
+        all_stats = PlayerGameStats.objects.filter(
+            tournament_player=tp,
+            game__winning_team__isnull=False
+        ).order_by('game__round_number')
+        
+        N = all_stats.count()
+        if N == 0:
+            continue
+        
+        # Подсчёт i: количество первых убийств в роли мирного или шерифа
+        first_kill_stats = all_stats.filter(
+            role__in=['civil', 'sheriff'],
+            first_shot__isnull=False
+        ).exclude(first_shot='')
+        i = first_kill_stats.count()
+        
+        # Вычисление B (40% от N, округлённое до целого, но не менее 4)
+        B = round(0.4 * N)
+        if B < 4:
+            B = 4
+        
+        # Вычисление глобального Ci
+        if i <= B and B > 0:
+            Ci_global = (i / B) * 0.4
+        else:
+            Ci_global = 0.4
+        
+        # Для каждой игры, где игрок был первым убитым, вычисляем индивидуальный ci
+        for stat in first_kill_stats:
+            # Проверяем наличие чёрных (мафия/дон) в лучшем ходе
+            best_shot = stat.first_shot
+            has_black = False
+            if best_shot:
+                try:
+                    numbers = [int(x) for x in best_shot.split() if x.strip()]
+                    seating_order = stat.game.seating.get('order', [])
+                    for num in numbers:
+                        if 1 <= num <= len(seating_order):
+                            target_player_id = seating_order[num - 1]
+                            # Ищем статистику цели в этой игре
+                            target_stat = PlayerGameStats.objects.filter(
+                                game=stat.game,
+                                user_id=target_player_id
+                            ).first()
+                            if target_stat and target_stat.role in ['mafia', 'don']:
+                                has_black = True
+                                break
+                except (ValueError, TypeError, IndexError):
+                    pass
+            
+            # Определяем коэффициент по правилам 8.2
+            winning_team = stat.game.winning_team
+            if winning_team == 'mafia':  # красная команда проиграла
+                coef = 1.0 if has_black else 0.5
+            else:  # красная команда выиграла
+                coef = 0.5 if has_black else 0.25
+            
+            # Вычисляем ci для этой игры
+            ci_value = round(Ci_global * coef, 2)
+            
+            # Обновляем поле ci
+            stat.ci = ci_value
+            stat.save()  # save автоматически пересчитает total_score
+
+
+def calculate_yellow_card_penalty(tournament_player, current_game_yellow_cards):
+    """
+    Рассчитывает штраф за жёлтые карточки с учётом всех игр турнира
+    
+    Args:
+        tournament_player: объект TournamentPlayer
+        current_game_yellow_cards: количество ЖК в текущей игре (0, 1, или 2)
+    
+    Returns:
+        float: сумма штрафа за ЖК для этой игры
+    """
+    # Получаем все предыдущие игры игрока в этом турнире
+    previous_stats = PlayerGameStats.objects.filter(
+        tournament_player=tournament_player
+    ).exclude(game__winning_team__isnull=True)  # только сыгранные игры
+    
+    # Считаем общее количество ЖК до этой игры
+    total_previous_yellow = sum(stat.yellow_cards for stat in previous_stats)
+    
+    # Если в текущей игре 2 ЖК - это красная карточка, фиксированный штраф 0.5
+    if current_game_yellow_cards >= 2:
+        return 0.5
+    
+    # Если 0 или 1 ЖК - считаем по прогрессии
+    if current_game_yellow_cards == 0:
+        return 0.0
+    else:  # 1 ЖК
+        # Номер этой ЖК в общем зачёте
+        card_number = total_previous_yellow + 1
+        # Штраф = 0.15 * номер карточки
+        return 0.15 * card_number
+    
