@@ -3,10 +3,6 @@ Django settings for projectomerta project.
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-
-# Загружаем переменные из .env
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -98,8 +94,9 @@ LOGIN_URL = '/login/'
 
 # Email настройки для PythonAnywhere
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.pythonanywhere.com'
-EMAIL_PORT = 25
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f'{EMAIL_HOST_USER}@pythonanywhere.com'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'nikita.leventev97@gmail.com'  # Ваш полный адрес Gmail
+EMAIL_HOST_PASSWORD = 'ewue knfw ciqf wlgt'  # Вставьте его сюда
+DEFAULT_FROM_EMAIL = 'nikita.leventev97@gmail.com'
