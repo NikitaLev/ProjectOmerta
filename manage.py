@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 import os
 import sys
 
 
 def main():
     """Run administrative tasks."""
-    # Определяем окружение: если файл settings_local.py существует и мы не на сервере
-    # На сервере PythonAnywhere есть переменная окружения PYTHONANYWHERE_DOMAIN
+    # Определяем окружение
     is_production = os.environ.get('PYTHONANYWHERE_DOMAIN') is not None
     
     if is_production:
