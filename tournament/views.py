@@ -1638,39 +1638,6 @@ def player_stats_api(request):
     if total_games == 0:
         return JsonResponse({'has_stats': False, 'message': 'У вас пока нет сыгранных игр'})
     
-    # ========== ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ==========
-    logger.info(f"=== РАСЧЁТ СТАТИСТИКИ ДЛЯ {user.username} ===")
-    logger.info(f"Всего игр: {total_games}")
-    
-    # Суммируем по каждой игре отдельно
-    total_score_calculated = 0
-    for stat in all_stats:
-        logger.info(f"  Игра {stat.game.id}: main={stat.main_score}, bonus={stat.bonus_score}, ci={stat.ci}, penalty={stat.penalty_score} -> total={stat.total_score}")
-        total_score_calculated += stat.total_score
-    
-    logger.info(f"Сумма total_score из БД: {total_score_calculated}")
-    
-    # А теперь посчитаем сами
-    total_main = sum(stat.main_score for stat in all_stats)
-    total_bonus = sum(stat.bonus_score for stat in all_stats)
-    total_ci = sum(stat.ci for stat in all_stats)
-    total_penalty = sum(stat.penalty_score for stat in all_stats)
-    
-    logger.info(f"Ручной подсчёт: main={total_main}, bonus={total_bonus}, ci={total_ci}, penalty={total_penalty}")
-    logger.info(f"Итого ручной: {total_main + total_bonus + total_ci - total_penalty}")
-    
-    # Проверка по каждому турниру
-    for tp in tournament_players:
-        tournament_stats = PlayerGameStats.objects.filter(tournament_player=tp)
-        tourney_total = sum(stat.total_score for stat in tournament_stats)
-        logger.info(f"Турнир '{tp.tournament.name}': total_score из БД={tourney_total}, final_place={tp.final_place}")
-        
-        # Детали по играм этого турнира
-        for stat in tournament_stats:
-            logger.info(f"    Игра {stat.game.round_number}: main={stat.main_score}, bonus={stat.bonus_score}, ci={stat.ci}, penalty={stat.penalty_score} -> total={stat.total_score}")
-    
-    logger.info("=== КОНЕЦ ЛОГА ===")
-    
     tournament_players = TournamentPlayer.objects.filter(user=user)
     all_stats = PlayerGameStats.objects.filter(user=user, game__winning_team__isnull=False)
     
