@@ -92,5 +92,5 @@ LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
-# Email настройки для PythonAnywhere
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email — просто вывод в консоль (логи)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
