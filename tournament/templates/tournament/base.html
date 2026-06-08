@@ -23,7 +23,7 @@
 
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/role-icons.css' %}">
-    
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/logo_4.png' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="dark-theme">
@@ -32,7 +32,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="{% url 'home' %}" class="logo-area">
-                    <div class="logo-placeholder"></div>
+                    <img src="{% static 'images/logo_4.png' %}" alt="Logo" class="logo-img">
                     <span class="logo-text">PROJECT OMERTA</span>
                 </a>
                 <nav class="main-nav">
