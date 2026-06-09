@@ -34,29 +34,7 @@
     <form method="post" class="game-form" id="gameForm">
         {% csrf_token %}
         
-        <!-- Блок выбора победителя -->
-        <div class="form-section winner-section">
-            <h2 class="section-title">
-                <i class="fas fa-trophy"></i>
-                Победитель игры
-            </h2>
-            <div class="winner-options">
-                <label class="winner-option">
-                    <input type="radio" name="winning_team" value="mafia" required>
-                    <div class="winner-card mafia">
-                        <span class="role-icon role-icon-mafia role-icon-lg"></span>
-                        <span>Мафия</span>
-                    </div>
-                </label>
-                <label class="winner-option">
-                    <input type="radio" name="winning_team" value="peace" required>
-                    <div class="winner-card peace">
-                        <span class="role-icon role-icon-civil role-icon-lg"></span>
-                        <span>Мирные</span>
-                    </div>
-                </label>
-            </div>
-        </div>
+        
         
         <!-- Таблица игроков -->
         <div class="form-section players-section">
@@ -171,7 +149,29 @@
                 </table>
             </div>
         </div>
-        
+        <!-- Блок выбора победителя -->
+        <div class="form-section winner-section">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                Победитель игры
+            </h2>
+            <div class="winner-options">
+                <label class="winner-option">
+                    <input type="radio" name="winning_team" value="mafia" required>
+                    <div class="winner-card mafia">
+                        <span class="role-icon role-icon-mafia role-icon-lg"></span>
+                        <span>Мафия</span>
+                    </div>
+                </label>
+                <label class="winner-option">
+                    <input type="radio" name="winning_team" value="peace" required>
+                    <div class="winner-card peace">
+                        <span class="role-icon role-icon-civil role-icon-lg"></span>
+                        <span>Мирные</span>
+                    </div>
+                </label>
+            </div>
+        </div>
         <!-- Кнопки сохранения -->
         <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-large">
