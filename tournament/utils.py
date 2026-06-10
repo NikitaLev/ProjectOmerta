@@ -12,7 +12,7 @@ def generate_invitation_token():
     """Генерирует уникальный токен для приглашения"""
     return secrets.token_urlsafe(32)
 
-def generate_seating(players, total_games):
+def generate_seating(players, total_games, request):
     """
     Генерирует рассадку для турнира.
     
@@ -26,12 +26,12 @@ def generate_seating(players, total_games):
     player_ids = [p.id for p in players]
     num_players = len(player_ids)
     
-    # Если игроков столько же, сколько игр - генерируем сбалансированную рассадку
-    if num_players == total_games:
-        return generate_balanced_seating(player_ids)
+    # Если игр меньше или равно числу игроков — сбалансированная (без повторов мест)
+    if total_games <= num_players:
+        return generate_balanced_seating_partial(player_ids, total_games)
     else:
-        # Иначе - просто случайные перестановки
-        return generate_random_seating(player_ids, total_games)
+        # Если игр больше, чем игроков — сбалансированная с повторами (циклический повтор)
+        return generate_balanced_seating_with_repeats(player_ids, total_games)
 
 def generate_balanced_seating(player_ids):
     """
@@ -75,6 +75,90 @@ def generate_random_seating(player_ids, total_games):
         shuffled = player_ids.copy()
         random.shuffle(shuffled)
         seating_plan.append(shuffled)
+    return seating_plan
+
+def generate_balanced_seating_partial(player_ids, total_games):
+    """
+    Генерирует сбалансированную рассадку, где каждый игрок сидит на каждом месте
+    НЕ БОЛЕЕ одного раза (если total_games <= num_players).
+    
+    Берутся первые total_games строк из полного латинского квадрата.
+    """
+    n = len(player_ids)
+    k = total_games  # количество игр
+    
+    # Строим полный латинский квадрат n×n (циклический сдвиг)
+    base_square = []
+    for i in range(n):
+        row = []
+        for j in range(n):
+            row.append(player_ids[(j + i) % n])
+        base_square.append(row)
+    
+    # Перемешиваем строки (игры)
+    random.shuffle(base_square)
+    
+    # Берём только первые k строк (игр)
+    selected_rows = base_square[:k]
+    
+    # Перемешиваем столбцы (места) одинаково для всех выбранных строк
+    col_perm = list(range(n))
+    random.shuffle(col_perm)
+    
+    seating_plan = []
+    for row in selected_rows:
+        new_row = [row[col_perm[j]] for j in range(n)]
+        seating_plan.append(new_row)
+    
+    # Проверка (опционально)
+    if n <= 10 and k == n:
+        verify_seating(seating_plan, player_ids, n)
+    
+    return seating_plan
+
+def generate_balanced_seating_with_repeats(player_ids, total_games):
+    """
+    Генерирует сбалансированную рассадку, когда игр больше, чем игроков.
+    
+    Каждый полный цикл из num_players игр даёт каждому игроку по разу на каждом месте.
+    Остаток (total_games % num_players) добирается из начала следующего цикла.
+    """
+    n = len(player_ids)
+    full_cycles = total_games // n  # полных циклов
+    remainder = total_games % n      # остаток игр
+    
+    # Строим один полный латинский квадрат
+    base_square = []
+    for i in range(n):
+        row = []
+        for j in range(n):
+            row.append(player_ids[(j + i) % n])
+        base_square.append(row)
+    
+    # Перемешиваем строки в базовом квадрате
+    random.shuffle(base_square)
+    
+    # Перемешиваем столбцы (одинаково для всех строк)
+    col_perm = list(range(n))
+    random.shuffle(col_perm)
+    
+    # Применяем перестановку столбцов к базовому квадрату
+    shuffled_square = []
+    for row in base_square:
+        shuffled_square.append([row[col_perm[j]] for j in range(n)])
+    
+    # Формируем итоговую рассадку
+    seating_plan = []
+    
+    # Добавляем полные циклы (каждый цикл — это n игр)
+    for cycle in range(full_cycles):
+        for row in shuffled_square:
+            seating_plan.append(row.copy())
+    
+    # Добавляем остаток (первые remainder игр из следующего цикла)
+    for i in range(remainder):
+        seating_plan.append(shuffled_square[i].copy())
+    
     return seating_plan
 
 def verify_seating(seating_plan, player_ids, num_players):
