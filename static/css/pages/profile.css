@@ -13,7 +13,7 @@
     gap: 25px;
 }
 
-/* ДВУХКОЛОНОЧНАЯ СТРУКТУРА */
+/* ===== ДВУХКОЛОНОЧНАЯ СТРУКТУРА ===== */
 .profile-main-row {
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -85,7 +85,7 @@
     color: var(--gold);
 }
 
-/* Мини-статистика */
+/* ===== Мини-статистика ===== */
 .profile-stats-mini {
     padding: 20px;
     display: grid;
@@ -113,7 +113,7 @@
     text-transform: uppercase;
 }
 
-/* Информация о пользователе */
+/* ===== Информация о пользователе ===== */
 .profile-info-list {
     padding: 20px;
 }
@@ -174,7 +174,7 @@
     gap: 20px;
 }
 
-/* Модули статистики */
+/* ===== Модули статистики ===== */
 .stats-module {
     background: linear-gradient(145deg, var(--bg-card), #1a1a1a);
     border: 1px solid var(--border-color);
@@ -200,18 +200,13 @@
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
+    margin: 0;
 }
 
-/* Сетки карточек */
+/* ===== Сетки карточек ===== */
 .stats-grid-4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
-
-.stats-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
 }
 
@@ -242,7 +237,7 @@
     text-transform: uppercase;
 }
 
-/* Роли */
+/* ===== Статистика по ролям ===== */
 .role-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -285,7 +280,7 @@
     font-weight: 600;
 }
 
-/* Графики */
+/* ===== Графики ===== */
 .charts-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -310,7 +305,7 @@
     height: 200px;
 }
 
-/* Рекорды */
+/* ===== Рекорды ===== */
 .records-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -337,7 +332,7 @@
     color: var(--gold);
 }
 
-/* ========== ТУРНИРЫ — ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ========== */
+/* ========== ТУРНИРЫ ========== */
 .profile-tournaments {
     background: linear-gradient(145deg, var(--bg-card), #1a1a1a);
     border: 1px solid var(--border-color);
@@ -366,7 +361,41 @@
     color: var(--gold);
 }
 
-/* Горизонтальный скролл */
+/* ===== Строка с заголовком и кнопкой создания ===== */
+.tournaments-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tournaments-header-row h2 {
+    margin-bottom: 0;
+}
+
+.btn-create-tournament {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-create-tournament:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    color: var(--bg-primary);
+}
+
+/* ===== Горизонтальный скролл ===== */
 .tournaments-scroll {
     overflow-x: auto;
     overflow-y: hidden;
@@ -394,14 +423,13 @@
     border-radius: 3px;
 }
 
-/* Карточки в строку */
 .tournaments-list-horizontal {
     display: inline-flex;
     gap: 16px;
     white-space: normal;
 }
 
-/* Карточка турнира */
+/* ===== Карточка турнира (горизонтальная) ===== */
 .tournament-card-horizontal {
     display: inline-flex;
     flex-direction: column;
@@ -412,7 +440,6 @@
     border-radius: 20px;
     padding: 15px;
     transition: all 0.2s;
-    cursor: pointer;
 }
 
 .tournament-card-horizontal:hover {
@@ -535,27 +562,62 @@
     transform: scale(1.05);
 }
 
-/* Пустое состояние */
-.empty-state.horizontal {
-    text-align: center;
-    padding: 30px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 20px;
-    border: 1px dashed var(--border-color);
+/* ===== Место в турнире ===== */
+.tournament-card-place {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin: 8px 0;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
 }
 
-.empty-state.horizontal i {
-    font-size: 2rem;
-    color: var(--gold);
-    margin-bottom: 10px;
-    opacity: 0.5;
+.tournament-card-place .place-icon {
+    font-size: 0.9rem;
 }
 
-.empty-state.horizontal p {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+.tournament-card-place .place-value {
+    color: var(--text-primary);
 }
 
+.tournament-card-place.place-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+    border-color: rgba(255, 215, 0, 0.4);
+}
+
+.tournament-card-place.place-gold .place-value {
+    color: #ffd700;
+}
+
+.tournament-card-place.place-silver {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(192, 192, 192, 0.05));
+    border-color: rgba(192, 192, 192, 0.4);
+}
+
+.tournament-card-place.place-silver .place-value {
+    color: #c0c0c0;
+}
+
+.tournament-card-place.place-bronze {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05));
+    border-color: rgba(205, 127, 50, 0.4);
+}
+
+.tournament-card-place.place-bronze .place-value {
+    color: #cd7f32;
+}
+
+.tournament-card-place.place-other {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
+    border-color: rgba(212, 175, 55, 0.2);
+}
+
+/* ===== Статистика в турнире (мини) ===== */
 .stat-mini {
     font-size: 0.7rem;
 }
@@ -569,7 +631,7 @@
     font-weight: 600;
 }
 
-/* Созданные игроки */
+/* ========== СОЗДАННЫЕ ИГРОКИ ========== */
 .players-stats-row {
     display: flex;
     gap: 15px;
@@ -716,7 +778,7 @@
     color: var(--bg-primary);
 }
 
-/* Загрузка и пустые состояния */
+/* ========== ОБЩИЕ СОСТОЯНИЯ ========== */
 .loading-spinner {
     text-align: center;
     padding: 30px;
@@ -748,105 +810,78 @@
     color: var(--text-secondary);
 }
 
-/* Анимации */
+.empty-state.horizontal {
+    text-align: center;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    border: 1px dashed var(--border-color);
+}
+
+.empty-state.horizontal i {
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.empty-state.horizontal p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
 
-/* Адаптивность */
+/* ========== АДАПТИВНОСТЬ ========== */
 @media (max-width: 1000px) {
     .profile-main-row {
         grid-template-columns: 1fr;
     }
     
+    /* ЛЕВАЯ КОЛОНКА — НА ВСЮ ШИРИНУ */
     .profile-sidebar {
-        max-width: 450px;
-        margin: 0 auto;
-    }
-    
-    .stats-grid-4, .role-stats-grid, .records-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .charts-row {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 600px) {
-    .profile-container {
-        padding: 15px;
-    }
-    
-    .stats-grid-4, .role-stats-grid, .records-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .players-list-header {
-        display: none;
-    }
-    
-    .player-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .player-cell {
-        justify-content: space-between;
-    }
-    
-    .invite-link-container {
-        flex-wrap: wrap;
-    }
-    
-    .copy-btn {
+        max-width: 100%;  /* ← Убираем ограничение 450px */
         width: 100%;
-        border-radius: 20px;
-    }
-}
-/* ========== МОБИЛЬНАЯ АДАПТАЦИЯ (до 768px) ========== */
-@media (max-width: 768px) {
-    .profile-container {
-        padding: 15px 12px;
-    }
-    
-    /* Левая колонка — на всю ширину */
-    .profile-sidebar {
-        max-width: 100%;
         margin: 0;
     }
     
+    /* ВНУТРЕННИЕ ЭЛЕМЕНТЫ ЛЕВОЙ КОЛОНКИ */
+    .profile-avatar-section {
+        padding: 25px 20px;
+    }
+    
     .profile-avatar {
-        width: 80px;
-        height: 80px;
+        width: 90px;
+        height: 90px;
     }
     
     .profile-avatar i {
-        font-size: 2.8rem;
+        font-size: 3rem;
     }
     
     .profile-name {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
     }
     
-    .stat-mini-value {
-        font-size: 1.1rem;
-    }
-    
-    .stat-mini-label {
-        font-size: 0.6rem;
-    }
-    
-    /* Мини-статистика — 2 колонки */
+    /* Мини-статистика — 4 колонки на планшетах */
     .profile-stats-mini {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        grid-template-columns: repeat(4, 1fr);
         padding: 15px;
     }
     
     .stat-mini-card {
-        padding: 8px;
+        padding: 8px 5px;
+    }
+    
+    .stat-mini-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-mini-label {
+        font-size: 0.6rem;
     }
     
     /* Информация о пользователе */
@@ -856,7 +891,6 @@
     
     .info-item {
         gap: 10px;
-        padding: 8px 0;
     }
     
     .info-icon {
@@ -865,12 +899,105 @@
     }
     
     .info-value {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
     
     /* Кнопки действий */
     .profile-actions-side {
         padding: 12px 15px;
+    }
+    
+    .profile-actions-side .btn {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+    
+    /* Правые модули */
+    .stats-grid-4,
+    .role-stats-grid,
+    .records-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 15px 12px;
+    }
+    
+    /* ЛЕВАЯ КОЛОНКА — ВО ВЕСЬ ЭКРАН */
+    .profile-sidebar {
+        max-width: 100%;
+    }
+    
+    /* Аватар */
+    .profile-avatar {
+        width: 75px;
+        height: 75px;
+    }
+    
+    .profile-avatar i {
+        font-size: 2.5rem;
+    }
+    
+    .profile-name {
+        font-size: 1.3rem;
+    }
+    
+    /* Мини-статистика — 4 колонки */
+    .profile-stats-mini {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .stat-mini-card {
+        padding: 8px 4px;
+    }
+    
+    .stat-mini-value {
+        font-size: 1rem;
+    }
+    
+    .stat-mini-label {
+        font-size: 0.55rem;
+    }
+    
+    /* Информация */
+    .profile-info-list {
+        padding: 12px;
+    }
+    
+    .info-item {
+        gap: 8px;
+        padding: 8px 0;
+    }
+    
+    .info-icon {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .info-icon i {
+        font-size: 0.8rem;
+    }
+    
+    .info-label {
+        font-size: 0.6rem;
+    }
+    
+    .info-value {
+        font-size: 0.8rem;
+    }
+    
+    /* Кнопки */
+    .profile-actions-side {
+        padding: 10px 12px;
+        gap: 8px;
     }
     
     .profile-actions-side .btn {
@@ -880,129 +1007,74 @@
     
     /* Модули статистики */
     .stats-module {
-        padding: 15px;
+        padding: 12px;
     }
     
     .stats-module-header h3 {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     
-    /* Сетки — 2 колонки на планшетах */
-    .stats-grid-4,
-    .stats-grid-3,
-    .role-stats-grid,
-    .records-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    /* Карточки статистики */
     .stat-card {
-        padding: 10px;
+        padding: 8px;
     }
     
     .stat-value {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
     
     .stat-label {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
     }
     
-    /* Карточки ролей */
+    /* Роли */
     .role-card {
-        padding: 10px;
-    }
-    
-    .role-stat-icon .role-icon {
-        width: 1.5rem;
-        height: 1.5rem;
+        padding: 8px;
     }
     
     .role-name {
-        font-size: 0.75rem;
-    }
-    
-    .role-stats {
-        font-size: 0.65rem;
-    }
-    
-    /* Графики */
-    .charts-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .chart-container {
-        height: 180px;
-    }
-    
-    .chart-header {
         font-size: 0.7rem;
     }
     
-    /* Рекорды */
-    .record-card {
-        padding: 10px;
-    }
-    
-    .record-value {
-        font-size: 0.9rem;
-    }
-    
-    .record-label {
+    .role-stats {
         font-size: 0.6rem;
+    }
+    
+    /* Графики */
+    .chart-container {
+        height: 160px;
     }
     
     /* Турниры */
     .profile-tournaments {
-        padding: 15px;
-    }
-    
-    .profile-tournaments h2 {
-        font-size: 1rem;
-        padding-left: 10px;
-    }
-    
-    .tournament-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
         padding: 12px;
     }
     
-    .tournament-info {
-        width: 100%;
+    .profile-tournaments h2 {
+        font-size: 0.95rem;
     }
     
-    .tournament-name {
-        font-size: 0.85rem;
+    .tournament-card-horizontal {
+        width: 200px;
+        padding: 10px;
     }
     
-    .tournament-meta {
-        flex-wrap: wrap;
-        gap: 8px;
+    .tournament-card-name {
+        font-size: 0.75rem;
     }
     
-    .tournament-stats {
-        width: 100%;
-        justify-content: flex-start;
+    .tournament-card-stat .stat-value {
+        font-size: 0.8rem;
     }
     
-    .tournament-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    /* Созданные игроки — таблица превращается в карточки */
+    /* Созданные игроки */
     .players-list-header {
         display: none;
     }
     
     .player-row {
         grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 10px 15px;
+        gap: 6px;
+        padding: 8px 12px;
     }
     
     .player-cell {
@@ -1010,73 +1082,66 @@
     }
     
     .player-cell i {
-        width: 20px;
+        width: 18px;
     }
     
     .invite-link-container {
-        width: 100%;
         flex-wrap: wrap;
     }
     
     .invite-link-input {
         width: 100%;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
     }
     
     .copy-btn {
         width: 100%;
         border-radius: 20px;
-        margin-top: 5px;
+        margin-top: 4px;
     }
     
     .players-stats-row {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
     
     .players-stat-card {
-        padding: 10px;
+        padding: 8px;
     }
     
     .players-stat-value {
-        font-size: 1.3rem;
-    }
-    
-    /* Загрузка и пустые состояния */
-    .loading-spinner {
-        padding: 20px;
-    }
-    
-    .loading-spinner i {
         font-size: 1.2rem;
+    }
+    
+    /* Состояния */
+    .loading-spinner {
+        padding: 15px;
     }
     
     .empty-state {
-        padding: 20px;
+        padding: 15px;
     }
     
     .empty-state i {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
     
     .empty-state p {
-        font-size: 0.75rem;
-    }
-        .tournament-card-horizontal {
-        width: 220px;
-        padding: 12px;
-    }
-    
-    .tournament-card-name {
-        font-size: 0.8rem;
-    }
-    
-    .tournament-card-stat .stat-value {
-        font-size: 0.9rem;
+        font-size: 0.7rem;
     }
 }
 
-/* ========== ОЧЕНЬ МАЛЕНЬКИЕ ТЕЛЕФОНЫ (до 480px) ========== */
+@media (max-width: 600px) {
+    .tournaments-header-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-create-tournament {
+        justify-content: center;
+    }
+}
+
 @media (max-width: 480px) {
     .stats-grid-4,
     .stats-grid-3,
@@ -1103,108 +1168,5 @@
     
     .chart-container {
         height: 160px;
-    }
-}
-/* Место в турнире */
-.tournament-card-place {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px 10px;
-    margin: 8px 0;
-    border-radius: 30px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-}
-
-.tournament-card-place .place-icon {
-    font-size: 0.9rem;
-}
-
-.tournament-card-place .place-value {
-    color: var(--text-primary);
-}
-
-.tournament-card-place.place-gold {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
-    border-color: rgba(255, 215, 0, 0.4);
-}
-
-.tournament-card-place.place-gold .place-value {
-    color: #ffd700;
-}
-
-.tournament-card-place.place-silver {
-    background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(192, 192, 192, 0.05));
-    border-color: rgba(192, 192, 192, 0.4);
-}
-
-.tournament-card-place.place-silver .place-value {
-    color: #c0c0c0;
-}
-
-.tournament-card-place.place-bronze {
-    background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05));
-    border-color: rgba(205, 127, 50, 0.4);
-}
-
-.tournament-card-place.place-bronze .place-value {
-    color: #cd7f32;
-}
-
-.tournament-card-place.place-other {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
-    border-color: rgba(212, 175, 55, 0.2);
-}
-/* ========== СТРОКА С ЗАГОЛОВКОМ И КНОПКОЙ СОЗДАНИЯ ========== */
-.tournaments-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.tournaments-header-row h2 {
-    margin-bottom: 0;
-    border-left: 3px solid var(--gold);
-    padding-left: 12px;
-}
-
-.btn-create-tournament {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-    color: var(--bg-primary);
-    padding: 8px 18px;
-    border-radius: 40px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-create-tournament:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-    color: var(--bg-primary);
-}
-
-/* Мобильная адаптация */
-@media (max-width: 600px) {
-    .tournaments-header-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .btn-create-tournament {
-        justify-content: center;
     }
 }
