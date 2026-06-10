@@ -181,7 +181,19 @@
         <!-- Проведённые турниры (только для ведущего) -->
         {% if is_host %}
         <div class="profile-tournaments hosted" id="hostedTournamentsBlock">
-            <h2><i class="fas fa-crown"></i> Проведённые турниры <span class="badge" id="hostedTournamentsCount">{{ hosted_stats.total|default:0 }}</span></h2>
+            <!-- ЗАГОЛОВОК С КНОПКОЙ -->
+            <div class="tournaments-header-row">
+                <h2>
+                    <i class="fas fa-crown"></i> 
+                    Проведённые турниры 
+                    <span class="badge" id="hostedTournamentsCount">{{ hosted_stats.total|default:0 }}</span>
+                </h2>
+                <a href="{% url 'create_tournament' %}" class="btn-create-tournament">
+                    <i class="fas fa-plus-circle"></i> 
+                    Создать турнир
+                </a>
+            </div>
+            
             <div id="hostedTournamentsList">
                 {% if hosted_tournaments %}
                     {% for tournament in hosted_tournaments %}
@@ -212,7 +224,11 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div class="empty-state"><i class="fas fa-crown"></i><p>Вы пока не провели ни одного турнира</p><a href="{% url 'create_tournament' %}" class="btn btn-primary btn-sm">Создать турнир</a></div>
+                    <div class="empty-state">
+                        <i class="fas fa-crown"></i>
+                        <p>Вы пока не провели ни одного турнира</p>
+                        <a href="{% url 'create_tournament' %}" class="btn btn-primary btn-sm">Создать турнир</a>
+                    </div>
                 {% endif %}
             </div>
         </div>

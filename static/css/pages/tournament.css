@@ -1924,3 +1924,66 @@
     font-weight: 600;
     font-size: 0.9rem;
 }
+
+/* Кнопка удаления (опасное действие) */
+.action-btn.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.action-btn.danger:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+/* Модальное окно удаления */
+.modal-content.small {
+    max-width: 450px;
+}
+
+.delete-warning {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.delete-warning i {
+    font-size: 3.5rem;
+    color: #ef4444;
+    margin-bottom: 15px;
+}
+
+.delete-warning h3 {
+    color: #ef4444;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+}
+
+.delete-warning p {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.delete-warning .warning-text {
+    color: #ef4444;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}

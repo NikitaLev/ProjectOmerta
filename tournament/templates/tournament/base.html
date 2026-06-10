@@ -43,7 +43,7 @@
                 </nav>
                 <!-- BETA кнопка для ведущих -->
                 {% if user.is_authenticated and user.role == 'host' and user.is_approved_host or user.role == 'admin' %}
-                <a href="{% url 'beta_game' %}" class="beta-link" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px 16px; border-radius: 30px; margin-left: 10px;">
+                <a href="{% url 'beta_game' %}" class="beta-link" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px 16px; border-radius: 30px; margin-right: 10px;">
                     <i class="fas fa-flask"></i> BETA Игра
                 </a>
                 {% endif %}

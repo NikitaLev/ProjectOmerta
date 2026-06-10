@@ -42,6 +42,8 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/toggle-visibility/', views.toggle_data_visibility, name='toggle_data_visibility'),
     path('tournament/<int:tournament_id>/complete/', views.complete_tournament, name='complete_tournament'),
     path('tournament/<int:tournament_id>/recalculate-stats/', views.recalculate_tournament_stats, name='recalculate_tournament_stats'),
+    # Удаление турнира
+    path('tournament/<int:tournament_id>/delete/', views.delete_tournament, name='delete_tournament'),
 
     # BETA модуль# BETA модуль
     path('beta/game/', views.beta_game, name='beta_game'),

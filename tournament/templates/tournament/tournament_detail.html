@@ -319,6 +319,17 @@
                             {% endif %}
                         </span>
                     </a>
+                    <!-- Кнопка видна всегда, но с разными стилями/текстом -->
+                    <a href="#" class="action-btn danger" id="showDeleteModal">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>
+                            {% if tournament.status == 'completed' %}
+                                Удалить из архива
+                            {% else %}
+                                Удалить турнир
+                            {% endif %}
+                        </span>
+                    </a>
                 </div>
             </div>
             </div>
@@ -552,7 +563,39 @@
         </div>
     </div>
 </div>
-
+<!-- Модальное окно подтверждения удаления турнира -->
+<div id="deleteTournamentModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Удаление турнира</h2>
+            <span class="close-modal close-delete-modal">&times;</span>
+        </div>
+        
+        <div class="modal-body">
+            <div class="delete-warning">
+                <i class="fas fa-skull"></i>
+                <h3>Вы уверены?</h3>
+                <p>
+                    Турнир <strong id="deleteTournamentName"></strong> будет полностью удалён.
+                    {% if tournament.status == 'completed' %}
+                        <span class="warning-text">Этот турнир уже завершён, вся его статистика будет потеряна.</span>
+                    {% endif %}
+                </p>
+                <p class="warning-text">Это действие нельзя отменить!</p>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline close-delete-modal-btn">Отмена</button>
+            <form method="post" id="deleteTournamentForm" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> Да, удалить
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -759,6 +802,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Модальное окно удаления турнира
+const deleteModal = document.getElementById('deleteTournamentModal');
+const showDeleteBtn = document.getElementById('showDeleteModal');
+const deleteForm = document.getElementById('deleteTournamentForm');
+
+if (showDeleteBtn) {
+    showDeleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Устанавливаем имя турнира в модальное окно
+        document.getElementById('deleteTournamentName').textContent = "{{ tournament.name|escapejs }}";
+        // Устанавливаем action формы
+        deleteForm.action = "{% url 'delete_tournament' tournament.id %}";
+        deleteModal.style.display = 'block';
+    });
+}
+
+// Закрытие модального окна
+function closeDeleteModal() {
+    deleteModal.style.display = 'none';
+}
+
+document.querySelectorAll('.close-delete-modal, .close-delete-modal-btn').forEach(btn => {
+    btn.addEventListener('click', closeDeleteModal);
+});
+
+// Закрытие по клику вне окна
+window.addEventListener('click', function(e) {
+    if (e.target === deleteModal) {
+        closeDeleteModal();
+    }
+});
 </script>
 {% endblock %}
 {% endblock %}

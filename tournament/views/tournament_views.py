@@ -272,3 +272,26 @@ def recalculate_tournament_stats(request, tournament_id):
     
     messages.success(request, 'Статистика турнира успешно пересчитана!')
     return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def delete_tournament(request, tournament_id):
+    """Удаление турнира (только для ведущего)"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host and not request.user.is_superuser:
+        messages.error(request, 'У вас нет прав для удаления этого турнира')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    tournament_name = tournament.name
+    
+    if request.method == 'POST':
+        tournament.delete()
+        messages.success(request, f'Турнир "{tournament_name}" успешно удалён!')
+        
+        if request.user.role == 'host' and request.user.is_approved_host:
+            return redirect('my_tournaments')
+        return redirect('home')
+    
+    # GET запрос — просто редирект (модальное окно обрабатывает подтверждение)
+    return redirect('tournament_detail', tournament_id=tournament.id)

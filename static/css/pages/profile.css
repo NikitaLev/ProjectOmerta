@@ -1159,3 +1159,52 @@
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent);
     border-color: rgba(212, 175, 55, 0.2);
 }
+/* ========== СТРОКА С ЗАГОЛОВКОМ И КНОПКОЙ СОЗДАНИЯ ========== */
+.tournaments-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tournaments-header-row h2 {
+    margin-bottom: 0;
+    border-left: 3px solid var(--gold);
+    padding-left: 12px;
+}
+
+.btn-create-tournament {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--bg-primary);
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-create-tournament:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    color: var(--bg-primary);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 600px) {
+    .tournaments-header-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-create-tournament {
+        justify-content: center;
+    }
+}
