@@ -13,7 +13,8 @@ from .tournament_views import (
 from .player_management_views import (
     get_players_for_tournament, add_player_to_tournament,
     remove_player_from_tournament, create_player_for_tournament,
-    delete_player, toggle_data_visibility
+    delete_player, toggle_data_visibility,
+    add_multiple_players
 )
 from .game_views import game_input, game_edit, game_view
 from .public_views import (

@@ -496,6 +496,10 @@
     <div class="modal-content large">
         <div class="modal-header">
             <h2><i class="fas fa-user-plus"></i> Добавить игроков</h2>
+            <div class="modal-player-counter" id="modalPlayerCounter">
+                <i class="fas fa-users"></i>
+                <span id="currentPlayersCount">{{ tournament.players.count }}</span> / <span id="maxPlayersCount">{{ tournament.max_players }}</span>
+            </div>
             <span class="close-modal">&times;</span>
         </div>
         
@@ -508,23 +512,34 @@
             <!-- Вкладка "Существующие" -->
             <div id="existingPlayersTab" class="tab-content active">
                 <div class="player-select-container">
-                    <label for="playerSelect" class="form-label">Выберите игрока из списка</label>
-                    <div class="custom-select-wrapper">
-                        <select id="playerSelect" class="custom-select" size="12">
-                            <option value="" disabled selected>── Загрузка списка ──</option>
-                        </select>
+                    <div class="select-header">
+                        <label class="form-label">
+                            <i class="fas fa-users"></i> Выберите игроков
+                        </label>
+                        
                         <div class="select-search">
                             <i class="fas fa-search"></i>
                             <input type="text" 
-                                   id="playerSearchInput" 
-                                   class="form-control" 
-                                   placeholder="Поиск по никнейму..."
-                                   autocomplete="off">
+                                id="playerSearchInputMulti" 
+                                class="form-control" 
+                                placeholder="Поиск по никнейму..."
+                                autocomplete="off">
+                        </div>
+                        <div class="select-actions">
+                            <button type="button" class="btn-select-none" id="selectNoneBtn">
+                                <i class="fas fa-times"></i> Снять всех
+                            </button>
                         </div>
                     </div>
+                    
+                    <div class="players-checkbox-list" id="playersCheckboxList">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner"></i> Загрузка...
+                        </div>
+                    </div>
+                    
                 </div>
             </div>
-            
             <!-- Вкладка "Новый игрок" -->
             <div id="newPlayerTab" class="tab-content">
                 <form id="newPlayerForm" method="post" action="{% url 'create_player_for_tournament' tournament.id %}">
@@ -543,18 +558,34 @@
                     </div>
                 </form>
             </div>
+            
+            <!-- Список выбранных игроков -->
+            <div class="selected-players-panel" id="selectedPlayersPanel" style="display: none;">
+                
+                <div class="selected-players-warning" id="selectedPlayersWarning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Превышен лимит! Можно добавить только <span id="availableSlots">0</span> игроков.</span>
+                </div>
+                <div class="selected-players-header">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Выбранные игроки</span>
+                    <span class="selected-players-count" id="selectedPlayersCountBadge">0</span>
+                </div>
+                <div class="selected-players-list" id="selectedPlayersList">
+                    <!-- Сюда будут добавляться выбранные игроки -->
+                </div>
+            </div>
         </div>
         
         <div class="modal-footer">
-            <div class="selected-player-footer" id="selectedPlayerFooter" style="display: none;">
+            <div class="selected-count-footer" id="selectedCountFooter" style="display: none;">
                 <i class="fas fa-user-check"></i>
-                <span id="selectedPlayerName"></span>
-                <span id="selectedPlayerUsername" class="player-username"></span>
+                <span id="selectedCount">0</span> игроков выбрано
             </div>
             <div class="footer-buttons">
                 <button class="btn btn-outline close-modal-btn">Отмена</button>
-                <button class="btn btn-primary" id="addSelectedPlayerBtn" disabled>
-                    <i class="fas fa-user-plus"></i> Добавить
+                <button class="btn btn-primary" id="addSelectedPlayersBtn" disabled>
+                    <i class="fas fa-user-plus"></i> Добавить выбранных
                 </button>
                 <button class="btn btn-primary" id="createNewPlayerBtn" style="display: none;">
                     <i class="fas fa-user-plus"></i> Создать игрока
@@ -603,68 +634,171 @@ document.addEventListener('DOMContentLoaded', function() {
     const showBtn = document.getElementById('showAddPlayers');
     const closeBtn = modal.querySelector('.close-modal');
     const closeFooterBtn = modal.querySelector('.close-modal-btn');
-    const playerSelect = document.getElementById('playerSelect');
-    const searchInput = document.getElementById('playerSearchInput');
-    const addBtn = document.getElementById('addSelectedPlayerBtn');
-    const selectedPlayerInfo = document.getElementById('selectedPlayerInfo');
-    const selectedPlayerName = document.getElementById('selectedPlayerName');
+    const searchInput = document.getElementById('playerSearchInputMulti');
+    const addBtn = document.getElementById('addSelectedPlayersBtn');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const selectNoneBtn = document.getElementById('selectNoneBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const selectedCountFooter = document.getElementById('selectedCountFooter');
+    const playersListDiv = document.getElementById('playersCheckboxList');
+    const selectedPlayersPanel = document.getElementById('selectedPlayersPanel');
+    const selectedPlayersListDiv = document.getElementById('selectedPlayersList');
+    const selectedPlayersCountBadge = document.getElementById('selectedPlayersCountBadge');
+    const selectedPlayersWarning = document.getElementById('selectedPlayersWarning');
+    const availableSlotsSpan = document.getElementById('availableSlots');
+    const currentPlayersCountSpan = document.getElementById('currentPlayersCount');
+    const maxPlayersCountSpan = document.getElementById('maxPlayersCount');
     
-    let allPlayers = []; // Храним всех игроков для фильтрации
-    let selectedPlayerId = null;
+    let allPlayers = [];
+    let filteredPlayers = [];
+    let selectedPlayers = new Map(); // id -> {nickname, username}
+    let currentPlayersCount = parseInt('{{ tournament.players.count }}');
+    let maxPlayers = parseInt('{{ tournament.max_players }}');
     
-    // Открыть модальное окно и загрузить список
+    // Функция обновления счётчиков и кнопки
+    function updateUI() {
+        const totalSelected = selectedPlayers.size;
+        const availableSlots = maxPlayers - currentPlayersCount;
+        const canAdd = totalSelected <= availableSlots && totalSelected > 0;
+        
+        // Счётчик внизу
+        selectedCountSpan.textContent = totalSelected;
+        selectedPlayersCountBadge.textContent = totalSelected;
+        
+        if (totalSelected > 0) {
+            selectedCountFooter.style.display = 'flex';
+            selectedPlayersPanel.style.display = 'block';
+            addBtn.disabled = !canAdd;
+        } else {
+            selectedCountFooter.style.display = 'none';
+            selectedPlayersPanel.style.display = 'none';
+            addBtn.disabled = true;
+        }
+        
+        // Предупреждение о превышении лимита
+        if (totalSelected > availableSlots) {
+            availableSlotsSpan.textContent = availableSlots;
+            selectedPlayersWarning.style.display = 'flex';
+        } else {
+            selectedPlayersWarning.style.display = 'none';
+        }
+        
+        // Обновляем галочки в списке
+        document.querySelectorAll('.player-checkbox').forEach(cb => {
+            cb.checked = selectedPlayers.has(parseInt(cb.value));
+        });
+        
+        // Обновляем список выбранных игроков
+        renderSelectedPlayersList();
+    }
+    
+    // Отображение списка выбранных игроков
+    function renderSelectedPlayersList() {
+        if (selectedPlayers.size === 0) {
+            selectedPlayersListDiv.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-secondary);">Никого не выбрано</div>';
+            return;
+        }
+        
+        let html = '';
+        for (const [id, player] of selectedPlayers) {
+            html += `
+                <div class="selected-player-tag" data-id="${id}">
+                    <span>${escapeHtml(player.nickname)}</span>
+                    <span class="remove-player" data-id="${id}">
+                        <i class="fas fa-times-circle"></i>
+                    </span>
+                </div>
+            `;
+        }
+        selectedPlayersListDiv.innerHTML = html;
+        
+        // Добавляем обработчики удаления
+        document.querySelectorAll('.remove-player').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const id = parseInt(this.dataset.id);
+                selectedPlayers.delete(id);
+                updateUI();
+            });
+        });
+    }
+    
+    // Открыть модальное окно
     showBtn.addEventListener('click', function(e) {
         e.preventDefault();
         modal.style.display = 'block';
         loadPlayersList();
     });
     
-    // Закрыть модальное окно
     function closeModal() {
         modal.style.display = 'none';
         searchInput.value = '';
-        selectedPlayerInfo.style.display = 'none';
-        addBtn.disabled = true;
-        selectedPlayerId = null;
+        selectedPlayers.clear();
+        updateUI();
     }
     
     closeBtn.addEventListener('click', closeModal);
     closeFooterBtn.addEventListener('click', closeModal);
     
     window.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeModal();
-        }
+        if (e.target === modal) closeModal();
     });
     
     // Загрузка списка игроков
     function loadPlayersList() {
-        playerSelect.innerHTML = '<option value="" disabled>── Загрузка... ──</option>';
+        playersListDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i> Загрузка...</div>';
         
         fetch('/tournament/{{ tournament.id }}/players/')
             .then(response => response.json())
             .then(data => {
                 allPlayers = data.players || [];
-                renderPlayerList(allPlayers);
+                filteredPlayers = [...allPlayers];
+                renderPlayersList(filteredPlayers);
             })
             .catch(error => {
-                playerSelect.innerHTML = '<option value="" disabled>── Ошибка загрузки ──</option>';
+                playersListDiv.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Ошибка загрузки</p></div>';
             });
     }
     
-    // Отображение списка игроков
-    function renderPlayerList(players) {
+    // Отображение списка игроков с чекбоксами
+    function renderPlayersList(players) {
         if (players.length === 0) {
-            playerSelect.innerHTML = '<option value="" disabled>── Нет доступных игроков ──</option>';
+            playersListDiv.innerHTML = '<div class="empty-state"><i class="fas fa-user-slash"></i><p>Нет доступных игроков</p></div>';
             return;
         }
         
         let html = '';
         players.forEach(player => {
-            // Используем display-строку для отображения
-            html += `<option value="${player.id}">${player.display}</option>`;
+            const isChecked = selectedPlayers.has(player.id) ? 'checked' : '';
+            html += `
+                <label class="player-checkbox-item">
+                    <input type="checkbox" class="player-checkbox" value="${player.id}" data-nickname="${escapeHtml(player.nickname)}" data-username="${escapeHtml(player.username)}" ${isChecked}>
+                    <div class="player-checkbox-info">
+                        <span class="player-checkbox-nickname">${escapeHtml(player.nickname)}</span>
+                        <span class="player-checkbox-username">@${escapeHtml(player.username)}</span>
+                    </div>
+                </label>
+            `;
         });
-        playerSelect.innerHTML = html;
+        playersListDiv.innerHTML = html;
+        
+        // Добавляем обработчики чекбоксов
+        document.querySelectorAll('.player-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const id = parseInt(this.value);
+                const nickname = this.dataset.nickname;
+                const username = this.dataset.username;
+                
+                if (this.checked) {
+                    selectedPlayers.set(id, { nickname, username });
+                } else {
+                    selectedPlayers.delete(id);
+                }
+                updateUI();
+            });
+        });
+        
+        updateUI();
     }
     
     // Поиск по списку
@@ -672,59 +806,62 @@ document.addEventListener('DOMContentLoaded', function() {
         const query = this.value.toLowerCase().trim();
         
         if (query === '') {
-            renderPlayerList(allPlayers);
-            return;
-        }
-        
-        const filtered = allPlayers.filter(player => 
-            player.nickname.toLowerCase().includes(query)
-        );
-        
-        renderPlayerList(filtered);
-    });
-    
-    // Выбор игрока из списка
-    playerSelect.addEventListener('change', function() {
-        selectedPlayerId = this.value;
-        const selectedOption = this.options[this.selectedIndex];
-        
-        if (selectedPlayerId) {
-            // Разбираем display-строку на никнейм и username
-            const displayText = selectedOption.text;
-            const match = displayText.match(/(.*) \((@.*)\)/);
-            
-            if (match) {
-                document.getElementById('selectedPlayerName').textContent = match[1].trim();
-                document.getElementById('selectedPlayerUsername').textContent = match[2];
-            } else {
-                document.getElementById('selectedPlayerName').textContent = displayText;
-                document.getElementById('selectedPlayerUsername').textContent = '';
-            }
-            
-            document.getElementById('selectedPlayerFooter').style.display = 'flex';
-            addBtn.disabled = false;
+            filteredPlayers = [...allPlayers];
         } else {
-            document.getElementById('selectedPlayerFooter').style.display = 'none';
-            addBtn.disabled = true;
+            filteredPlayers = allPlayers.filter(player => 
+                player.nickname.toLowerCase().includes(query)
+            );
         }
+        
+        renderPlayersList(filteredPlayers);
     });
     
-    // Добавление выбранного игрока
-    addBtn.addEventListener('click', function() {
-        if (!selectedPlayerId) return;
-        
-        const selectedNickname = selectedPlayerName.textContent;
-        window.location.href = `/tournament/{{ tournament.id }}/add/${selectedPlayerId}/`;
+    // Снять всех
+    selectNoneBtn.addEventListener('click', function() {
+        selectedPlayers.clear();
+        renderPlayersList(filteredPlayers);
+        updateUI();
     });
-
+    
+    // Массовое добавление
+    addBtn.addEventListener('click', function() {
+        const selectedIds = Array.from(selectedPlayers.keys());
+        
+        if (selectedIds.length === 0) return;
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "add_multiple_players" tournament.id %}';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrfmiddlewaretoken';
+            input.value = csrfToken.value;
+            form.appendChild(input);
+        }
+        
+        selectedIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'player_ids';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    });
+    
     // Переключение вкладок
     const tabExisting = document.getElementById('tabExisting');
     const tabNew = document.getElementById('tabNew');
     const existingTab = document.getElementById('existingPlayersTab');
     const newTab = document.getElementById('newPlayerTab');
-    const addExistingBtn = document.getElementById('addSelectedPlayerBtn');
+    const addExistingBtn = document.getElementById('addSelectedPlayersBtn');
     const addNewBtn = document.getElementById('createNewPlayerBtn');
-
+    
     tabExisting.addEventListener('click', function() {
         tabExisting.classList.add('active');
         tabNew.classList.remove('active');
@@ -732,13 +869,9 @@ document.addEventListener('DOMContentLoaded', function() {
         newTab.classList.remove('active');
         addExistingBtn.style.display = 'block';
         addNewBtn.style.display = 'none';
-        
-        // Сбрасываем выбранного игрока
-        selectedPlayerId = null;
-        document.getElementById('selectedPlayerFooter').style.display = 'none';
-        addExistingBtn.disabled = true;
+        loadPlayersList();
     });
-
+    
     tabNew.addEventListener('click', function() {
         tabNew.classList.add('active');
         tabExisting.classList.remove('active');
@@ -747,54 +880,51 @@ document.addEventListener('DOMContentLoaded', function() {
         addExistingBtn.style.display = 'none';
         addNewBtn.style.display = 'block';
     });
-
-    // Обработка создания нового игрока
+    
+    // Создание нового игрока
     document.getElementById('createNewPlayerBtn').addEventListener('click', function() {
         document.getElementById('newPlayerForm').submit();
     });
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 });
-// Сортировка таблицы по баллам
+
+// Сортировка таблицы (оставляем как было)
 document.addEventListener('DOMContentLoaded', function() {
     const sortHeader = document.querySelector('.player-cell.sortable');
     if (sortHeader) {
-        let currentSort = {
-            column: 'score',
-            order: 'desc'
-        };
+        let currentSort = { column: 'score', order: 'desc' };
         
         function updateSortIcon(order) {
             const icon = sortHeader.querySelector('i.fa-sort, i.fa-sort-up, i.fa-sort-down');
+            if (!icon) return;
             icon.classList.remove('fa-sort', 'fa-sort-up', 'fa-sort-down');
-            
             if (order === 'desc') {
                 icon.classList.add('fa-sort-down');
-                sortHeader.classList.remove('asc');
-                sortHeader.classList.add('desc');
             } else {
                 icon.classList.add('fa-sort-up');
-                sortHeader.classList.remove('desc');
-                sortHeader.classList.add('asc');
             }
         }
         
         function sortTable(order) {
             const table = document.querySelector('.players-table');
             const rows = Array.from(document.querySelectorAll('.players-table-row'));
-            
             rows.sort((a, b) => {
-                const scoreA = parseFloat(a.querySelector('.player-total-score').textContent) || 0;
-                const scoreB = parseFloat(b.querySelector('.player-total-score').textContent) || 0;
+                const scoreA = parseFloat(a.querySelector('.player-total-score')?.textContent) || 0;
+                const scoreB = parseFloat(b.querySelector('.player-total-score')?.textContent) || 0;
                 return order === 'desc' ? scoreB - scoreA : scoreA - scoreB;
             });
-            
             rows.forEach(row => table.appendChild(row));
             currentSort.order = order;
             updateSortIcon(order);
         }
         
-        // Начальная сортировка
         sortTable('desc');
-        
         sortHeader.addEventListener('click', function() {
             const newOrder = currentSort.order === 'desc' ? 'asc' : 'desc';
             sortTable(newOrder);
@@ -810,15 +940,12 @@ const deleteForm = document.getElementById('deleteTournamentForm');
 if (showDeleteBtn) {
     showDeleteBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        // Устанавливаем имя турнира в модальное окно
         document.getElementById('deleteTournamentName').textContent = "{{ tournament.name|escapejs }}";
-        // Устанавливаем action формы
         deleteForm.action = "{% url 'delete_tournament' tournament.id %}";
         deleteModal.style.display = 'block';
     });
 }
 
-// Закрытие модального окна
 function closeDeleteModal() {
     deleteModal.style.display = 'none';
 }
@@ -827,11 +954,8 @@ document.querySelectorAll('.close-delete-modal, .close-delete-modal-btn').forEac
     btn.addEventListener('click', closeDeleteModal);
 });
 
-// Закрытие по клику вне окна
 window.addEventListener('click', function(e) {
-    if (e.target === deleteModal) {
-        closeDeleteModal();
-    }
+    if (e.target === deleteModal) closeDeleteModal();
 });
 </script>
 {% endblock %}

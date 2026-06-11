@@ -168,3 +168,52 @@ def toggle_data_visibility(request, tournament_id):
     messages.success(request, f'Данные турнира теперь {status}')
     
     return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def add_multiple_players(request, tournament_id):
+    """Добавить нескольких игроков в турнир (массовое добавление)"""
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    # Проверяем права
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    if request.method == 'POST':
+        player_ids = request.POST.getlist('player_ids')
+        
+        if not player_ids:
+            messages.warning(request, 'Не выбрано ни одного игрока')
+            return redirect('tournament_detail', tournament_id=tournament.id)
+        
+        added_count = 0
+        already_added = []
+        not_found = []
+        
+        for player_id in player_ids:
+            try:
+                player = User.objects.get(id=player_id)
+                # Проверяем, не добавлен ли уже
+                if tournament.players.filter(user=player).exists():
+                    already_added.append(player.player_nickname or player.username)
+                else:
+                    TournamentPlayer.objects.create(
+                        tournament=tournament,
+                        user=player,
+                        is_active=True
+                    )
+                    added_count += 1
+            except User.DoesNotExist:
+                not_found.append(player_id)
+        
+        # Формируем сообщение
+        if added_count > 0:
+            messages.success(request, f'✅ Добавлено игроков: {added_count}')
+        
+        if already_added:
+            messages.warning(request, f'⚠️ Уже в турнире: {", ".join(already_added[:5])}{" и др." if len(already_added) > 5 else ""}')
+        
+        if not_found:
+            messages.error(request, f'❌ Не найдены: {", ".join(map(str, not_found))}')
+    
+    return redirect('tournament_detail', tournament_id=tournament.id)
