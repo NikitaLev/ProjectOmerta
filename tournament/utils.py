@@ -12,7 +12,7 @@ def generate_invitation_token():
     """Генерирует уникальный токен для приглашения"""
     return secrets.token_urlsafe(32)
 
-def generate_seating(players, total_games, request):
+def generate_seating(players, total_games):
     """
     Генерирует рассадку для турнира.
     
