@@ -133,8 +133,8 @@ def start_tournament(request, tournament_id):
     # Получаем список игроков
     players = [tp.user for tp in tournament.players.all()]
     
-    # Генерируем рассадку
-    seating_plan = generate_seating(players, tournament.total_games)
+    # Генерируем рассадку (теперь возвращает seating_plan и report)
+    seating_plan, report = generate_seating(players, tournament.total_games, request=request)
     
     # Создаем игры
     for round_num, game_seating in enumerate(seating_plan, 1):
@@ -143,7 +143,7 @@ def start_tournament(request, tournament_id):
             round_number=round_num,
             seating={
                 'order': game_seating,
-                'algorithm': 'smart_balanced'
+                'algorithm': report['algorithm']
             }
         )
     
@@ -151,7 +151,9 @@ def start_tournament(request, tournament_id):
     tournament.status = 'active'
     tournament.save()
     
-    messages.success(request, f'Турнир начат! Создано {tournament.total_games} игр.')
+    # Дополнительное сообщение с деталями
+    messages.success(request, f'Турнир начат! Создано {tournament.total_games} игр. {report["details"]}')
+    
     return redirect('tournament_detail', tournament_id=tournament.id)
 
 @login_required

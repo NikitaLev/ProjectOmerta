@@ -12,26 +12,116 @@ def generate_invitation_token():
     """Генерирует уникальный токен для приглашения"""
     return secrets.token_urlsafe(32)
 
-def generate_seating(players, total_games):
+def generate_seating(players, total_games, request=None):
     """
-    Генерирует рассадку для турнира.
-    
-    Args:
-        players: список объектов User (игроки)
-        total_games: количество игр в турнире
+    Генерирует рассадку для турнира с возможностью вывода сообщений.
     
     Returns:
-        list: список рассадок для каждой игры, где каждая рассадка - список ID игроков в порядке мест (0..N-1)
+        tuple: (seating_plan, report) где report - словарь с информацией о генерации
     """
     player_ids = [p.id for p in players]
     num_players = len(player_ids)
     
-    # Если игр меньше или равно числу игроков — сбалансированная (без повторов мест)
+    report = {
+        'total_games': total_games,
+        'num_players': num_players,
+        'algorithm': '',
+        'is_perfect': False,
+        'message': '',
+        'details': ''
+    }
+    
     if total_games <= num_players:
-        return generate_balanced_seating_partial(player_ids, total_games)
+        # Сбалансированная рассадка (без повторов мест)
+        seating_plan = generate_balanced_seating_partial(player_ids, total_games)
+        report['algorithm'] = 'balanced_partial'
+        
+        if total_games == num_players:
+            report['is_perfect'] = True
+            report['message'] = f'✅ Идеальная рассадка для {num_players} игроков и {total_games} игр!'
+            report['details'] = f'Каждый игрок по 1 разу на каждом месте.'
+        else:
+            report['is_perfect'] = True
+            report['message'] = f'✅ Сбалансированная рассадка для {num_players} игроков и {total_games} игр!'
+            report['details'] = f'Каждый игрок сядет на {total_games} разных местах (из {num_players} возможных).'
     else:
-        # Если игр больше, чем игроков — сбалансированная с повторами (циклический повтор)
-        return generate_balanced_seating_with_repeats(player_ids, total_games)
+        # Игр больше, чем игроков — с повторами
+        seating_plan = generate_balanced_seating_with_repeats(player_ids, total_games)
+        full_cycles = total_games // num_players
+        remainder = total_games % num_players
+        report['algorithm'] = 'balanced_with_repeats'
+        report['is_perfect'] = False
+        report['message'] = f'🔄 Циклическая рассадка для {num_players} игроков и {total_games} игр!'
+        report['details'] = f'{full_cycles} полных циклов (каждый на каждом месте {full_cycles} раз) + {remainder} дополнительных игр.'
+    
+    # Проверяем качество рассадки
+    verification = verify_seating(seating_plan, player_ids, num_players, request=request)
+    report['verification'] = verification
+    
+    return seating_plan, report
+
+def verify_seating(seating_plan, player_ids, num_players, request=None):
+    """
+    Проверяет рассадку и возвращает детальный отчёт.
+    """
+    from collections import defaultdict
+    
+    position_matrix = defaultdict(set)
+    for game_idx, positions in enumerate(seating_plan):
+        for seat_idx, player_id in enumerate(positions):
+            position_matrix[player_id].add(seat_idx)
+    
+    # Собираем статистику
+    player_stats = {}
+    max_positions = 0
+    min_positions = num_players
+    perfect_count = 0
+    
+    for player_id in player_ids:
+        positions = position_matrix.get(player_id, set())
+        count = len(positions)
+        max_positions = max(max_positions, count)
+        min_positions = min(min_positions, count)
+        if count == num_players:
+            perfect_count += 1
+        
+        missing = set(range(num_players)) - positions
+        player_stats[player_id] = {
+            'count': count,
+            'missing': list(missing) if missing else []
+        }
+    
+    is_perfect = all(len(position_matrix.get(pid, set())) == min(len(seating_plan), num_players) 
+                      for pid in player_ids)
+    
+    result = {
+        'is_valid': is_perfect,
+        'total_games': len(seating_plan),
+        'num_players': num_players,
+        'max_positions_per_player': max_positions,
+        'min_positions_per_player': min_positions,
+        'perfect_players': perfect_count,
+        'player_stats': player_stats
+    }
+    
+    # Выводим сообщение через Django messages, если есть request
+    if request:
+        from django.contrib import messages
+        
+        if is_perfect:
+            messages.success(
+                request, 
+                f'✅ Рассадка успешно сгенерирована! {len(seating_plan)} игр, {num_players} игроков. '
+                f'Каждый игрок на {min_positions} разных местах.'
+            )
+        else:
+            messages.warning(
+                request,
+                f'⚠️ Рассадка сгенерирована с ограничениями. {len(seating_plan)} игр, {num_players} игроков. '
+                f'У некоторых игроков есть повторы мест ({max_positions} из {num_players} возможных).'
+            )
+    
+    return result
 
 def generate_balanced_seating(player_ids):
     """
@@ -61,11 +151,7 @@ def generate_balanced_seating(player_ids):
     for row in base_square:
         new_row = [row[col_perm[j]] for j in range(n)]
         seating_plan.append(new_row)
-    
-    # Проверка (опционально) - можно оставить для отладки
-    if n <= 10:  # не выводить для больших n, чтобы не засорять консоль
-        verify_seating(seating_plan, player_ids, n)
-    
+        
     return seating_plan
 
 def generate_random_seating(player_ids, total_games):
@@ -109,11 +195,7 @@ def generate_balanced_seating_partial(player_ids, total_games):
     for row in selected_rows:
         new_row = [row[col_perm[j]] for j in range(n)]
         seating_plan.append(new_row)
-    
-    # Проверка (опционально)
-    if n <= 10 and k == n:
-        verify_seating(seating_plan, player_ids, n)
-    
+        
     return seating_plan
 
 def generate_balanced_seating_with_repeats(player_ids, total_games):
@@ -161,27 +243,6 @@ def generate_balanced_seating_with_repeats(player_ids, total_games):
     
     return seating_plan
 
-def verify_seating(seating_plan, player_ids, num_players):
-    """
-    Проверяет, что каждый игрок был на каждом месте ровно один раз.
-    Выводит предупреждение, если это не так.
-    """
-    position_matrix = defaultdict(set)
-    for game_idx, positions in enumerate(seating_plan):
-        for seat_idx, player_id in enumerate(positions):
-            position_matrix[player_id].add(seat_idx)
-    
-    all_seats_covered = all(len(positions) == num_players for positions in position_matrix.values())
-    if not all_seats_covered:
-        print("⚠️ Предупреждение: не все позиции покрыты уникально")
-        for player_id in player_ids:
-            missing = set(range(num_players)) - position_matrix[player_id]
-            if missing:
-                # Найдём имя игрока (можно передавать словарь имён, но для простоты оставим ID)
-                print(f"Игрок {player_id} не был на местах: {missing}")
-    else:
-        print("✅ Уникальность позиций подтверждена")
-    return all_seats_covered
 
 def calculate_tournament_statistics(tournament):
     """
