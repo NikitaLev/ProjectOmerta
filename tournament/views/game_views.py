@@ -9,6 +9,18 @@ from ..models import Tournament, Game, TournamentPlayer, PlayerGameStats
 # Импорт вспомогательных функций из utils (их нужно перенести туда)
 from ..utils import calculate_final_places, calculate_tournament_statistics, calculate_yellow_card_penalty, recalculate_yellow_card_penalties, recalculate_ci
 
+def to_float(value, default=0.0):
+    """Преобразует строку в float, заменяя запятую на точку"""
+    if not value:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    # Заменяем запятую на точку
+    value = str(value).replace(',', '.').strip()
+    try:
+        return float(value)
+    except ValueError:
+        return default
 
 def update_player_tournament_stats(tournament_player):
     """Обновляет общую статистику игрока в турнире"""
@@ -110,11 +122,11 @@ def game_input(request, tournament_id, game_round):
                     return redirect('game_input', tournament_id=tournament.id, game_round=game_round)
                 
                 # Получаем данные из формы
-                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)
+                manual_bonus = to_float(request.POST.get(f'bonus_{player_id}', 0))
 
-                manual_penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+                manual_penalty = to_float(request.POST.get(f'penalty_{player_id}', 0))
 
-                penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)
+                penalty = to_float(request.POST.get(f'penalty_{player_id}', 0))
                 
                 first_kill = (str(player_id) == str(first_killed_id))
                 best_shot = request.POST.get(f'best_shot_{player_id}', '') if first_kill else ''
@@ -257,8 +269,8 @@ def game_edit(request, tournament_id, game_round):
                     return redirect('game_edit', tournament_id=tournament.id, game_round=game_round)
                 
                 # Получаем данные из формы
-                manual_bonus = float(request.POST.get(f'bonus_{player_id}', 0) or 0)  # Ручной бонус
-                manual_penalty = float(request.POST.get(f'penalty_{player_id}', 0) or 0)  # Ручной штраф
+                manual_bonus = to_float(request.POST.get(f'bonus_{player_id}', 0))  # Ручной бонус
+                manual_penalty = to_float(request.POST.get(f'penalty_{player_id}', 0)) # Ручной штраф
                 yellow_cards = int(request.POST.get(f'yellow_cards_{player_id}', 0) or 0)
                 
                 first_kill = (str(player_id) == str(first_killed_id))
