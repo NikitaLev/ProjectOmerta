@@ -89,7 +89,7 @@ def activate_account(request, token):
         user.save()
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'redirect': '/accounts/login/'})
+            return JsonResponse({'success': True, 'redirect': '/login/'})
         
         messages.success(request, f'✅ Аккаунт "{username}" успешно активирован!', extra_tags='activation')
         return redirect('login')
