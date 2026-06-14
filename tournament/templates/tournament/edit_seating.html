@@ -1,0 +1,79 @@
+{% extends 'tournament/base.html' %}
+{% load static %}
+
+{% block title %}Управление рассадкой - {{ tournament.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/edit_seating.css' %}?v=final">
+{% endblock %}
+
+{% block content %}
+<div class="seating-page">
+    {% csrf_token %}
+    <div class="seating-header">
+        <h1><i class="fas fa-chair"></i> Управление рассадкой</h1>
+        <div class="tournament-info">
+            <span class="tournament-name">{{ tournament.name }}</span>
+            <span class="tournament-status status-{{ tournament.status }}">{{ tournament.get_status_display }}</span>
+        </div>
+        <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Вернуться
+        </a>
+    </div>
+
+    <div class="seating-container">
+        {% for game in games %}
+        <div class="game-card {% if game.winning_team %}game-completed{% endif %}" data-game-id="{{ game.id }}">
+            <div class="game-card-header">
+                <div class="game-title">
+                    <i class="fas fa-gamepad"></i>
+                    Игра {{ game.round_number }} / {{ games|length }}
+                    {% if game.winning_team %}
+                        <span class="game-completed-badge">✅ Завершена</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="game-card-body">
+                <div class="seating-table">
+                    {% with seating=game.seating.order %}
+                    {% for player_id in seating %}
+                    <div class="seating-row" data-seat-index="{{ forloop.counter0 }}">
+                        <div class="seat-info">
+                            <span class="seat-number">Место {{ forloop.counter }}</span>
+                            <span class="prev-seat-badge">—</span>
+                        </div>
+                        <div class="player-col">
+                            <button type="button" class="player-button" data-player-id="{{ player_id }}" {% if game.winning_team %}disabled{% endif %}>
+                                {% for tp in tournament.players.all %}
+                                    {% if tp.user.id == player_id %}
+                                        {{ tp.user.player_nickname|default:tp.user.username }}
+                                    {% endif %}
+                                {% endfor %}
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+
+                {% if not game.winning_team %}
+                <div class="game-card-footer">
+                    <div class="duplicate-warning" style="display: none;"></div>
+                    <button type="button" class="btn btn-primary save-game-btn" data-game-id="{{ game.id }}">
+                        <i class="fas fa-save"></i> Сохранить рассадку
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{{ tournament.id|json_script:"tournamentId" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pages/edit_seating.js' %}?v=final"></script>
+{% endblock %}

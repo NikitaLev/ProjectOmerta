@@ -8,7 +8,7 @@ from .tournament_views import (
     home, create_tournament, tournament_detail, my_tournaments,
     start_tournament, cancel_tournament_start, tournament_games,
     complete_tournament, recalculate_tournament_stats,
-    delete_tournament
+    delete_tournament, edit_seating, save_seating
 )
 from .player_management_views import (
     get_players_for_tournament, add_player_to_tournament,

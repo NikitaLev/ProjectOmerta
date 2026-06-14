@@ -3,11 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
 from django.utils import timezone
+from django.http import JsonResponse
+import json
+from django.template.defaultfilters import register
 
 from ..models import Tournament, TournamentPlayer, Game, PlayerGameStats
 from ..forms import TournamentCreateForm
 from ..utils import generate_seating, calculate_final_places, calculate_tournament_statistics
 
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 def home(request):
     """Главная страница"""
@@ -297,3 +303,60 @@ def delete_tournament(request, tournament_id):
     
     # GET запрос — просто редирект (модальное окно обрабатывает подтверждение)
     return redirect('tournament_detail', tournament_id=tournament.id)
+
+@login_required
+def edit_seating(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    
+    if request.user != tournament.host:
+        messages.error(request, 'Нет доступа')
+        return redirect('tournament_detail', tournament_id=tournament.id)
+    
+    games = tournament.games.all().order_by('round_number')
+    
+    # Словарь игроков для доступа по ID в шаблоне
+    players = {}
+    for tp in tournament.players.all():
+        players[tp.user.id] = tp.user
+    
+    context = {
+        'tournament': tournament,
+        'games': games,
+        'players': players,
+    }
+    return render(request, 'tournament/edit_seating.html', context)
+
+
+import json
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def save_seating(request, tournament_id, game_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    game = get_object_or_404(Game, id=game_id, tournament=tournament)
+    
+    if request.user != tournament.host:
+        return JsonResponse({'error': 'Нет доступа'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_order = data.get('order')
+            
+            if not new_order or len(new_order) != tournament.players.count():
+                return JsonResponse({'error': 'Неверное количество игроков'}, status=400)
+            
+            # Обновляем поле seating
+            seating = game.seating or {}
+            seating['order'] = new_order
+            seating['manual_edit'] = True
+            game.seating = seating
+            game.save()
+            
+            return JsonResponse({'success': True, 'message': 'Рассадка сохранена'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

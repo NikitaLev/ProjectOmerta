@@ -253,6 +253,13 @@
                             <span>Редактировать</span>
                         </a>
                     {% endif %}
+                    <!-- Кнопка управления рассадкой (только для активных турниров) -->
+                    {% if tournament.status == 'active' %}
+                        <a href="{% url 'edit_seating' tournament.id %}" class="action-btn info">
+                            <i class="fas fa-chair"></i>
+                            <span>Управление рассадкой</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
             {% if tournament.status == 'completed' %}
