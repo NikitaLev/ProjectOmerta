@@ -1,0 +1,715 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.http import JsonResponse
+from django.utils import timezone
+from django.db import transaction
+import json
+
+from ..models import (
+    RuleVersion, RuleCategory, RuleSection, RuleItem, 
+    RuleVariable, RuleHint, RuleTag, User
+)
+
+def is_admin(user):
+    """Проверка, является ли пользователь администратором"""
+    return user.is_authenticated and (user.role == 'admin' or user.is_superuser)
+
+@login_required
+@user_passes_test(is_admin)
+def rules_admin(request):
+    """Главная страница управления правилами"""
+    from ..models import RuleTag
+    
+    versions = RuleVersion.objects.all().order_by('-published_date')
+    active_version = RuleVersion.objects.filter(is_active=True).first()
+    
+    categories = []
+    if active_version:
+        categories = RuleCategory.objects.filter(
+            version=active_version
+        ).prefetch_related(
+            'sections__items', 
+            'direct_items',
+            'direct_items__tags',
+            'tags'
+        ).order_by('order')
+    
+    variables = []
+    if active_version:
+        variables = RuleVariable.objects.filter(version=active_version).order_by('key')
+    
+    all_tags = RuleTag.objects.all().order_by('name')
+    
+    context = {
+        'versions': versions,
+        'active_version': active_version,
+        'categories': categories,
+        'variables': variables,
+        'all_tags': all_tags,
+    }
+    return render(request, 'tournament/rules/admin.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_create_version(request):
+    """Создание новой версии правил"""
+    if request.method == 'POST':
+        version = request.POST.get('version')
+        published_date = request.POST.get('published_date')
+        changelog = request.POST.get('changelog', '')
+        copy_from = request.POST.get('copy_from')
+        
+        if not version or not published_date:
+            messages.error(request, 'Заполните все обязательные поля')
+            return redirect('rules_admin')
+        
+        # Проверяем, что такой версии нет
+        if RuleVersion.objects.filter(version=version).exists():
+            messages.error(request, f'Версия {version} уже существует')
+            return redirect('rules_admin')
+        
+        # Создаем новую версию
+        from datetime import datetime
+        published_date = datetime.strptime(published_date, '%Y-%m-%d')
+        
+        new_version = RuleVersion.objects.create(
+            version=version,
+            published_date=published_date,
+            is_active=False,
+            created_by=request.user,
+            changelog=changelog
+        )
+        
+        # Если нужно скопировать из другой версии
+        if copy_from:
+            source_version = get_object_or_404(RuleVersion, id=copy_from)
+            
+            # Копируем категории
+            for source_category in source_version.categories.all():
+                new_category = RuleCategory.objects.create(
+                    version=new_version,
+                    number=source_category.number,
+                    title=source_category.title,
+                    description=source_category.description,
+                    order=source_category.order
+                )
+                
+                # Копируем подразделы
+                for source_section in source_category.sections.all():
+                    new_section = RuleSection.objects.create(
+                        category=new_category,
+                        number=source_section.number,
+                        title=source_section.title,
+                        description=source_section.description,
+                        order=source_section.order
+                    )
+                    
+                    # Копируем пункты
+                    for source_item in source_section.items.all():
+                        RuleItem.objects.create(
+                            section=new_section,
+                            number=source_item.number,
+                            content=source_item.content,
+                            order=source_item.order
+                        )
+            
+            # Копируем переменные
+            for source_var in source_version.variables.all():
+                RuleVariable.objects.create(
+                    version=new_version,
+                    key=source_var.key,
+                    name=source_var.name,
+                    description=source_var.description,
+                    value=source_var.value,
+                    var_type=source_var.var_type,
+                    is_editable=source_var.is_editable,
+                    rule_reference=source_var.rule_reference
+                )
+            
+            # Копируем подсказки (только если есть)
+            # Для простоты копируем через items
+            for source_category in source_version.categories.all():
+                new_category = RuleCategory.objects.get(
+                    version=new_version,
+                    number=source_category.number
+                )
+                for source_section in source_category.sections.all():
+                    new_section = RuleSection.objects.get(
+                        category=new_category,
+                        number=source_section.number
+                    )
+                    for source_item in source_section.items.all():
+                        new_item = RuleItem.objects.get(
+                            section=new_section,
+                            number=source_item.number
+                        )
+                        for source_hint in source_item.hints.all():
+                            RuleHint.objects.create(
+                                rule_item=new_item,
+                                text=source_hint.text,
+                                priority=source_hint.priority
+                            )
+        
+        messages.success(request, f'Версия {version} успешно создана!')
+        return redirect('rules_admin')
+    
+    # GET запрос - показываем форму
+    versions = RuleVersion.objects.all().order_by('-published_date')
+    context = {
+        'versions': versions,
+    }
+    return render(request, 'tournament/rules/create_version.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_activate_version(request, version_id):
+    """Активировать версию правил"""
+    version = get_object_or_404(RuleVersion, id=version_id)
+    
+    if request.method == 'POST':
+        # Деактивируем все версии
+        RuleVersion.objects.all().update(is_active=False)
+        # Активируем выбранную
+        version.is_active = True
+        version.save()
+        
+        messages.success(request, f'Версия {version.version} активирована!')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_version(request, version_id):
+    """Удалить версию правил"""
+    version = get_object_or_404(RuleVersion, id=version_id)
+    
+    if version.is_active:
+        messages.error(request, 'Нельзя удалить активную версию правил')
+        return redirect('rules_admin')
+    
+    if request.method == 'POST':
+        version_name = version.version
+        version.delete()
+        messages.success(request, f'Версия {version_name} удалена')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ========== УПРАВЛЕНИЕ КАТЕГОРИЯМИ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_category(request):
+    """Добавить категорию (раздел)"""
+    if request.method == 'POST':
+        version_id = request.POST.get('version_id')
+        number = request.POST.get('number')
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        order = request.POST.get('order', 0)
+        
+        version = get_object_or_404(RuleVersion, id=version_id)
+        
+        # Проверяем уникальность
+        if RuleCategory.objects.filter(version=version, number=number).exists():
+            messages.error(request, f'Категория с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        RuleCategory.objects.create(
+            version=version,
+            number=number,
+            title=title,
+            description=description,
+            order=order
+        )
+        
+        messages.success(request, f'Раздел {number} добавлен')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_edit_category(request, category_id):
+    """Редактировать категорию"""
+    category = get_object_or_404(RuleCategory, id=category_id)
+    
+    if request.method == 'POST':
+        category.number = request.POST.get('number', category.number)
+        category.title = request.POST.get('title', category.title)
+        category.description = request.POST.get('description', category.description)
+        category.order = request.POST.get('order', category.order)
+        category.save()
+        
+        messages.success(request, f'Раздел {category.number} обновлен')
+        return redirect('rules_admin')
+    
+    context = {'category': category}
+    return render(request, 'tournament/rules/admin.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_category(request, category_id):
+    """Удалить категорию"""
+    category = get_object_or_404(RuleCategory, id=category_id)
+    
+    if request.method == 'POST':
+        category_number = category.number
+        category.delete()
+        messages.success(request, f'Раздел {category_number} удален')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ========== УПРАВЛЕНИЕ ПОДРАЗДЕЛАМИ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_section(request):
+    """Добавить подраздел"""
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        number = request.POST.get('number')
+        title = request.POST.get('title')
+        description = request.POST.get('description', '')
+        order = request.POST.get('order', 0)
+        
+        category = get_object_or_404(RuleCategory, id=category_id)
+        
+        if RuleSection.objects.filter(category=category, number=number).exists():
+            messages.error(request, f'Подраздел с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        RuleSection.objects.create(
+            category=category,
+            number=number,
+            title=title,
+            description=description,
+            order=order
+        )
+        
+        messages.success(request, f'Подраздел {number} добавлен')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_edit_section(request, section_id):
+    """Редактировать подраздел"""
+    section = get_object_or_404(RuleSection, id=section_id)
+    
+    if request.method == 'POST':
+        section.number = request.POST.get('number', section.number)
+        section.title = request.POST.get('title', section.title)
+        section.description = request.POST.get('description', section.description)
+        section.order = request.POST.get('order', section.order)
+        section.save()
+        
+        messages.success(request, f'Подраздел {section.number} обновлен')
+        return redirect('rules_admin')
+    
+    context = {'section': section}
+    return render(request, 'tournament/rules/admin.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_section(request, section_id):
+    """Удалить подраздел"""
+    section = get_object_or_404(RuleSection, id=section_id)
+    
+    if request.method == 'POST':
+        section_number = section.number
+        section.delete()
+        messages.success(request, f'Подраздел {section_number} удален')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ========== УПРАВЛЕНИЕ ПУНКТАМИ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_item(request):
+    """Добавить пункт правил"""
+    if request.method == 'POST':
+        section_id = request.POST.get('section_id')
+        number = request.POST.get('number')
+        content = request.POST.get('content')
+        order = request.POST.get('order', 0)
+        
+        section = get_object_or_404(RuleSection, id=section_id)
+        
+        if RuleItem.objects.filter(section=section, number=number).exists():
+            messages.error(request, f'Пункт с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        RuleItem.objects.create(
+            section=section,
+            number=number,
+            content=content,
+            order=order
+        )
+        
+        messages.success(request, f'Пункт {number} добавлен')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_edit_item(request, item_id):
+    """Редактировать пункт правил"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    
+    if request.method == 'POST':
+        item.number = request.POST.get('number', item.number)
+        item.content = request.POST.get('content', item.content)
+        item.order = request.POST.get('order', item.order)
+        item.save()
+        
+        messages.success(request, f'Пункт {item.number} обновлен')
+        return redirect('rules_admin')
+    
+    context = {'item': item}
+    return render(request, 'tournament/rules/admin.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_item(request, item_id):
+    """Удалить пункт правил"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    
+    if request.method == 'POST':
+        item_number = item.number
+        item.delete()
+        messages.success(request, f'Пункт {item_number} удален')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ========== УПРАВЛЕНИЕ ПЕРЕМЕННЫМИ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_variable(request):
+    """Добавить переменную правил"""
+    if request.method == 'POST':
+        version_id = request.POST.get('version_id')
+        key = request.POST.get('key')
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        value = request.POST.get('value')
+        var_type = request.POST.get('var_type')
+        rule_reference = request.POST.get('rule_reference', '')
+        
+        version = get_object_or_404(RuleVersion, id=version_id)
+        
+        if RuleVariable.objects.filter(version=version, key=key).exists():
+            messages.error(request, f'Переменная с ключом {key} уже существует')
+            return redirect('rules_admin')
+        
+        RuleVariable.objects.create(
+            version=version,
+            key=key,
+            name=name,
+            description=description,
+            value=value,
+            var_type=var_type,
+            rule_reference=rule_reference
+        )
+        
+        messages.success(request, f'Переменная {key} добавлена')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_edit_variable(request, variable_id):
+    """Редактировать переменную"""
+    variable = get_object_or_404(RuleVariable, id=variable_id)
+    
+    if request.method == 'POST':
+        variable.key = request.POST.get('key', variable.key)
+        variable.name = request.POST.get('name', variable.name)
+        variable.description = request.POST.get('description', variable.description)
+        variable.value = request.POST.get('value', variable.value)
+        variable.var_type = request.POST.get('var_type', variable.var_type)
+        variable.rule_reference = request.POST.get('rule_reference', variable.rule_reference)
+        variable.save()
+        
+        messages.success(request, f'Переменная {variable.key} обновлена')
+        return redirect('rules_admin')
+    
+    context = {'variable': variable}
+    return render(request, 'tournament/rules/admin.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_variable(request, variable_id):
+    """Удалить переменную"""
+    variable = get_object_or_404(RuleVariable, id=variable_id)
+    
+    if request.method == 'POST':
+        variable_key = variable.key
+        variable.delete()
+        messages.success(request, f'Переменная {variable_key} удалена')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ========== API ДЛЯ AJAX ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_get_version_data(request, version_id):
+    """Получить данные версии для отображения в дереве"""
+    version = get_object_or_404(RuleVersion, id=version_id)
+    
+    categories = []
+    for category in version.categories.all().order_by('order'):
+        sections_data = []
+        for section in category.sections.all().order_by('order'):
+            items_data = []
+            for item in section.items.all().order_by('order'):
+                items_data.append({
+                    'id': item.id,
+                    'number': item.number,
+                    'content': item.content[:200] + '...' if len(item.content) > 200 else item.content
+                })
+            sections_data.append({
+                'id': section.id,
+                'number': section.number,
+                'title': section.title,
+                'items': items_data
+            })
+        categories.append({
+            'id': category.id,
+            'number': category.number,
+            'title': category.title,
+            'sections': sections_data
+        })
+    
+    variables = []
+    for var in version.variables.all().order_by('key'):
+        variables.append({
+            'id': var.id,
+            'key': var.key,
+            'name': var.name,
+            'value': var.value,
+            'var_type': var.var_type,
+            'rule_reference': var.rule_reference
+        })
+    
+    return JsonResponse({
+        'categories': categories,
+        'variables': variables
+    })
+
+
+# ========== API ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_category(request, category_id):
+    """Получить данные категории для редактирования"""
+    category = get_object_or_404(RuleCategory, id=category_id)
+    return JsonResponse({
+        'id': category.id,
+        'number': category.number,
+        'title': category.title,
+        'description': category.description,
+        'order': category.order
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_section(request, section_id):
+    """Получить данные подраздела для редактирования"""
+    section = get_object_or_404(RuleSection, id=section_id)
+    return JsonResponse({
+        'id': section.id,
+        'number': section.number,
+        'title': section.title,
+        'description': section.description,
+        'order': section.order
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_item(request, item_id):
+    """Получить данные пункта для редактирования"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    return JsonResponse({
+        'id': item.id,
+        'number': item.number,
+        'content': item.content,
+        'order': item.order
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_variable(request, variable_id):
+    """Получить данные переменной для редактирования"""
+    variable = get_object_or_404(RuleVariable, id=variable_id)
+    return JsonResponse({
+        'id': variable.id,
+        'key': variable.key,
+        'name': variable.name,
+        'value': variable.value,
+        'var_type': variable.var_type,
+        'rule_reference': variable.rule_reference,
+        'description': variable.description
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_direct_item(request):
+    """Добавить пункт прямо в раздел (без подраздела)"""
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        number = request.POST.get('number')
+        content = request.POST.get('content')
+        order = request.POST.get('order', 0)
+        tags = request.POST.getlist('tags')
+        
+        category = get_object_or_404(RuleCategory, id=category_id)
+        
+        # Проверяем уникальность
+        if RuleItem.objects.filter(category=category, number=number).exists():
+            messages.error(request, f'Пункт с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        item = RuleItem.objects.create(
+            category=category,
+            number=number,
+            content=content,
+            order=order
+        )
+        
+        if tags:
+            item.tags.set(tags)
+        
+        messages.success(request, f'Пункт {number} добавлен в раздел "{category.title}"')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+@user_passes_test(is_admin)
+def rules_edit_direct_item(request, item_id):
+    """Редактировать прямой пункт"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    
+    if request.method == 'POST':
+        number = request.POST.get('number')
+        content = request.POST.get('content')
+        order = request.POST.get('order', 0)
+        tags = request.POST.getlist('tags')
+        
+        if RuleItem.objects.filter(
+            category=item.category, 
+            number=number
+        ).exclude(id=item.id).exists():
+            messages.error(request, f'Пункт с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        item.number = number
+        item.content = content
+        item.order = order
+        if tags:
+            item.tags.set(tags)
+        else:
+            item.tags.clear()
+        item.save()
+        
+        messages.success(request, f'Пункт {number} обновлен')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_direct_item(request, item_id):
+    """Удалить прямой пункт"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, 'Пункт удален')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_direct_item(request, item_id):
+    """Получить данные прямого пункта для редактирования"""
+    item = get_object_or_404(RuleItem, id=item_id)
+    return JsonResponse({
+        'id': item.id,
+        'number': item.number,
+        'content': item.content,
+        'order': item.order,
+        'tags': list(item.tags.values_list('id', flat=True))
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_tags(request):
+    """Страница управления тегами"""
+    tags = RuleTag.objects.all().order_by('name')
+    return render(request, 'tournament/rules/tags.html', {'tags': tags})
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_add_tag(request):
+    """Добавить тег"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        color = request.POST.get('color', '#D4AF37')
+        
+        if RuleTag.objects.filter(name__iexact=name).exists():
+            messages.error(request, f'Тег "{name}" уже существует')
+            return redirect('rules_tags')
+        
+        RuleTag.objects.create(name=name, color=color)
+        messages.success(request, f'Тег "{name}" добавлен')
+        return redirect('rules_tags')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+@user_passes_test(is_admin)
+def rules_delete_tag(request, tag_id):
+    """Удалить тег"""
+    tag = get_object_or_404(RuleTag, id=tag_id)
+    
+    if request.method == 'POST':
+        tag.delete()
+        messages.success(request, 'Тег удален')
+        return redirect('rules_tags')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

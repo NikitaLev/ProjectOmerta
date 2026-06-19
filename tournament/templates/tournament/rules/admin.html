@@ -1,0 +1,254 @@
+{% extends "tournament/base.html" %}
+{% load static %}
+
+{% block title %}Управление правилами{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/rules/admin.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="rules-admin-wrapper">
+        <div class="rules-admin-header">
+            <h1><i class="fas fa-book"></i> Управление правилами</h1>
+            <div class="header-actions">
+                
+                <a href="{% url 'rules_tags' %}" class="btn btn-outline">
+                    <i class="fas fa-tags"></i> Теги
+                </a>
+                <a href="{% url 'rules_create_version' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Создать версию
+                </a>
+            </div>
+        </div>
+
+        <!-- Версии -->
+        <div class="versions-section">
+            <h2><i class="fas fa-tag"></i> Версии правил</h2>
+            <div class="versions-list">
+                {% for version in versions %}
+                <div class="version-card {% if version.is_active %}active{% endif %}">
+                    <div class="version-info">
+                        <span class="version-number">v{{ version.version }}</span>
+                        <span class="version-date">{{ version.published_date|date:"d.m.Y" }}</span>
+                        {% if version.is_active %}
+                            <span class="badge-active"><i class="fas fa-check-circle"></i> Активна</span>
+                        {% endif %}
+                    </div>
+                    <div class="version-actions">
+                        {% if not version.is_active %}
+                            <form method="post" action="{% url 'rules_activate_version' version.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Активировать">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'rules_delete_version' version.id %}" style="display:inline;" 
+                                  onsubmit="return confirm('Удалить версию {{ version.version }}?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="empty-text">Нет созданных версий</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% if active_version %}
+        <!-- Активная версия -->
+        <div class="rules-content">
+            <div class="rules-header">
+                <h2>Структура правил</h2>
+                <span class="version-label">v{{ active_version.version }}</span>
+            </div>
+
+            <!-- Категории (разделы) -->
+            <div class="categories-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-folder"></i> Разделы</h3>
+                    <button class="btn btn-sm btn-primary" onclick="openAddCategoryModal()">
+                        <i class="fas fa-plus"></i> Добавить раздел
+                    </button>
+                </div>
+
+                {% for category in categories %}
+                <div class="category-card" data-category-id="{{ category.id }}">
+                    <div class="category-header">
+                        <div class="category-title">
+                            <span class="category-number">{{ category.number }}</span>
+                            <span class="category-name">{{ category.title }}</span>
+                            {% if category.tags.all %}
+                            <div class="tags-container">
+                                {% for tag in category.tags.all %}
+                                <span class="tag" style="background: {{ tag.color }}20; color: {{ tag.color }}; border-color: {{ tag.color }};">
+                                    {{ tag.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="category-actions">
+                            <button class="btn btn-sm btn-outline" onclick="openEditCategoryModal('{{ category.id }}')" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCategory('{{ category.id }}')" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="openAddSectionModal('{{ category.id }}')" title="Добавить подраздел">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="openAddDirectItemModal('{{ category.id }}')" title="Добавить пункт">
+                                <i class="fas fa-file-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ПРЯМЫЕ ПУНКТЫ (без подраздела) -->
+                    {% if category.direct_items.all %}
+                    <div class="direct-items-section">
+                        <div class="direct-items-label">Пункты раздела:</div>
+                        <div class="items-list">
+                            {% for item in category.direct_items.all %}
+                            <div class="item-card">
+                                <div class="item-number">{{ item.number }}</div>
+                                <div class="item-content">{{ item.content }}</div>
+                                {% if item.tags.all %}
+                                <div class="item-tags">
+                                    {% for tag in item.tags.all %}
+                                    <span class="tag-mini" style="background: {{ tag.color }}20; color: {{ tag.color }};">
+                                        {{ tag.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="item-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="openEditDirectItemModal('{{ item.id }}')" title="Редактировать">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteItem('{{ item.id }}')" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Подразделы -->
+                    <div class="sections-list">
+                        {% for section in category.sections.all %}
+                        <div class="section-card" data-section-id="{{ section.id }}">
+                            <div class="section-header-inner">
+                                <div class="section-title">
+                                    <span class="section-number">{{ section.number }}</span>
+                                    <span class="section-name">{{ section.title }}</span>
+                                </div>
+                                <div class="section-actions">
+                                    <button class="btn btn-sm btn-outline" onclick="openEditSectionModal('{{ section.id }}')" title="Редактировать">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSection('{{ section.id }}')" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="openAddItemModal('{{ section.id }}')" title="Добавить пункт">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Пункты -->
+                            <div class="items-list">
+                                {% for item in section.items.all %}
+                                <div class="item-card">
+                                    <div class="item-number">{{ item.number }}</div>
+                                    <div class="item-content">{{ item.content }}</div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-sm btn-outline" onclick="openEditItemModal('{{ item.id }}')" title="Редактировать">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteItem('{{ item.id }}')" title="Удалить">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="empty-text">Нет пунктов</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="empty-text">Нет подразделов</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="empty-text">Нет разделов</p>
+                {% endfor %}
+            </div>
+
+            <!-- Переменные -->
+            <div class="variables-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-sliders-h"></i> Переменные правил</h3>
+                    <button class="btn btn-sm btn-primary" onclick="openAddVariableModal()">
+                        <i class="fas fa-plus"></i> Добавить переменную
+                    </button>
+                </div>
+
+                <div class="variables-grid">
+                    {% for var in variables %}
+                    <div class="variable-card">
+                        <div class="variable-key">{{ var.key }}</div>
+                        <div class="variable-name">{{ var.name }}</div>
+                        <div class="variable-value">{{ var.value }}</div>
+                        <div class="variable-type">
+                            <span class="badge badge-{{ var.var_type }}">
+                                {{ var.get_var_type_display }}
+                            </span>
+                        </div>
+                        <div class="variable-actions">
+                            <button class="btn btn-sm btn-outline" onclick="openEditVariableModal('{{ var.id }}')" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteVariable('{{ var.id }}')" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="empty-text">Нет переменных</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-book-open"></i>
+            <h3>Нет активной версии правил</h3>
+            <p>Создайте новую версию правил и активируйте её</p>
+            <a href="{% url 'rules_create_version' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Создать версию
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальные окна -->
+{% include 'tournament/rules/modals.html' %}
+
+<!-- CSRF токен для AJAX запросов -->
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pages/rules/modals.js' %}?v=2"></script>
+<script src="{% static 'js/pages/rules/admin.js' %}?v=2"></script>
+{% endblock %}

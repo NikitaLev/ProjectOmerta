@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+from .views import rules_views
+
 urlpatterns = [
     # Главная
     path('', views.home, name='home'),
@@ -61,5 +63,53 @@ urlpatterns = [
     path('recover-password/sent/', views.custom_password_reset_done, name='password_reset_done'),
     path('recover-password/confirm/<uidb64>/<token>/', views.custom_password_reset_confirm, name='password_reset_confirm'),
     path('recover-password/complete/', views.custom_password_reset_complete, name='password_reset_complete'),
+
+
+      # ========== УПРАВЛЕНИЕ ПРАВИЛАМИ (ВСЕ МАРШРУТЫ ВМЕСТЕ) ==========
+    # Главная страница управления правилами
+    path('rules/admin/', rules_views.rules_admin, name='rules_admin'),
+    
+    # Теги
+    path('rules/tags/', rules_views.rules_tags, name='rules_tags'),
+    path('rules/add-tag/', rules_views.rules_add_tag, name='rules_add_tag'),
+    path('rules/delete-tag/<int:tag_id>/', rules_views.rules_delete_tag, name='rules_delete_tag'),
+    
+    # Версии
+    path('rules/create-version/', rules_views.rules_create_version, name='rules_create_version'),
+    path('rules/activate-version/<int:version_id>/', rules_views.rules_activate_version, name='rules_activate_version'),
+    path('rules/delete-version/<int:version_id>/', rules_views.rules_delete_version, name='rules_delete_version'),
+    
+    # Категории (разделы)
+    path('rules/add-category/', rules_views.rules_add_category, name='rules_add_category'),
+    path('rules/edit-category/<int:category_id>/', rules_views.rules_edit_category, name='rules_edit_category'),
+    path('rules/delete-category/<int:category_id>/', rules_views.rules_delete_category, name='rules_delete_category'),
+    
+    # Подразделы
+    path('rules/add-section/', rules_views.rules_add_section, name='rules_add_section'),
+    path('rules/edit-section/<int:section_id>/', rules_views.rules_edit_section, name='rules_edit_section'),
+    path('rules/delete-section/<int:section_id>/', rules_views.rules_delete_section, name='rules_delete_section'),
+    
+    # Пункты (с подразделом)
+    path('rules/add-item/', rules_views.rules_add_item, name='rules_add_item'),
+    path('rules/edit-item/<int:item_id>/', rules_views.rules_edit_item, name='rules_edit_item'),
+    path('rules/delete-item/<int:item_id>/', rules_views.rules_delete_item, name='rules_delete_item'),
+    
+    # Прямые пункты (без подраздела)
+    path('rules/add-direct-item/', rules_views.rules_add_direct_item, name='rules_add_direct_item'),
+    path('rules/edit-direct-item/<int:item_id>/', rules_views.rules_edit_direct_item, name='rules_edit_direct_item'),
+    path('rules/delete-direct-item/<int:item_id>/', rules_views.rules_delete_direct_item, name='rules_delete_direct_item'),
+    
+    # Переменные
+    path('rules/add-variable/', rules_views.rules_add_variable, name='rules_add_variable'),
+    path('rules/edit-variable/<int:variable_id>/', rules_views.rules_edit_variable, name='rules_edit_variable'),
+    path('rules/delete-variable/<int:variable_id>/', rules_views.rules_delete_variable, name='rules_delete_variable'),
+    
+    # API (должны быть в конце, чтобы не перекрывать другие маршруты)
+    path('rules/api/category/<int:category_id>/', rules_views.rules_api_category, name='rules_api_category'),
+    path('rules/api/section/<int:section_id>/', rules_views.rules_api_section, name='rules_api_section'),
+    path('rules/api/item/<int:item_id>/', rules_views.rules_api_item, name='rules_api_item'),
+    path('rules/api/variable/<int:variable_id>/', rules_views.rules_api_variable, name='rules_api_variable'),
+    path('rules/api/direct-item/<int:item_id>/', rules_views.rules_api_direct_item, name='rules_api_direct_item'),
+    path('rules/api/version/<int:version_id>/', rules_views.rules_get_version_data, name='rules_get_version_data'),
     
 ]

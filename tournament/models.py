@@ -243,3 +243,188 @@ class PlayerGameStats(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - Игра {self.game.round_number} - {self.get_role_display()}"
+    
+
+# ========== МОДУЛЬ ПРАВИЛ ==========
+
+class RuleTag(models.Model):
+    """Тег для правил (для поиска и фильтрации)"""
+    name = models.CharField(max_length=50, unique=True, verbose_name="Название тега")
+    color = models.CharField(max_length=7, default='#D4AF37', verbose_name="Цвет тега")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Тег правил"
+        verbose_name_plural = "Теги правил"
+    
+    def __str__(self):
+        return self.name
+class RuleVersion(models.Model):
+    """Версия правил"""
+    version = models.CharField(max_length=20, verbose_name="Версия")  # "1.0", "2.0"
+    published_date = models.DateTimeField(verbose_name="Дата публикации")
+    is_active = models.BooleanField(default=False, verbose_name="Активна")
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='rule_versions',
+        verbose_name="Создал"
+    )
+    changelog = models.TextField(blank=True, verbose_name="Что нового")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создана")
+    
+    class Meta:
+        ordering = ['-published_date']
+        verbose_name = "Версия правил"
+        verbose_name_plural = "Версии правил"
+    
+    def __str__(self):
+        return f"Правила v{self.version} ({self.published_date.strftime('%d.%m.%Y')})"
+    
+    def save(self, *args, **kwargs):
+        # Если эта версия становится активной, деактивируем все остальные
+        if self.is_active:
+            RuleVersion.objects.exclude(id=self.id).update(is_active=False)
+        super().save(*args, **kwargs)
+
+
+class RuleCategory(models.Model):
+    """Раздел правил (1, 2, 3...)"""
+    version = models.ForeignKey(
+        RuleVersion, 
+        on_delete=models.CASCADE, 
+        related_name='categories',
+        verbose_name="Версия"
+    )
+    number = models.CharField(max_length=10, verbose_name="Номер")  # "1", "2", "3"
+    title = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    order = models.IntegerField(default=0, verbose_name="Порядок")
+    tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_categories', verbose_name="Теги")
+    
+    class Meta:
+        ordering = ['order']
+        unique_together = ['version', 'number']
+        verbose_name = "Раздел правил"
+        verbose_name_plural = "Разделы правил"
+    
+    def __str__(self):
+        return f"{self.number}. {self.title}"
+
+
+class RuleSection(models.Model):
+    """Подраздел правил (4.1, 4.2, 5.6...)"""
+    category = models.ForeignKey(
+        RuleCategory, 
+        on_delete=models.CASCADE, 
+        related_name='sections',
+        verbose_name="Раздел"
+    )
+    number = models.CharField(max_length=10, verbose_name="Номер")  # "4.1", "4.2"
+    title = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    order = models.IntegerField(default=0, verbose_name="Порядок")
+    tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_sections', verbose_name="Теги")
+    
+    class Meta:
+        ordering = ['order']
+        unique_together = ['category', 'number']
+        verbose_name = "Подраздел правил"
+        verbose_name_plural = "Подразделы правил"
+    
+    def __str__(self):
+        return f"{self.number} {self.title}"
+
+
+class RuleItem(models.Model):
+    """Конкретный пункт правил (4.1.1, 4.1.2...)"""
+    section = models.ForeignKey(
+        RuleSection, 
+        on_delete=models.CASCADE, 
+        related_name='items',
+        verbose_name="Подраздел",
+        null=True,
+        blank=True  # теперь может быть без подраздела
+    )
+    category = models.ForeignKey(
+        RuleCategory,
+        on_delete=models.CASCADE,
+        related_name='direct_items',
+        verbose_name="Раздел (прямые пункты)",
+        null=True,
+        blank=True
+    )
+    number = models.CharField(max_length=10, verbose_name="Номер")  # "1.1", "1.2"
+    content = models.TextField(verbose_name="Содержание")
+    order = models.IntegerField(default=0, verbose_name="Порядок")
+    tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_items', verbose_name="Теги")
+    
+    class Meta:
+        ordering = ['order']
+        verbose_name = "Пункт правил"
+        verbose_name_plural = "Пункты правил"
+    
+    def __str__(self):
+        return f"{self.number}"
+
+
+class RuleVariable(models.Model):
+    """Переменные правила (штрафы, коэффициенты)"""
+    VARIABLE_TYPES = [
+        ('penalty', 'Штраф'),
+        ('bonus', 'Бонус'),
+        ('coefficient', 'Коэффициент'),
+        ('time', 'Время'),
+        ('count', 'Количество'),
+    ]
+    
+    version = models.ForeignKey(
+        RuleVersion, 
+        on_delete=models.CASCADE, 
+        related_name='variables',
+        verbose_name="Версия"
+    )
+    key = models.CharField(max_length=50, verbose_name="Ключ")
+    name = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    value = models.FloatField(verbose_name="Значение")
+    var_type = models.CharField(max_length=20, choices=VARIABLE_TYPES, default='penalty', verbose_name="Тип")
+    is_editable = models.BooleanField(default=True, verbose_name="Редактируемо")
+    rule_reference = models.CharField(max_length=20, blank=True, verbose_name="Ссылка на пункт правил")
+    
+    class Meta:
+        ordering = ['key']
+        unique_together = ['version', 'key']
+        verbose_name = "Переменная правил"
+        verbose_name_plural = "Переменные правил"
+    
+    def __str__(self):
+        return f"{self.key} = {self.value}"
+
+
+class RuleHint(models.Model):
+    """Подсказка для ведущего на основе правил"""
+    rule_item = models.ForeignKey(
+        RuleItem, 
+        on_delete=models.CASCADE, 
+        related_name='hints',
+        verbose_name="Пункт правил"
+    )
+    text = models.TextField(verbose_name="Текст подсказки")
+    priority = models.IntegerField(
+        default=0, 
+        choices=[(0, 'Низкий'), (1, 'Средний'), (2, 'Высокий')],
+        verbose_name="Приоритет"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создана")
+    
+    class Meta:
+        ordering = ['-priority']
+        verbose_name = "Подсказка"
+        verbose_name_plural = "Подсказки"
+    
+    def __str__(self):
+        return f"Подсказка к {self.rule_item.number}"
+    

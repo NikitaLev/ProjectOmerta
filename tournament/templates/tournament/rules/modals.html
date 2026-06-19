@@ -1,0 +1,596 @@
+<!-- Модальные окна для управления правилами -->
+
+<style>
+#addCategoryModal,
+#editCategoryModal,
+#addSectionModal,
+#editSectionModal,
+#addItemModal,
+#editItemModal,
+#addDirectItemModal,
+#editDirectItemModal,
+#addVariableModal,
+#editVariableModal {
+    display: none;
+}
+
+/* Стили для модальных окон */
+.modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    overflow: auto;
+}
+
+.modal-content {
+    position: relative;
+    background-color: var(--bg-card);
+    margin: 5% auto;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease;
+    width: 90%;
+}
+
+.modal-content.medium {
+    max-width: 650px;
+}
+
+.modal-content.large {
+    max-width: 800px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 20px 25px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), transparent);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 24px 24px 0 0;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.modal-header h2 i {
+    color: var(--gold);
+}
+
+.close-modal {
+    color: var(--text-secondary);
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close-modal:hover {
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-body {
+    padding: 25px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 15px 25px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    border-radius: 0 0 24px 24px;
+    flex-shrink: 0;
+}
+
+.modal-form .form-group {
+    margin-bottom: 16px;
+}
+
+.modal-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.modal-form label .required {
+    color: #ef4444;
+}
+
+.modal-form .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.modal-form .form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.modal-form .form-help {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.modal-form select.form-control {
+    cursor: pointer;
+}
+
+.modal-form select.form-control option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+</style>
+
+<!-- ===== МОДАЛКА ДОБАВЛЕНИЯ РАЗДЕЛА ===== -->
+<div id="addCategoryModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-folder-plus"></i> Добавить раздел</h2>
+            <span class="close-modal" onclick="closeModal('addCategoryModal')">&times;</span>
+        </div>
+        <form method="post" action="{% url 'rules_add_category' %}" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" name="version_id" value="{{ active_version.id }}">
+                <div class="form-group">
+                    <label for="category_number">Номер раздела <span class="required">*</span></label>
+                    <input type="text" id="category_number" name="number" class="form-control" 
+                           placeholder="Например: 1, 2, 3" required>
+                </div>
+                <div class="form-group">
+                    <label for="category_title">Название <span class="required">*</span></label>
+                    <input type="text" id="category_title" name="title" class="form-control" 
+                           placeholder="ОСНОВНЫЕ ПОНЯТИЯ" required>
+                </div>
+                <div class="form-group">
+                    <label for="category_tags">Теги</label>
+                    <select id="category_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Выберите теги для этого раздела</small>
+                </div>
+                <div class="form-group">
+                    <label for="category_description">Описание</label>
+                    <textarea id="category_description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="category_order">Порядок</label>
+                    <input type="number" id="category_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addCategoryModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ РАЗДЕЛА ===== -->
+<div id="editCategoryModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Редактировать раздел</h2>
+            <span class="close-modal" onclick="closeModal('editCategoryModal')">&times;</span>
+        </div>
+        <form method="post" id="editCategoryForm" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_category_number">Номер раздела <span class="required">*</span></label>
+                    <input type="text" id="edit_category_number" name="number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_category_title">Название <span class="required">*</span></label>
+                    <input type="text" id="edit_category_title" name="title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_category_description">Описание</label>
+                    <textarea id="edit_category_description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_category_order">Порядок</label>
+                    <input type="number" id="edit_category_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editCategoryModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПОДРАЗДЕЛА ===== -->
+<div id="addSectionModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-folder-plus"></i> Добавить подраздел</h2>
+            <span class="close-modal" onclick="closeModal('addSectionModal')">&times;</span>
+        </div>
+        <form method="post" action="{% url 'rules_add_section' %}" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" id="section_category_id" name="category_id">
+                <div class="form-group">
+                    <label for="section_number">Номер подраздела <span class="required">*</span></label>
+                    <input type="text" id="section_number" name="number" class="form-control" 
+                           placeholder="Например: 4.1, 4.2" required>
+                </div>
+                <div class="form-group">
+                    <label for="section_title">Название <span class="required">*</span></label>
+                    <input type="text" id="section_title" name="title" class="form-control" 
+                           placeholder="Начало игры" required>
+                </div>
+                <div class="form-group">
+                    <label for="section_description">Описание</label>
+                    <textarea id="section_description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="section_order">Порядок</label>
+                    <input type="number" id="section_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addSectionModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ПОДРАЗДЕЛА ===== -->
+<div id="editSectionModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Редактировать подраздел</h2>
+            <span class="close-modal" onclick="closeModal('editSectionModal')">&times;</span>
+        </div>
+        <form method="post" id="editSectionForm" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_section_number">Номер подраздела <span class="required">*</span></label>
+                    <input type="text" id="edit_section_number" name="number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_section_title">Название <span class="required">*</span></label>
+                    <input type="text" id="edit_section_title" name="title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_section_description">Описание</label>
+                    <textarea id="edit_section_description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_section_order">Порядок</label>
+                    <input type="number" id="edit_section_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editSectionModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПУНКТА ===== -->
+<div id="addItemModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-plus"></i> Добавить пункт правил</h2>
+            <span class="close-modal" onclick="closeModal('addItemModal')">&times;</span>
+        </div>
+        <form method="post" action="{% url 'rules_add_item' %}" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" id="item_section_id" name="section_id">
+                <div class="form-group">
+                    <label for="item_number">Номер пункта <span class="required">*</span></label>
+                    <input type="text" id="item_number" name="number" class="form-control" 
+                           placeholder="Например: 4.1.1, 4.1.2" required>
+                </div>
+                <div class="form-group">
+                    <label for="item_content">Содержание <span class="required">*</span></label>
+                    <textarea id="item_content" name="content" class="form-control" rows="6" 
+                              placeholder="Введите текст пункта правил..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="item_order">Порядок</label>
+                    <input type="number" id="item_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addItemModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ПУНКТА ===== -->
+<div id="editItemModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Редактировать пункт</h2>
+            <span class="close-modal" onclick="closeModal('editItemModal')">&times;</span>
+        </div>
+        <form method="post" id="editItemForm" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_item_number">Номер пункта <span class="required">*</span></label>
+                    <input type="text" id="edit_item_number" name="number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_item_content">Содержание <span class="required">*</span></label>
+                    <textarea id="edit_item_content" name="content" class="form-control" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_item_order">Порядок</label>
+                    <input type="number" id="edit_item_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editItemModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПЕРЕМЕННОЙ ===== -->
+<div id="addVariableModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-cog"></i> Добавить переменную</h2>
+            <span class="close-modal" onclick="closeModal('addVariableModal')">&times;</span>
+        </div>
+        <form method="post" action="{% url 'rules_add_variable' %}" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" name="version_id" value="{{ active_version.id }}">
+                <div class="form-group">
+                    <label for="variable_key">Ключ <span class="required">*</span></label>
+                    <input type="text" id="variable_key" name="key" class="form-control" 
+                           placeholder="yellow_card_penalty_base" required>
+                    <small class="form-help">Уникальный идентификатор для использования в коде</small>
+                </div>
+                <div class="form-group">
+                    <label for="variable_name">Название <span class="required">*</span></label>
+                    <input type="text" id="variable_name" name="name" class="form-control" 
+                           placeholder="Базовый штраф за ЖК" required>
+                </div>
+                <div class="form-group">
+                    <label for="variable_value">Значение <span class="required">*</span></label>
+                    <input type="number" id="variable_value" name="value" class="form-control" 
+                           step="0.01" placeholder="0.15" required>
+                </div>
+                <div class="form-group">
+                    <label for="variable_type">Тип <span class="required">*</span></label>
+                    <select id="variable_type" name="var_type" class="form-control" required>
+                        <option value="penalty">Штраф</option>
+                        <option value="bonus">Бонус</option>
+                        <option value="coefficient">Коэффициент</option>
+                        <option value="time">Время</option>
+                        <option value="count">Количество</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="variable_reference">Ссылка на пункт правил</label>
+                    <input type="text" id="variable_reference" name="rule_reference" class="form-control" 
+                           placeholder="5.7">
+                    <small class="form-help">Номер пункта, к которому относится переменная</small>
+                </div>
+                <div class="form-group">
+                    <label for="variable_description">Описание</label>
+                    <textarea id="variable_description" name="description" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addVariableModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ПЕРЕМЕННОЙ ===== -->
+<div id="editVariableModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Редактировать переменную</h2>
+            <span class="close-modal" onclick="closeModal('editVariableModal')">&times;</span>
+        </div>
+        <form method="post" id="editVariableForm" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_variable_key">Ключ <span class="required">*</span></label>
+                    <input type="text" id="edit_variable_key" name="key" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_variable_name">Название <span class="required">*</span></label>
+                    <input type="text" id="edit_variable_name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_variable_value">Значение <span class="required">*</span></label>
+                    <input type="number" id="edit_variable_value" name="value" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_variable_type">Тип <span class="required">*</span></label>
+                    <select id="edit_variable_type" name="var_type" class="form-control" required>
+                        <option value="penalty">Штраф</option>
+                        <option value="bonus">Бонус</option>
+                        <option value="coefficient">Коэффициент</option>
+                        <option value="time">Время</option>
+                        <option value="count">Количество</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_variable_reference">Ссылка на пункт правил</label>
+                    <input type="text" id="edit_variable_reference" name="rule_reference" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="edit_variable_description">Описание</label>
+                    <textarea id="edit_variable_description" name="description" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editVariableModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПУНКТА В РАЗДЕЛ (БЕЗ ПОДРАЗДЕЛА) ===== -->
+<div id="addDirectItemModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-plus"></i> Добавить пункт в раздел</h2>
+            <span class="close-modal" onclick="closeModal('addDirectItemModal')">&times;</span>
+        </div>
+        <form method="post" action="{% url 'rules_add_direct_item' %}" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" id="direct_item_category_id" name="category_id">
+                <div class="form-group">
+                    <label for="direct_item_number">Номер пункта <span class="required">*</span></label>
+                    <input type="text" id="direct_item_number" name="number" class="form-control" 
+                           placeholder="Например: 1.1, 1.2" required>
+                    <small class="form-help">Формат: Номер раздела.Номер пункта (например, 1.1)</small>
+                </div>
+                <div class="form-group">
+                    <label for="direct_item_content">Содержание <span class="required">*</span></label>
+                    <textarea id="direct_item_content" name="content" class="form-control" rows="6" 
+                              placeholder="Введите текст пункта правил..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="direct_item_tags">Теги</label>
+                    <select id="direct_item_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Выберите теги для этого пункта (Ctrl+клик для множественного выбора)</small>
+                </div>
+                <div class="form-group">
+                    <label for="direct_item_order">Порядок</label>
+                    <input type="number" id="direct_item_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addDirectItemModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА РЕДАКТИРОВАНИЯ ПРЯМОГО ПУНКТА ===== -->
+<div id="editDirectItemModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Редактировать пункт</h2>
+            <span class="close-modal" onclick="closeModal('editDirectItemModal')">&times;</span>
+        </div>
+        <form method="post" id="editDirectItemForm" class="modal-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" id="edit_direct_item_id" name="item_id">
+                <div class="form-group">
+                    <label for="edit_direct_item_number">Номер пункта <span class="required">*</span></label>
+                    <input type="text" id="edit_direct_item_number" name="number" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_direct_item_content">Содержание <span class="required">*</span></label>
+                    <textarea id="edit_direct_item_content" name="content" class="form-control" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_direct_item_tags">Теги</label>
+                    <select id="edit_direct_item_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_direct_item_order">Порядок</label>
+                    <input type="number" id="edit_direct_item_order" name="order" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editDirectItemModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
