@@ -198,9 +198,10 @@
             <div class="modal-body">
                 <input type="hidden" name="version_id" value="{{ active_version.id }}">
                 <div class="form-group">
-                    <label for="category_number">Номер раздела <span class="required">*</span></label>
+                    <label for="category_number">Номер раздела</label>
                     <input type="text" id="category_number" name="number" class="form-control" 
-                           placeholder="Например: 1, 2, 3" required>
+                           placeholder="Автоматически" readonly style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help" id="category_number_hint">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
                     <label for="category_title">Название <span class="required">*</span></label>
@@ -208,21 +209,8 @@
                            placeholder="ОСНОВНЫЕ ПОНЯТИЯ" required>
                 </div>
                 <div class="form-group">
-                    <label for="category_tags">Теги</label>
-                    <select id="category_tags" name="tags" class="form-control" multiple>
-                        {% for tag in all_tags %}
-                        <option value="{{ tag.id }}">{{ tag.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <small class="form-help">Выберите теги для этого раздела</small>
-                </div>
-                <div class="form-group">
                     <label for="category_description">Описание</label>
                     <textarea id="category_description" name="description" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="category_order">Порядок</label>
-                    <input type="number" id="category_order" name="order" class="form-control" value="0">
                 </div>
             </div>
             <div class="modal-footer">
@@ -267,7 +255,6 @@
         </form>
     </div>
 </div>
-
 <!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПОДРАЗДЕЛА ===== -->
 <div id="addSectionModal" class="modal">
     <div class="modal-content medium">
@@ -280,9 +267,10 @@
             <div class="modal-body">
                 <input type="hidden" id="section_category_id" name="category_id">
                 <div class="form-group">
-                    <label for="section_number">Номер подраздела <span class="required">*</span></label>
+                    <label for="section_number">Номер подраздела</label>
                     <input type="text" id="section_number" name="number" class="form-control" 
-                           placeholder="Например: 4.1, 4.2" required>
+                           placeholder="Автоматически" readonly style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help" id="section_number_hint">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
                     <label for="section_title">Название <span class="required">*</span></label>
@@ -292,10 +280,6 @@
                 <div class="form-group">
                     <label for="section_description">Описание</label>
                     <textarea id="section_description" name="description" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="section_order">Порядок</label>
-                    <input type="number" id="section_order" name="order" class="form-control" value="0">
                 </div>
             </div>
             <div class="modal-footer">
@@ -317,8 +301,10 @@
             {% csrf_token %}
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="edit_section_number">Номер подраздела <span class="required">*</span></label>
-                    <input type="text" id="edit_section_number" name="number" class="form-control" required>
+                    <label for="section_number">Номер подраздела</label>
+                    <input type="text" id="section_number" name="number" class="form-control" 
+                        placeholder="Автоматически" style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
                     <label for="edit_section_title">Название <span class="required">*</span></label>
@@ -353,9 +339,10 @@
             <div class="modal-body">
                 <input type="hidden" id="item_section_id" name="section_id">
                 <div class="form-group">
-                    <label for="item_number">Номер пункта <span class="required">*</span></label>
+                    <label for="item_number">Номер пункта</label>
                     <input type="text" id="item_number" name="number" class="form-control" 
-                           placeholder="Например: 4.1.1, 4.1.2" required>
+                        placeholder="Автоматически" style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
                     <label for="item_content">Содержание <span class="required">*</span></label>

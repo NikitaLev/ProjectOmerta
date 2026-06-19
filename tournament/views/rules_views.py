@@ -212,14 +212,19 @@ def rules_add_category(request):
         number = request.POST.get('number')
         title = request.POST.get('title')
         description = request.POST.get('description', '')
-        order = request.POST.get('order', 0)
         
         version = get_object_or_404(RuleVersion, id=version_id)
         
-        # Проверяем уникальность
+        # Если номер не указан или пустой - генерируем автоматически
+        if not number:
+            number = RuleCategory.get_next_number(version)
+        
         if RuleCategory.objects.filter(version=version, number=number).exists():
-            messages.error(request, f'Категория с номером {number} уже существует')
+            messages.error(request, f'Раздел с номером {number} уже существует')
             return redirect('rules_admin')
+        
+        # order = числовое значение номера
+        order = int(number) if number.isdigit() else 0
         
         RuleCategory.objects.create(
             version=version,
@@ -229,8 +234,15 @@ def rules_add_category(request):
             order=order
         )
         
-        messages.success(request, f'Раздел {number} добавлен')
+        messages.success(request, f'Раздел "{title}" добавлен')
         return redirect('rules_admin')
+    
+    # GET запрос — возвращаем следующий номер для предзаполнения
+    version_id = request.GET.get('version_id')
+    if version_id:
+        version = get_object_or_404(RuleVersion, id=version_id)
+        next_number = RuleCategory.get_next_number(version)
+        return JsonResponse({'next_number': next_number})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -281,13 +293,22 @@ def rules_add_section(request):
         number = request.POST.get('number')
         title = request.POST.get('title')
         description = request.POST.get('description', '')
-        order = request.POST.get('order', 0)
         
         category = get_object_or_404(RuleCategory, id=category_id)
+        
+        # Если номер не указан - генерируем автоматически
+        if not number:
+            number = RuleSection.get_next_number(category)
         
         if RuleSection.objects.filter(category=category, number=number).exists():
             messages.error(request, f'Подраздел с номером {number} уже существует')
             return redirect('rules_admin')
+        
+        # order = числовое значение после точки (4.1 -> 1)
+        try:
+            order = int(number.split('.')[1]) if '.' in number else 0
+        except (ValueError, IndexError):
+            order = 0
         
         RuleSection.objects.create(
             category=category,
@@ -297,7 +318,7 @@ def rules_add_section(request):
             order=order
         )
         
-        messages.success(request, f'Подраздел {number} добавлен')
+        messages.success(request, f'Подраздел "{title}" добавлен')
         return redirect('rules_admin')
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -343,25 +364,39 @@ def rules_delete_section(request, section_id):
 @login_required
 @user_passes_test(is_admin)
 def rules_add_item(request):
-    """Добавить пункт правил"""
+    """Добавить пункт правил в подраздел"""
     if request.method == 'POST':
         section_id = request.POST.get('section_id')
         number = request.POST.get('number')
         content = request.POST.get('content')
-        order = request.POST.get('order', 0)
+        tags = request.POST.getlist('tags')
         
         section = get_object_or_404(RuleSection, id=section_id)
+        
+        # Если номер не указан - генерируем автоматически
+        if not number:
+            number = RuleItem.get_next_number_for_section(section)
         
         if RuleItem.objects.filter(section=section, number=number).exists():
             messages.error(request, f'Пункт с номером {number} уже существует')
             return redirect('rules_admin')
         
-        RuleItem.objects.create(
+        # order = числовое значение после второй точки (4.1.1 -> 1)
+        try:
+            parts = number.split('.')
+            order = int(parts[2]) if len(parts) == 3 and parts[2].isdigit() else 0
+        except (ValueError, IndexError):
+            order = 0
+        
+        item = RuleItem.objects.create(
             section=section,
             number=number,
             content=content,
             order=order
         )
+        
+        if tags:
+            item.tags.set(tags)
         
         messages.success(request, f'Пункт {number} добавлен')
         return redirect('rules_admin')
@@ -594,10 +629,20 @@ def rules_add_direct_item(request):
         
         category = get_object_or_404(RuleCategory, id=category_id)
         
-        # Проверяем уникальность
+        # Если номер не указан - генерируем автоматически
+        if not number:
+            number = RuleItem.get_next_number_for_category(category)
+        
         if RuleItem.objects.filter(category=category, number=number).exists():
             messages.error(request, f'Пункт с номером {number} уже существует')
             return redirect('rules_admin')
+        
+        # order = числовое значение после точки (1.1 -> 1)
+        try:
+            parts = number.split('.')
+            order = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 0
+        except (ValueError, IndexError):
+            order = 0
         
         item = RuleItem.objects.create(
             category=category,
@@ -713,3 +758,52 @@ def rules_delete_tag(request, tag_id):
         return redirect('rules_tags')
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+# ========== API ДЛЯ ПОЛУЧЕНИЯ СЛЕДУЮЩИХ НОМЕРОВ ==========
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_next_category_number(request):
+    """Получить следующий номер для раздела"""
+    version_id = request.GET.get('version_id')
+    if version_id:
+        version = get_object_or_404(RuleVersion, id=version_id)
+        next_number = RuleCategory.get_next_number(version)
+        return JsonResponse({'next_number': next_number})
+    return JsonResponse({'error': 'version_id required'}, status=400)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_next_section_number(request):
+    """Получить следующий номер для подраздела"""
+    category_id = request.GET.get('category_id')
+    if category_id:
+        category = get_object_or_404(RuleCategory, id=category_id)
+        next_number = RuleSection.get_next_number(category)
+        return JsonResponse({'next_number': next_number})
+    return JsonResponse({'error': 'category_id required'}, status=400)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_next_item_number(request):
+    """Получить следующий номер для пункта (в подразделе)"""
+    section_id = request.GET.get('section_id')
+    if section_id:
+        section = get_object_or_404(RuleSection, id=section_id)
+        next_number = RuleItem.get_next_number_for_section(section)
+        return JsonResponse({'next_number': next_number})
+    return JsonResponse({'error': 'section_id required'}, status=400)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_api_next_direct_item_number(request):
+    """Получить следующий номер для прямого пункта (в разделе)"""
+    category_id = request.GET.get('category_id')
+    if category_id:
+        category = get_object_or_404(RuleCategory, id=category_id)
+        next_number = RuleItem.get_next_number_for_category(category)
+        return JsonResponse({'next_number': next_number})
+    return JsonResponse({'error': 'category_id required'}, status=400)

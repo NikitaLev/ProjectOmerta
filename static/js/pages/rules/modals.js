@@ -47,6 +47,22 @@ document.addEventListener('keydown', function(event) {
 // ========== ФУНКЦИИ ДЛЯ РАЗДЕЛОВ (КАТЕГОРИЙ) ==========
 
 function openAddCategoryModal() {
+    // Получаем следующий номер для раздела
+    const versionId = document.querySelector('input[name="version_id"]')?.value;
+    if (versionId) {
+        fetch('/rules/api/next-category-number/?version_id=' + versionId)
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.next_number) {
+                    document.getElementById('category_number').value = data.next_number;
+                    document.getElementById('category_number_hint').textContent = 
+                        'Будет создан раздел №' + data.next_number;
+                }
+            })
+            .catch(function() {
+                // Если не получилось, оставляем заглушку
+            });
+    }
     openModal('addCategoryModal');
 }
 
@@ -83,6 +99,21 @@ function deleteCategory(categoryId) {
 
 function openAddSectionModal(categoryId) {
     document.getElementById('section_category_id').value = categoryId;
+    
+    // Получаем следующий номер для подраздела
+    fetch('/rules/api/next-section-number/?category_id=' + categoryId)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.next_number) {
+                document.getElementById('section_number').value = data.next_number;
+                document.getElementById('section_number_hint').textContent = 
+                    'Будет создан подраздел №' + data.next_number;
+            }
+        })
+        .catch(function() {
+            // Если не получилось, оставляем заглушку
+        });
+    
     openModal('addSectionModal');
 }
 
@@ -119,6 +150,21 @@ function deleteSection(sectionId) {
 
 function openAddItemModal(sectionId) {
     document.getElementById('item_section_id').value = sectionId;
+    
+    // Получаем следующий номер для пункта
+    fetch('/rules/api/next-item-number/?section_id=' + sectionId)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.next_number) {
+                document.getElementById('item_number').value = data.next_number;
+                document.getElementById('item_number_hint').textContent = 
+                    'Будет создан пункт №' + data.next_number;
+            }
+        })
+        .catch(function() {
+            // Если не получилось, оставляем заглушку
+        });
+    
     openModal('addItemModal');
 }
 
@@ -198,6 +244,21 @@ function getCsrfToken() {
 
 function openAddDirectItemModal(categoryId) {
     document.getElementById('direct_item_category_id').value = categoryId;
+    
+    // Получаем следующий номер для прямого пункта
+    fetch('/rules/api/next-direct-item-number/?category_id=' + categoryId)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.next_number) {
+                document.getElementById('direct_item_number').value = data.next_number;
+                document.getElementById('direct_item_number_hint').textContent = 
+                    'Будет создан пункт №' + data.next_number;
+            }
+        })
+        .catch(function() {
+            // Если не получилось, оставляем заглушку
+        });
+    
     openModal('addDirectItemModal');
 }
 

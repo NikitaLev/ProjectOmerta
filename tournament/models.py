@@ -310,6 +310,25 @@ class RuleCategory(models.Model):
         verbose_name = "Раздел правил"
         verbose_name_plural = "Разделы правил"
     
+    @classmethod
+    def get_next_number(cls, version):
+        """Получить следующий номер раздела для версии"""
+        existing = cls.objects.filter(version=version).order_by('-number')
+        if existing.exists():
+            try:
+                # Пробуем получить максимальный номер как число
+                max_num = 0
+                for c in existing:
+                    if c.number.isdigit():
+                        num = int(c.number)
+                        if num > max_num:
+                            max_num = num
+                return str(max_num + 1)
+            except (ValueError, TypeError):
+                # Если есть нечисловые номера, просто считаем количество + 1
+                return str(cls.objects.filter(version=version).count() + 1)
+        return '1'
+    
     def __str__(self):
         return f"{self.number}. {self.title}"
 
@@ -333,6 +352,23 @@ class RuleSection(models.Model):
         unique_together = ['category', 'number']
         verbose_name = "Подраздел правил"
         verbose_name_plural = "Подразделы правил"
+
+    @classmethod
+    def get_next_number(cls, category):
+        """Получить следующий номер подраздела для категории"""
+        existing = cls.objects.filter(category=category).order_by('-number')
+        if existing.exists():
+            try:
+                numbers = []
+                for s in existing:
+                    parts = s.number.split('.')
+                    if len(parts) == 2 and parts[1].isdigit():
+                        numbers.append(int(parts[1]))
+                if numbers:
+                    return f"{category.number}.{max(numbers) + 1}"
+            except (ValueError, TypeError):
+                pass
+        return f"{category.number}.1"
     
     def __str__(self):
         return f"{self.number} {self.title}"
@@ -361,6 +397,39 @@ class RuleItem(models.Model):
     order = models.IntegerField(default=0, verbose_name="Порядок")
     tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_items', verbose_name="Теги")
     
+    @classmethod
+    def get_next_number_for_section(cls, section):
+        """Получить следующий номер пункта для подраздела"""
+        existing = cls.objects.filter(section=section).order_by('-number')
+        if existing.exists():
+            try:
+                numbers = []
+                for item in existing:
+                    parts = item.number.split('.')
+                    if len(parts) == 3 and parts[2].isdigit():
+                        numbers.append(int(parts[2]))
+                if numbers:
+                    return f"{section.number}.{max(numbers) + 1}"
+            except (ValueError, TypeError):
+                pass
+        return f"{section.number}.1"
+    @classmethod
+    def get_next_number_for_category(cls, category):
+        """Получить следующий номер пункта для категории (без подраздела)"""
+        existing = cls.objects.filter(category=category).order_by('-number')
+        if existing.exists():
+            try:
+                numbers = []
+                for item in existing:
+                    parts = item.number.split('.')
+                    if len(parts) == 2 and parts[1].isdigit():
+                        numbers.append(int(parts[1]))
+                if numbers:
+                    return f"{category.number}.{max(numbers) + 1}"
+            except (ValueError, TypeError):
+                pass
+        return f"{category.number}.1"
+
     class Meta:
         ordering = ['order']
         verbose_name = "Пункт правил"
