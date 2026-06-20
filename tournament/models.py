@@ -303,6 +303,25 @@ class RuleCategory(models.Model):
     description = models.TextField(blank=True, verbose_name="Описание")
     order = models.IntegerField(default=0, verbose_name="Порядок")
     tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_categories', verbose_name="Теги")
+
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Создано"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Обновлено"
+    )
+    changed_in_version = models.ForeignKey(
+        'RuleVersion',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='changed_categories',
+        verbose_name="Изменено в версии"
+    )
+    is_new = models.BooleanField(default=False, verbose_name="Новое в этой версии")
+    is_changed = models.BooleanField(default=False, verbose_name="Изменено в этой версии")
     
     class Meta:
         ordering = ['order']
@@ -346,6 +365,19 @@ class RuleSection(models.Model):
     description = models.TextField(blank=True, verbose_name="Описание")
     order = models.IntegerField(default=0, verbose_name="Порядок")
     tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_sections', verbose_name="Теги")
+
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Создано")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
+    changed_in_version = models.ForeignKey(
+        'RuleVersion',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='changed_sections',
+        verbose_name="Изменено в версии"
+    )
+    is_new = models.BooleanField(default=False, verbose_name="Новое в этой версии")
+    is_changed = models.BooleanField(default=False, verbose_name="Изменено в этой версии")
     
     class Meta:
         ordering = ['order']
@@ -396,6 +428,19 @@ class RuleItem(models.Model):
     content = models.TextField(verbose_name="Содержание")
     order = models.IntegerField(default=0, verbose_name="Порядок")
     tags = models.ManyToManyField(RuleTag, blank=True, related_name='rule_items', verbose_name="Теги")
+
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Создано")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
+    changed_in_version = models.ForeignKey(
+        'RuleVersion',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='changed_items',
+        verbose_name="Изменено в версии"
+    )
+    is_new = models.BooleanField(default=False, verbose_name="Новое в этой версии")
+    is_changed = models.BooleanField(default=False, verbose_name="Изменено в этой версии")
     
     @classmethod
     def get_next_number_for_section(cls, section):
@@ -497,3 +542,4 @@ class RuleHint(models.Model):
     def __str__(self):
         return f"Подсказка к {self.rule_item.number}"
     
+

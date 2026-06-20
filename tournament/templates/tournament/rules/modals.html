@@ -301,10 +301,8 @@
             {% csrf_token %}
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="section_number">Номер подраздела</label>
-                    <input type="text" id="section_number" name="number" class="form-control" 
-                        placeholder="Автоматически" style="background: var(--bg-secondary); opacity: 0.7;">
-                    <small class="form-help">Номер будет определён автоматически</small>
+                    <label for="edit_section_number">Номер подраздела <span class="required">*</span></label>
+                    <input type="text" id="edit_section_number" name="number" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_section_title">Название <span class="required">*</span></label>
@@ -313,6 +311,15 @@
                 <div class="form-group">
                     <label for="edit_section_description">Описание</label>
                     <textarea id="edit_section_description" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_section_tags">Теги</label>
+                    <select id="edit_section_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-help">Выберите теги для этого подраздела (Ctrl+клик для множественного выбора)</small>
                 </div>
                 <div class="form-group">
                     <label for="edit_section_order">Порядок</label>
@@ -341,17 +348,21 @@
                 <div class="form-group">
                     <label for="item_number">Номер пункта</label>
                     <input type="text" id="item_number" name="number" class="form-control" 
-                        placeholder="Автоматически" style="background: var(--bg-secondary); opacity: 0.7;">
-                    <small class="form-help">Номер будет определён автоматически</small>
+                           placeholder="Автоматически" readonly style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help" id="item_number_hint">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
-                    <label for="item_content">Содержание <span class="required">*</span></label>
-                    <textarea id="item_content" name="content" class="form-control" rows="6" 
-                              placeholder="Введите текст пункта правил..." required></textarea>
+                    <label>Содержание <span class="required">*</span></label>
+                    <div id="addItemEditor" style="min-height: 200px;"></div>
+                    <input type="hidden" id="addItemContent" name="content" required>
                 </div>
                 <div class="form-group">
-                    <label for="item_order">Порядок</label>
-                    <input type="number" id="item_order" name="order" class="form-control" value="0">
+                    <label for="add_item_tags">Теги</label>
+                    <select id="add_item_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
@@ -377,8 +388,17 @@
                     <input type="text" id="edit_item_number" name="number" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit_item_content">Содержание <span class="required">*</span></label>
-                    <textarea id="edit_item_content" name="content" class="form-control" rows="6" required></textarea>
+                    <label>Содержание <span class="required">*</span></label>
+                    <div id="editItemEditor" style="min-height: 200px;"></div>
+                    <input type="hidden" id="editItemContent" name="content" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_item_tags">Теги</label>
+                    <select id="edit_item_tags" name="tags" class="form-control" multiple>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="edit_item_order">Порядок</label>
@@ -497,7 +517,6 @@
         </form>
     </div>
 </div>
-
 <!-- ===== МОДАЛКА ДОБАВЛЕНИЯ ПУНКТА В РАЗДЕЛ (БЕЗ ПОДРАЗДЕЛА) ===== -->
 <div id="addDirectItemModal" class="modal">
     <div class="modal-content large">
@@ -510,28 +529,24 @@
             <div class="modal-body">
                 <input type="hidden" id="direct_item_category_id" name="category_id">
                 <div class="form-group">
-                    <label for="direct_item_number">Номер пункта <span class="required">*</span></label>
+                    <label for="direct_item_number">Номер пункта</label>
                     <input type="text" id="direct_item_number" name="number" class="form-control" 
-                           placeholder="Например: 1.1, 1.2" required>
-                    <small class="form-help">Формат: Номер раздела.Номер пункта (например, 1.1)</small>
+                           placeholder="Автоматически" readonly style="background: var(--bg-secondary); opacity: 0.7;">
+                    <small class="form-help" id="direct_item_number_hint">Номер будет определён автоматически</small>
                 </div>
                 <div class="form-group">
-                    <label for="direct_item_content">Содержание <span class="required">*</span></label>
-                    <textarea id="direct_item_content" name="content" class="form-control" rows="6" 
-                              placeholder="Введите текст пункта правил..." required></textarea>
+                    <label>Содержание <span class="required">*</span></label>
+                    <div id="addDirectItemEditor" style="min-height: 200px;"></div>
+                    <input type="hidden" id="addDirectItemContent" name="content" required>
                 </div>
                 <div class="form-group">
-                    <label for="direct_item_tags">Теги</label>
-                    <select id="direct_item_tags" name="tags" class="form-control" multiple>
+                    <label for="add_direct_item_tags">Теги</label>
+                    <select id="add_direct_item_tags" name="tags" class="form-control" multiple>
                         {% for tag in all_tags %}
                         <option value="{{ tag.id }}">{{ tag.name }}</option>
                         {% endfor %}
                     </select>
                     <small class="form-help">Выберите теги для этого пункта (Ctrl+клик для множественного выбора)</small>
-                </div>
-                <div class="form-group">
-                    <label for="direct_item_order">Порядок</label>
-                    <input type="number" id="direct_item_order" name="order" class="form-control" value="0">
                 </div>
             </div>
             <div class="modal-footer">
@@ -558,8 +573,9 @@
                     <input type="text" id="edit_direct_item_number" name="number" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit_direct_item_content">Содержание <span class="required">*</span></label>
-                    <textarea id="edit_direct_item_content" name="content" class="form-control" rows="6" required></textarea>
+                    <label>Содержание <span class="required">*</span></label>
+                    <div id="editDirectItemEditor" style="min-height: 200px;"></div>
+                    <input type="hidden" id="editDirectItemContent" name="content" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_direct_item_tags">Теги</label>

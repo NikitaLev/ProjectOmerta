@@ -70,7 +70,6 @@ def rules_create_version(request):
             messages.error(request, f'Версия {version} уже существует')
             return redirect('rules_admin')
         
-        # Создаем новую версию
         from datetime import datetime
         published_date = datetime.strptime(published_date, '%Y-%m-%d')
         
@@ -93,8 +92,35 @@ def rules_create_version(request):
                     number=source_category.number,
                     title=source_category.title,
                     description=source_category.description,
-                    order=source_category.order
+                    order=source_category.order,
+                    is_new=False,  # <-- НЕ НОВОЕ (скопировано)
+                    is_changed=False,  # <-- НЕ ИЗМЕНЕНО
+                    changed_in_version=None  # <-- НЕ ПРИВЯЗАНО К ВЕРСИИ
                 )
+                
+                # Копируем теги категории
+                if source_category.tags.exists():
+                    new_category.tags.set(source_category.tags.all())
+                
+                # Копируем ПРЯМЫЕ ПУНКТЫ (без подраздела)
+                for source_item in source_category.direct_items.all():
+                    new_item = RuleItem.objects.create(
+                        category=new_category,
+                        number=source_item.number,
+                        content=source_item.content,
+                        order=source_item.order
+                    )
+                    # Копируем теги пункта
+                    if source_item.tags.exists():
+                        new_item.tags.set(source_item.tags.all())
+                    
+                    # Копируем подсказки пункта
+                    for source_hint in source_item.hints.all():
+                        RuleHint.objects.create(
+                            rule_item=new_item,
+                            text=source_hint.text,
+                            priority=source_hint.priority
+                        )
                 
                 # Копируем подразделы
                 for source_section in source_category.sections.all():
@@ -106,14 +132,29 @@ def rules_create_version(request):
                         order=source_section.order
                     )
                     
-                    # Копируем пункты
+                    # Копируем теги подраздела
+                    if source_section.tags.exists():
+                        new_section.tags.set(source_section.tags.all())
+                    
+                    # Копируем пункты подраздела
                     for source_item in source_section.items.all():
-                        RuleItem.objects.create(
+                        new_item = RuleItem.objects.create(
                             section=new_section,
                             number=source_item.number,
                             content=source_item.content,
                             order=source_item.order
                         )
+                        # Копируем теги пункта
+                        if source_item.tags.exists():
+                            new_item.tags.set(source_item.tags.all())
+                        
+                        # Копируем подсказки пункта
+                        for source_hint in source_item.hints.all():
+                            RuleHint.objects.create(
+                                rule_item=new_item,
+                                text=source_hint.text,
+                                priority=source_hint.priority
+                            )
             
             # Копируем переменные
             for source_var in source_version.variables.all():
@@ -128,29 +169,31 @@ def rules_create_version(request):
                     rule_reference=source_var.rule_reference
                 )
             
-            # Копируем подсказки (только если есть)
-            # Для простоты копируем через items
-            for source_category in source_version.categories.all():
-                new_category = RuleCategory.objects.get(
+            # Копируем систему оценки (если есть)
+            if hasattr(source_version, 'scoring'):
+                scoring = source_version.scoring
+                from ..models import RuleScoring
+                RuleScoring.objects.create(
                     version=new_version,
-                    number=source_category.number
+                    win_points=scoring.win_points,
+                    loss_points=scoring.loss_points,
+                    lh_bonus_3=scoring.lh_bonus_3,
+                    lh_bonus_2=scoring.lh_bonus_2,
+                    yellow_base_penalty=scoring.yellow_base_penalty,
+                    yellow_progression=scoring.yellow_progression,
+                    red_card_penalty=scoring.red_card_penalty,
+                    ppk_penalty=scoring.ppk_penalty,
+                    disqualification_penalty=scoring.disqualification_penalty,
+                    ci_percent=scoring.ci_percent,
+                    ci_min_games=scoring.ci_min_games,
+                    ci_coef_win_with_black=scoring.ci_coef_win_with_black,
+                    ci_coef_lose_with_black=scoring.ci_coef_lose_with_black,
+                    ci_coef_win_no_black=scoring.ci_coef_win_no_black,
+                    ci_coef_lose_no_black=scoring.ci_coef_lose_no_black,
+                    extra_min=scoring.extra_min,
+                    extra_max=scoring.extra_max,
+                    extra_step=scoring.extra_step
                 )
-                for source_section in source_category.sections.all():
-                    new_section = RuleSection.objects.get(
-                        category=new_category,
-                        number=source_section.number
-                    )
-                    for source_item in source_section.items.all():
-                        new_item = RuleItem.objects.get(
-                            section=new_section,
-                            number=source_item.number
-                        )
-                        for source_hint in source_item.hints.all():
-                            RuleHint.objects.create(
-                                rule_item=new_item,
-                                text=source_hint.text,
-                                priority=source_hint.priority
-                            )
         
         messages.success(request, f'Версия {version} успешно создана!')
         return redirect('rules_admin')
@@ -162,7 +205,6 @@ def rules_create_version(request):
     }
     return render(request, 'tournament/rules/create_version.html', context)
 
-
 @login_required
 @user_passes_test(is_admin)
 def rules_activate_version(request, version_id):
@@ -170,11 +212,18 @@ def rules_activate_version(request, version_id):
     version = get_object_or_404(RuleVersion, id=version_id)
     
     if request.method == 'POST':
+        # Находим предыдущую активную версию
+        old_active = RuleVersion.objects.filter(is_active=True).first()
+        
         # Деактивируем все версии
         RuleVersion.objects.all().update(is_active=False)
+        
         # Активируем выбранную
         version.is_active = True
         version.save()
+        
+        # Отмечаем изменения
+        mark_changes_in_version(version, old_active)
         
         messages.success(request, f'Версия {version.version} активирована!')
         return redirect('rules_admin')
@@ -231,7 +280,9 @@ def rules_add_category(request):
             number=number,
             title=title,
             description=description,
-            order=order
+            order=order,
+            is_new=True,
+            changed_in_version=version
         )
         
         messages.success(request, f'Раздел "{title}" добавлен')
@@ -258,6 +309,9 @@ def rules_edit_category(request, category_id):
         category.title = request.POST.get('title', category.title)
         category.description = request.POST.get('description', category.description)
         category.order = request.POST.get('order', category.order)
+        category.is_changed = True  # <-- ДОБАВИТЬ
+        category.is_new = False  # <-- если было новым, теперь не новое
+        category.changed_in_version = category.version  # <-- ДОБАВИТЬ
         category.save()
         
         messages.success(request, f'Раздел {category.number} обновлен')
@@ -315,7 +369,9 @@ def rules_add_section(request):
             number=number,
             title=title,
             description=description,
-            order=order
+            order=order,
+            is_new=True,
+            changed_in_version=category.version 
         )
         
         messages.success(request, f'Подраздел "{title}" добавлен')
@@ -335,6 +391,9 @@ def rules_edit_section(request, section_id):
         section.title = request.POST.get('title', section.title)
         section.description = request.POST.get('description', section.description)
         section.order = request.POST.get('order', section.order)
+        section.is_changed = True  # <-- ДОБАВИТЬ
+        section.is_new = False  # <-- если было новым, теперь не новое
+        section.changed_in_version = section.category.version  # <-- ДОБАВИТЬ
         section.save()
         
         messages.success(request, f'Подраздел {section.number} обновлен')
@@ -392,7 +451,9 @@ def rules_add_item(request):
             section=section,
             number=number,
             content=content,
-            order=order
+            order=order,
+            is_new=True,
+            changed_in_version=section.category.version
         )
         
         if tags:
@@ -414,6 +475,13 @@ def rules_edit_item(request, item_id):
         item.number = request.POST.get('number', item.number)
         item.content = request.POST.get('content', item.content)
         item.order = request.POST.get('order', item.order)
+        item.is_changed = True  # <-- ДОБАВИТЬ
+        item.is_new = False  # <-- если было новым, теперь не новое
+        # Определяем версию
+        if item.section:
+            item.changed_in_version = item.section.category.version
+        elif item.category:
+            item.changed_in_version = item.category.version
         item.save()
         
         messages.success(request, f'Пункт {item.number} обновлен')
@@ -573,7 +641,8 @@ def rules_api_category(request, category_id):
         'number': category.number,
         'title': category.title,
         'description': category.description,
-        'order': category.order
+        'order': category.order,
+        'tags': list(category.tags.values_list('id', flat=True)) if category.tags.exists() else []
     })
 
 @login_required
@@ -586,7 +655,8 @@ def rules_api_section(request, section_id):
         'number': section.number,
         'title': section.title,
         'description': section.description,
-        'order': section.order
+        'order': section.order,
+        'tags': list(section.tags.values_list('id', flat=True)) if hasattr(section, 'tags') and section.tags.exists() else []
     })
 
 @login_required
@@ -598,7 +668,8 @@ def rules_api_item(request, item_id):
         'id': item.id,
         'number': item.number,
         'content': item.content,
-        'order': item.order
+        'order': item.order,
+        'tags': list(item.tags.values_list('id', flat=True)) if item.tags.exists() else []
     })
 
 @login_required
@@ -648,7 +719,9 @@ def rules_add_direct_item(request):
             category=category,
             number=number,
             content=content,
-            order=order
+            order=order,
+            is_new=True,  
+            changed_in_version=category.version  
         )
         
         if tags:
@@ -685,6 +758,9 @@ def rules_edit_direct_item(request, item_id):
             item.tags.set(tags)
         else:
             item.tags.clear()
+        item.is_changed = True  # <-- ДОБАВИТЬ
+        item.is_new = False  # <-- если было новым, теперь не новое
+        item.changed_in_version = item.category.version  # <-- ДОБАВИТЬ
         item.save()
         
         messages.success(request, f'Пункт {number} обновлен')
@@ -807,3 +883,100 @@ def rules_api_next_direct_item_number(request):
         next_number = RuleItem.get_next_number_for_category(category)
         return JsonResponse({'next_number': next_number})
     return JsonResponse({'error': 'category_id required'}, status=400)
+
+def mark_changes_in_version(version, old_version=None):
+    """
+    Отмечает новые и изменённые элементы в версии.
+    Сравнивает с предыдущей активной версией.
+    """
+    from ..models import RuleCategory, RuleSection, RuleItem
+    
+    # Если нет старой версии, всё считается новым
+    if not old_version:
+        # Все категории, разделы и пункты в новой версии — новые
+        for category in version.categories.all():
+            category.is_new = True
+            category.changed_in_version = version
+            category.save()
+            for section in category.sections.all():
+                section.is_new = True
+                section.changed_in_version = version
+                section.save()
+                for item in section.items.all():
+                    item.is_new = True
+                    item.changed_in_version = version
+                    item.save()
+            for item in category.direct_items.all():
+                item.is_new = True
+                item.changed_in_version = version
+                item.save()
+        return
+    
+    # Сравниваем со старой версией
+    old_categories = {c.number: c for c in old_version.categories.all()}
+    new_categories = {c.number: c for c in version.categories.all()}
+    
+    # Проверяем категории
+    for num, new_cat in new_categories.items():
+        if num in old_categories:
+            old_cat = old_categories[num]
+            # Проверяем изменения
+            if (old_cat.title != new_cat.title or 
+                old_cat.description != new_cat.description):
+                new_cat.is_changed = True
+                new_cat.changed_in_version = version
+                new_cat.save()
+        else:
+            # Новая категория
+            new_cat.is_new = True
+            new_cat.changed_in_version = version
+            new_cat.save()
+        
+        # Проверяем подразделы
+        old_sections = {s.number: s for s in old_cat.sections.all()} if num in old_categories else {}
+        new_sections = {s.number: s for s in new_cat.sections.all()}
+        
+        for sec_num, new_sec in new_sections.items():
+            if sec_num in old_sections:
+                old_sec = old_sections[sec_num]
+                if (old_sec.title != new_sec.title or 
+                    old_sec.description != new_sec.description):
+                    new_sec.is_changed = True
+                    new_sec.changed_in_version = version
+                    new_sec.save()
+            else:
+                new_sec.is_new = True
+                new_sec.changed_in_version = version
+                new_sec.save()
+            
+            # Проверяем пункты в подразделах
+            old_items = {i.number: i for i in old_sec.items.all()} if sec_num in old_sections else {}
+            new_items = {i.number: i for i in new_sec.items.all()}
+            
+            for item_num, new_item in new_items.items():
+                if item_num in old_items:
+                    old_item = old_items[item_num]
+                    if old_item.content != new_item.content:
+                        new_item.is_changed = True
+                        new_item.changed_in_version = version
+                        new_item.save()
+                else:
+                    new_item.is_new = True
+                    new_item.changed_in_version = version
+                    new_item.save()
+        
+        # Проверяем прямые пункты (без подраздела)
+        old_direct = {i.number: i for i in old_cat.direct_items.all()} if num in old_categories else {}
+        new_direct = {i.number: i for i in new_cat.direct_items.all()}
+        
+        for item_num, new_item in new_direct.items():
+            if item_num in old_direct:
+                old_item = old_direct[item_num]
+                if old_item.content != new_item.content:
+                    new_item.is_changed = True
+                    new_item.changed_in_version = version
+                    new_item.save()
+            else:
+                new_item.is_new = True
+                new_item.changed_in_version = version
+                new_item.save()

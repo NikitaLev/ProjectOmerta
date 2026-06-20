@@ -68,17 +68,33 @@ function openAddCategoryModal() {
 
 function openEditCategoryModal(categoryId) {
     fetch('/rules/api/category/' + categoryId + '/')
-        .then(function(response) { return response.json(); })
+        .then(function(response) { 
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки: ' + response.status);
+            }
+            return response.json(); 
+        })
         .then(function(data) {
             document.getElementById('edit_category_number').value = data.number;
             document.getElementById('edit_category_title').value = data.title;
             document.getElementById('edit_category_description').value = data.description || '';
             document.getElementById('edit_category_order').value = data.order || 0;
+            
+            // Выбираем теги с проверкой
+            const select = document.getElementById('edit_category_tags');
+            if (select) {
+                const tagIds = data.tags || [];
+                for (let option of select.options) {
+                    option.selected = tagIds.includes(parseInt(option.value));
+                }
+            }
+            
             document.getElementById('editCategoryForm').action = '/rules/edit-category/' + categoryId + '/';
             openModal('editCategoryModal');
         })
-        .catch(function() {
-            alert('Ошибка загрузки данных раздела');
+        .catch(function(error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка загрузки данных раздела: ' + error.message);
         });
 }
 
@@ -119,17 +135,33 @@ function openAddSectionModal(categoryId) {
 
 function openEditSectionModal(sectionId) {
     fetch('/rules/api/section/' + sectionId + '/')
-        .then(function(response) { return response.json(); })
+        .then(function(response) { 
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки: ' + response.status);
+            }
+            return response.json(); 
+        })
         .then(function(data) {
             document.getElementById('edit_section_number').value = data.number;
             document.getElementById('edit_section_title').value = data.title;
             document.getElementById('edit_section_description').value = data.description || '';
             document.getElementById('edit_section_order').value = data.order || 0;
+            
+            // Выбираем теги с проверкой
+            const select = document.getElementById('edit_section_tags');
+            if (select) {
+                const tagIds = data.tags || [];
+                for (let option of select.options) {
+                    option.selected = tagIds.includes(parseInt(option.value));
+                }
+            }
+            
             document.getElementById('editSectionForm').action = '/rules/edit-section/' + sectionId + '/';
             openModal('editSectionModal');
         })
-        .catch(function() {
-            alert('Ошибка загрузки данных подраздела');
+        .catch(function(error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка загрузки данных подраздела: ' + error.message);
         });
 }
 
@@ -166,21 +198,6 @@ function openAddItemModal(sectionId) {
         });
     
     openModal('addItemModal');
-}
-
-function openEditItemModal(itemId) {
-    fetch('/rules/api/item/' + itemId + '/')
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            document.getElementById('edit_item_number').value = data.number;
-            document.getElementById('edit_item_content').value = data.content;
-            document.getElementById('edit_item_order').value = data.order || 0;
-            document.getElementById('editItemForm').action = '/rules/edit-item/' + itemId + '/';
-            openModal('editItemModal');
-        })
-        .catch(function() {
-            alert('Ошибка загрузки данных пункта');
-        });
 }
 
 function deleteItem(itemId) {
@@ -255,11 +272,14 @@ function openAddDirectItemModal(categoryId) {
                     'Будет создан пункт №' + data.next_number;
             }
         })
-        .catch(function() {
-            // Если не получилось, оставляем заглушку
-        });
+        .catch(function() {});
     
     openModal('addDirectItemModal');
+    
+    // Инициализируем редактор после открытия модалки
+    setTimeout(function() {
+        initQuillEditor('addDirectItemEditor', 'addDirectItemContent');
+    }, 100);
 }
 
 function openEditDirectItemModal(itemId) {
@@ -273,22 +293,116 @@ function openEditDirectItemModal(itemId) {
         .then(function(data) {
             document.getElementById('edit_direct_item_id').value = data.id;
             document.getElementById('edit_direct_item_number').value = data.number;
-            document.getElementById('edit_direct_item_content').value = data.content;
             document.getElementById('edit_direct_item_order').value = data.order || 0;
             
-            // Выбираем теги
+            // Выбираем теги с проверкой
             const select = document.getElementById('edit_direct_item_tags');
             if (select) {
+                const tagIds = data.tags || [];
                 for (let option of select.options) {
-                    option.selected = data.tags.includes(parseInt(option.value));
+                    option.selected = tagIds.includes(parseInt(option.value));
                 }
             }
             
             document.getElementById('editDirectItemForm').action = '/rules/edit-direct-item/' + itemId + '/';
             openModal('editDirectItemModal');
+            
+            // Инициализируем редактор с содержимым
+            setTimeout(function() {
+                const quill = initQuillEditor('editDirectItemEditor', 'editDirectItemContent');
+                if (quill && data.content) {
+                    quill.root.innerHTML = data.content;
+                }
+            }, 100);
         })
         .catch(function(error) {
             console.error('Ошибка:', error);
             alert('Ошибка загрузки данных пункта: ' + error.message);
         });
+}
+
+// ========== ФУНКЦИИ ДЛЯ ПУНКТОВ ==========
+
+function openAddItemModal(sectionId) {
+    document.getElementById('item_section_id').value = sectionId;
+    
+    // Получаем следующий номер для пункта
+    fetch('/rules/api/next-item-number/?section_id=' + sectionId)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.next_number) {
+                document.getElementById('item_number').value = data.next_number;
+                document.getElementById('item_number_hint').textContent = 
+                    'Будет создан пункт №' + data.next_number;
+            }
+        })
+        .catch(function() {});
+    
+    openModal('addItemModal');
+    
+    // Инициализируем редактор после открытия модалки
+    setTimeout(function() {
+        initQuillEditor('addItemEditor', 'addItemContent');
+    }, 100);
+}
+
+function openEditItemModal(itemId) {
+    fetch('/rules/api/item/' + itemId + '/')
+        .then(function(response) { 
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки: ' + response.status);
+            }
+            return response.json(); 
+        })
+        .then(function(data) {
+            document.getElementById('edit_item_number').value = data.number;
+            document.getElementById('edit_item_order').value = data.order || 0;
+            
+            // Выбираем теги с проверкой
+            const select = document.getElementById('edit_item_tags');
+            if (select) {
+                const tagIds = data.tags || [];
+                for (let option of select.options) {
+                    option.selected = tagIds.includes(parseInt(option.value));
+                }
+            }
+            
+            document.getElementById('editItemForm').action = '/rules/edit-item/' + itemId + '/';
+            openModal('editItemModal');
+            
+            // Инициализируем редактор с содержимым
+            setTimeout(function() {
+                const quill = initQuillEditor('editItemEditor', 'editItemContent');
+                if (quill && data.content) {
+                    quill.root.innerHTML = data.content;
+                }
+            }, 100);
+        })
+        .catch(function(error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка загрузки данных пункта: ' + error.message);
+        });
+}
+
+// Закрытие модалки с очисткой редактора
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Уничтожаем редактор если он есть
+        if (modalId === 'addItemModal') {
+            destroyQuillEditor('addItemEditor');
+        }
+        if (modalId === 'editItemModal') {
+            destroyQuillEditor('editItemEditor');
+        }
+        if (modalId === 'addDirectItemModal') {
+            destroyQuillEditor('addDirectItemEditor');
+        }
+        if (modalId === 'editDirectItemModal') {
+            destroyQuillEditor('editDirectItemEditor');
+        }
+    }
 }
