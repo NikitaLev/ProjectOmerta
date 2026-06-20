@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db import transaction
 import json
-
+import re
 from ..models import (
     RuleVersion, RuleCategory, RuleSection, RuleItem, 
     RuleVariable, RuleHint, RuleTag, User
@@ -60,6 +60,7 @@ def rules_admin(request, version_id=None):
         'all_variables': all_variables_for_links,  # для модалки связывания
         'all_tags': all_tags,
         'viewing_version_id': active_version.id if active_version else None,
+        'variables_json': list(RuleVariable.objects.filter(version=active_version).values('key', 'value')) if active_version else [],
     }
     return render(request, 'tournament/rules/admin.html', context)
 
@@ -445,6 +446,13 @@ def rules_add_item(request):
         
         section = get_object_or_404(RuleSection, id=section_id)
         
+        version = section.category.version  # ← получаем версию
+        # ===== ВАЛИДАЦИЯ ПЕРЕМЕННЫХ =====
+        missing = validate_variables(content, version)
+        if missing:
+            messages.warning(request, f'Внимание! Не найдены переменные: {", ".join(missing)}')
+            # Можно либо вернуть ошибку, либо сохранить с предупреждением
+            # return redirect('rules_admin')  # если хотим прервать сохранение
         # Если номер не указан - генерируем автоматически
         if not number:
             number = RuleItem.get_next_number_for_section(section)
@@ -453,6 +461,7 @@ def rules_add_item(request):
             messages.error(request, f'Пункт с номером {number} уже существует')
             return redirect('rules_admin')
         
+
         # order = числовое значение после второй точки (4.1.1 -> 1)
         try:
             parts = number.split('.')
@@ -466,7 +475,7 @@ def rules_add_item(request):
             content=content,
             order=order,
             is_new=True,
-            changed_in_version=section.category.version
+            changed_in_version=version
         )
         
         if tags:
@@ -485,23 +494,55 @@ def rules_edit_item(request, item_id):
     item = get_object_or_404(RuleItem, id=item_id)
     
     if request.method == 'POST':
-        item.number = request.POST.get('number', item.number)
-        item.content = request.POST.get('content', item.content)
-        item.order = request.POST.get('order', item.order)
-        item.is_changed = True  # <-- ДОБАВИТЬ
-        item.is_new = False  # <-- если было новым, теперь не новое
+        number = request.POST.get('number')
+        content = request.POST.get('content')
+        order = request.POST.get('order', 0)
+        tags = request.POST.getlist('tags')
+        
         # Определяем версию
         if item.section:
-            item.changed_in_version = item.section.category.version
+            version = item.section.category.version
         elif item.category:
-            item.changed_in_version = item.category.version
+            version = item.category.version
+        else:
+            version = None
+        
+        # ===== ВАЛИДАЦИЯ ПЕРЕМЕННЫХ =====
+        missing = []
+        if version:
+            missing = validate_variables(content, version)
+            if missing:
+                messages.warning(request, f'Внимание! Не найдены переменные: {", ".join(missing)}')
+        
+        if RuleItem.objects.filter(
+            section=item.section, 
+            number=number
+        ).exclude(id=item.id).exists():
+            messages.error(request, f'Пункт с номером {number} уже существует')
+            return redirect('rules_admin')
+        
+        item.number = number
+        item.content = content
+        item.order = order
+        item.is_changed = True
+        if version:
+            item.changed_in_version = version
+        
+        if tags:
+            item.tags.set(tags)
+        else:
+            item.tags.clear()
+        
         item.save()
         
-        messages.success(request, f'Пункт {item.number} обновлен')
+        if missing:
+            messages.warning(request, f'Пункт {number} обновлён, но переменные не найдены: {", ".join(missing)}')
+        else:
+            messages.success(request, f'Пункт {number} обновлён')
+        
         return redirect('rules_admin')
     
-    context = {'item': item}
-    return render(request, 'tournament/rules/admin.html', context)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 @login_required
@@ -708,12 +749,16 @@ def rules_add_direct_item(request):
         category_id = request.POST.get('category_id')
         number = request.POST.get('number')
         content = request.POST.get('content')
-        order = request.POST.get('order', 0)
         tags = request.POST.getlist('tags')
         
         category = get_object_or_404(RuleCategory, id=category_id)
+        version = category.version  # ← получаем версию
         
-        # Если номер не указан - генерируем автоматически
+        # ===== ВАЛИДАЦИЯ ПЕРЕМЕННЫХ =====
+        missing = validate_variables(content, version)
+        if missing:
+            messages.warning(request, f'Внимание! Не найдены переменные: {", ".join(missing)}')
+        
         if not number:
             number = RuleItem.get_next_number_for_category(category)
         
@@ -721,7 +766,6 @@ def rules_add_direct_item(request):
             messages.error(request, f'Пункт с номером {number} уже существует')
             return redirect('rules_admin')
         
-        # order = числовое значение после точки (1.1 -> 1)
         try:
             parts = number.split('.')
             order = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 0
@@ -733,14 +777,18 @@ def rules_add_direct_item(request):
             number=number,
             content=content,
             order=order,
-            is_new=True,  
-            changed_in_version=category.version  
+            is_new=True,
+            changed_in_version=version
         )
         
         if tags:
             item.tags.set(tags)
         
-        messages.success(request, f'Пункт {number} добавлен в раздел "{category.title}"')
+        if missing:
+            messages.warning(request, f'Пункт {number} добавлен, но переменные не найдены: {", ".join(missing)}')
+        else:
+            messages.success(request, f'Пункт {number} добавлен в раздел "{category.title}"')
+        
         return redirect('rules_admin')
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -757,6 +805,15 @@ def rules_edit_direct_item(request, item_id):
         order = request.POST.get('order', 0)
         tags = request.POST.getlist('tags')
         
+        version = item.category.version if item.category else None
+        
+        # ===== ВАЛИДАЦИЯ ПЕРЕМЕННЫХ =====
+        missing = []
+        if version:
+            missing = validate_variables(content, version)
+            if missing:
+                messages.warning(request, f'Внимание! Не найдены переменные: {", ".join(missing)}')
+        
         if RuleItem.objects.filter(
             category=item.category, 
             number=number
@@ -767,16 +824,22 @@ def rules_edit_direct_item(request, item_id):
         item.number = number
         item.content = content
         item.order = order
+        item.is_changed = True
+        if version:
+            item.changed_in_version = version
+        
         if tags:
             item.tags.set(tags)
         else:
             item.tags.clear()
-        item.is_changed = True  # <-- ДОБАВИТЬ
-        item.is_new = False  # <-- если было новым, теперь не новое
-        item.changed_in_version = item.category.version  # <-- ДОБАВИТЬ
+        
         item.save()
         
-        messages.success(request, f'Пункт {number} обновлен')
+        if missing:
+            messages.warning(request, f'Пункт {number} обновлён, но переменные не найдены: {", ".join(missing)}')
+        else:
+            messages.success(request, f'Пункт {number} обновлён')
+        
         return redirect('rules_admin')
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -1050,3 +1113,28 @@ def rules_remove_variable_link(request, link_id):
         return JsonResponse({'success': True})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+import re
+
+def validate_variables(content, version):
+    """
+    Проверяет, что все переменные в тексте существуют в версии.
+    Возвращает список отсутствующих ключей.
+    """
+    if not content or not version:
+        return []
+    
+    # Ищем все {{ ключ }} в тексте
+    pattern = r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}'
+    matches = re.findall(pattern, content)
+    
+    if not matches:
+        return []
+    
+    # Получаем существующие ключи переменных в этой версии
+    existing_keys = set(RuleVariable.objects.filter(version=version).values_list('key', flat=True))
+    
+    # Возвращаем отсутствующие ключи
+    missing = [key for key in set(matches) if key not in existing_keys]
+    
+    return missing

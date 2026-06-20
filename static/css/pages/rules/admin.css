@@ -878,3 +878,62 @@ select[multiple] option:checked {
 .section-actions .btn-outline i {
     font-size: 0.75rem;
 }
+/* ========== ПОДСКАЗКИ ПЕРЕМЕННЫХ ========== */
+.variable-suggestions {
+    position: fixed;
+    background: var(--bg-card);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    min-width: 250px;
+    max-width: 400px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: none;
+}
+
+.variable-suggestions .suggestion-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.variable-suggestions .suggestion-item:hover {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.variable-suggestions .suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.variable-suggestions .suggestion-key {
+    color: var(--gold);
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.variable-suggestions .suggestion-value {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.variable-suggestions .suggestion-item .insert-hint {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    margin-left: 10px;
+}
+
+/* Подсветка текста как переменной в редакторе */
+.ql-editor .variable-placeholder {
+    color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+    padding: 0 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: 600;
+}

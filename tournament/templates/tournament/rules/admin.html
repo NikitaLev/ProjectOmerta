@@ -345,6 +345,8 @@
 <!-- Модальные окна -->
 {% include 'tournament/rules/modals.html' %}
 
+ <!-- Данные переменных для автодополнения -->
+{{ variables_json|json_script:"variablesData" }}
 <!-- CSRF токен для AJAX запросов -->
 <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
 
