@@ -406,3 +406,67 @@ function closeModal(modalId) {
         }
     }
 }
+
+// ========== СВЯЗЫВАНИЕ ПЕРЕМЕННЫХ ==========
+
+function openLinkVariableModal(itemId) {
+    document.getElementById('link_item_id').value = itemId;
+    document.getElementById('link_variable_id').value = '';
+    document.getElementById('link_placeholder').value = '';
+    document.getElementById('linkPreview').innerHTML = 'Выберите переменную и укажите заполнитель';
+    openModal('linkVariableModal');
+}
+
+// Предпросмотр при выборе переменной
+document.addEventListener('DOMContentLoaded', function() {
+    const variableSelect = document.getElementById('link_variable_id');
+    const placeholderInput = document.getElementById('link_placeholder');
+    const previewBox = document.getElementById('linkPreview');
+    
+    if (variableSelect && placeholderInput && previewBox) {
+        function updatePreview() {
+            const varId = variableSelect.value;
+            const placeholder = placeholderInput.value || '{{ placeholder }}';
+            
+            if (varId && placeholder) {
+                // Находим выбранную переменную
+                const option = variableSelect.options[variableSelect.selectedIndex];
+                const varText = option ? option.text.split('=')[0].trim() : 'переменная';
+                const value = option ? option.text.match(/=\s*([\d.-]+)/) : null;
+                
+                previewBox.innerHTML = `
+                    <div class="preview-row">
+                        <span class="preview-text">Текст с заполнителем: </span>
+                        <code>${placeholder}</code>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-text">Будет заменено на: </span>
+                        <strong style="color: var(--gold);">${value ? value[1] : '?'}</strong>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-text">Результат: </span>
+                        <span style="color: var(--text-secondary);">${placeholder} → ${value ? value[1] : '?'}</span>
+                    </div>
+                `;
+            } else {
+                previewBox.innerHTML = 'Выберите переменную и укажите заполнитель';
+            }
+        }
+        
+        variableSelect.addEventListener('change', updatePreview);
+        placeholderInput.addEventListener('input', updatePreview);
+    }
+});
+
+function removeVariableLink(linkId) {
+    if (!confirm('Удалить связь с переменной?')) return;
+    
+    fetch('/rules/api/remove-variable-link/' + linkId + '/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+        },
+    })
+    .then(() => location.reload())
+    .catch(() => alert('Ошибка при удалении связи'));
+}

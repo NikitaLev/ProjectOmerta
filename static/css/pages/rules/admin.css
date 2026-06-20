@@ -743,3 +743,138 @@ select[multiple] option:checked {
 .version-label i {
     font-size: 0.85rem;
 }
+
+/* ========== ПЕРЕМЕННЫЕ В ПУНКТАХ ========== */
+.item-variables {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border-color);
+    width: 100%;
+}
+
+.variables-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.variable-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.variable-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px 2px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.variable-chip:hover {
+    border-color: var(--gold);
+}
+
+.var-key {
+    color: var(--gold);
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.var-value {
+    color: var(--text-secondary);
+}
+
+.variable-chip .btn-danger {
+    padding: 0 4px;
+    height: 18px;
+    font-size: 0.6rem;
+    border-radius: 50%;
+    min-width: 18px;
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+}
+
+.variable-chip .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* ========== СВОРАЧИВАНИЕ РАЗДЕЛОВ ========== */
+
+.category-card {
+    transition: all 0.3s ease;
+}
+
+.category-card .collapse-toggle {
+    margin-right: 4px;
+    transition: transform 0.3s ease;
+}
+
+/* Контент внутри категории, который сворачивается */
+.category-card .sections-list,
+.category-card .direct-items-section {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+    max-height: 5000px;
+    opacity: 1;
+}
+
+/* Свёрнутое состояние */
+.category-card.collapsed .sections-list,
+.category-card.collapsed .direct-items-section {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Плавный переход для заголовка */
+.category-header {
+    transition: border-color 0.3s ease;
+}
+
+.category-card.collapsed .category-header {
+    border-bottom-color: transparent;
+    margin-bottom: 0;
+}
+
+/* Кнопка сворачивания при ховере */
+.collapse-toggle {
+    transition: all 0.2s ease;
+}
+
+.collapse-toggle:hover {
+    transform: scale(1.1);
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+/* Анимация для контента */
+.category-card .sections-list > *,
+.category-card .direct-items-section > * {
+    transition: opacity 0.3s ease;
+}
+
+.category-card.collapsed .sections-list > *,
+.category-card.collapsed .direct-items-section > * {
+    opacity: 0;
+}
+
+/* Кнопки "Свернуть все" и "Развернуть все" */
+.section-actions .btn-outline {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+}
+
+.section-actions .btn-outline i {
+    font-size: 0.75rem;
+}

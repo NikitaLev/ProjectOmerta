@@ -49,12 +49,15 @@ def rules_admin(request, version_id=None):
     
     all_tags = RuleTag.objects.all().order_by('name')
     
+    all_variables_for_links = RuleVariable.objects.filter(version=active_version).order_by('key')
+    
     context = {
         'versions': versions,
         'active_version': active_version,
         'is_active_version': active_version and active_version.is_active,  # флаг, активна ли версия
         'categories': categories,
         'variables': variables,
+        'all_variables': all_variables_for_links,  # для модалки связывания
         'all_tags': all_tags,
         'viewing_version_id': active_version.id if active_version else None,
     }
@@ -990,3 +993,60 @@ def mark_changes_in_version(version, old_version=None):
                 new_item.is_new = True
                 new_item.changed_in_version = version
                 new_item.save()
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_link_variable(request):
+    """Связать переменную с пунктом правил"""
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        variable_id = request.POST.get('variable_id')
+        placeholder = request.POST.get('placeholder')
+        
+        item = get_object_or_404(RuleItem, id=item_id)
+        variable = get_object_or_404(RuleVariable, id=variable_id)
+        
+        # Проверяем, что версии совпадают
+        item_version = item.section.category.version if item.section else item.category.version
+        if item_version != variable.version:
+            messages.error(request, 'Пункт и переменная должны быть из одной версии правил')
+            return redirect('rules_admin')
+        
+        # Создаём связь
+        RuleItemVariableLink.objects.create(
+            item=item,
+            variable=variable,
+            placeholder=placeholder
+        )
+        
+        # Помечаем пункт как изменённый
+        item.is_changed = True
+        item.changed_in_version = item_version
+        item.save()
+        
+        messages.success(request, f'Переменная {variable.key} связана с пунктом {item.number}')
+        return redirect('rules_admin')
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+@user_passes_test(is_admin)
+def rules_remove_variable_link(request, link_id):
+    """Удалить связь переменной с пунктом"""
+    link = get_object_or_404(RuleItemVariableLink, id=link_id)
+    
+    if request.method == 'POST':
+        item = link.item
+        link.delete()
+        
+        # Помечаем пункт как изменённый
+        item_version = item.section.category.version if item.section else item.category.version
+        item.is_changed = True
+        item.changed_in_version = item_version
+        item.save()
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

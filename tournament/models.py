@@ -479,6 +479,48 @@ class RuleItem(models.Model):
         ordering = ['order']
         verbose_name = "Пункт правил"
         verbose_name_plural = "Пункты правил"
+
+    def render_content(self):
+        """Заменяет {{ ключ }} на значения переменных из базы"""
+        content = self.content
+        version = self.get_version()
+        
+        if not version:
+            return content
+        
+        # Ищем все {{ ключ }} в тексте
+        import re
+        pattern = r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}'
+        matches = re.findall(pattern, content)
+        
+        # Для каждого найденного ключа ищем переменную
+        for key in matches:
+            try:
+                variable = RuleVariable.objects.get(version=version, key=key)
+                value = variable.value
+                # Заменяем {{ ключ }} на значение
+                content = content.replace(f'{{{{ {key} }}}}', str(value))
+                content = content.replace(f'{{{{{key}}}}}', str(value))  # без пробелов
+            except RuleVariable.DoesNotExist:
+                # Если переменная не найдена, оставляем как есть
+                pass
+        
+        return content
+    
+    def get_version(self):
+        """Получить версию правил, к которой относится пункт"""
+        if self.section:
+            return self.section.category.version
+        elif self.category:
+            return self.category.version
+        return None
+    
+    def get_used_variables(self):
+        """Возвращает список ключей переменных, используемых в пункте"""
+        import re
+        content = self.content
+        pattern = r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}'
+        return list(set(re.findall(pattern, content)))
     
     def __str__(self):
         return f"{self.number}"
@@ -514,6 +556,10 @@ class RuleVariable(models.Model):
         verbose_name = "Переменная правил"
         verbose_name_plural = "Переменные правил"
     
+    def get_used_in_items(self):
+        """Возвращает все пункты, где используется эта переменная"""
+        return [link.item for link in self.item_links.all()]
+    
     def __str__(self):
         return f"{self.key} = {self.value}"
 
@@ -542,4 +588,3 @@ class RuleHint(models.Model):
     def __str__(self):
         return f"Подсказка к {self.rule_item.number}"
     
-

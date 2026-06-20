@@ -113,4 +113,7 @@ urlpatterns = [
     path('rules/api/direct-item/<int:item_id>/', rules_views.rules_api_direct_item, name='rules_api_direct_item'),
     path('rules/api/version/<int:version_id>/', rules_views.rules_get_version_data, name='rules_get_version_data'),
     
+    # Связи с переменными
+    path('rules/link-variable/', rules_views.rules_link_variable, name='rules_link_variable'),
+    path('rules/api/remove-variable-link/<int:link_id>/', rules_views.rules_remove_variable_link, name='rules_remove_variable_link'),
 ]
