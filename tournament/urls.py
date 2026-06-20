@@ -67,6 +67,7 @@ urlpatterns = [
 
       # ========== УПРАВЛЕНИЕ ПРАВИЛАМИ (ВСЕ МАРШРУТЫ ВМЕСТЕ) ==========
     # Главная страница управления правилами
+    path('rules/view/<int:version_id>/', rules_views.rules_admin, name='rules_view_version'),
     path('rules/admin/', rules_views.rules_admin, name='rules_admin'),
     
     # Теги

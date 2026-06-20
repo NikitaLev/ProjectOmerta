@@ -30,26 +30,43 @@
             <h2><i class="fas fa-tag"></i> Версии правил</h2>
             <div class="versions-list">
                 {% for version in versions %}
-                <div class="version-card {% if version.is_active %}active{% endif %}">
+                <div class="version-card {% if version.id == viewing_version_id %}viewing{% endif %} {% if version.is_active %}active{% endif %}">
                     <div class="version-info">
                         <span class="version-number">v{{ version.version }}</span>
                         <span class="version-date">{{ version.published_date|date:"d.m.Y" }}</span>
                         {% if version.is_active %}
                             <span class="badge-active"><i class="fas fa-check-circle"></i> Активна</span>
                         {% endif %}
+                        {% if version.id == viewing_version_id and not version.is_active %}
+                            <span class="badge-viewing"><i class="fas fa-eye"></i> Просмотр</span>
+                        {% endif %}
                     </div>
                     <div class="version-actions">
+                        <!-- Кнопка просмотра (всегда доступна) -->
+                        <a href="{% url 'rules_view_version' version.id %}" class="btn btn-sm btn-outline" title="Просмотреть версию">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        
+                        <!-- Кнопка активации (только если не активна) -->
                         {% if not version.is_active %}
                             <form method="post" action="{% url 'rules_activate_version' version.id %}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-success" title="Активировать">
+                                <button type="submit" class="btn btn-sm btn-success" title="Активировать версию">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
+                        {% else %}
+                            <span class="btn btn-sm btn-success disabled" style="opacity:0.5; cursor:default;">
+                                <i class="fas fa-star"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <!-- Кнопка удаления (только если не активна) -->
+                        {% if not version.is_active %}
                             <form method="post" action="{% url 'rules_delete_version' version.id %}" style="display:inline;" 
-                                  onsubmit="return confirm('Удалить версию {{ version.version }}?')">
+                                onsubmit="return confirm('Удалить версию {{ version.version }}?')">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger" title="Удалить">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Удалить версию">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -66,7 +83,29 @@
         <div class="rules-content">
             <div class="rules-header">
                 <h2>Структура правил</h2>
-                <span class="version-label">v{{ active_version.version }}</span>
+                <div class="rules-header-info">
+                    <span class="version-label">
+                        {% if is_active_version %}
+                            <i class="fas fa-check-circle" style="color: #4ade80;"></i>
+                        {% else %}
+                            <i class="fas fa-eye" style="color: var(--gold);"></i>
+                        {% endif %}
+                        v{{ active_version.version }}
+                        {% if is_active_version %}
+                            (активна)
+                        {% else %}
+                            (просмотр)
+                        {% endif %}
+                    </span>
+                    {% if not is_active_version %}
+                    <form method="post" action="{% url 'rules_activate_version' active_version.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Активировать
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Категории (разделы) -->
@@ -110,7 +149,7 @@
                                 <i class="fas fa-folder-plus"></i>
                             </button>
                             <button class="btn btn-sm btn-success" onclick="openAddDirectItemModal('{{ category.id }}')" title="Добавить пункт">
-                                <i class="fas fa-file-plus"></i>
+                                <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>

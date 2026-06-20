@@ -17,19 +17,27 @@ def is_admin(user):
 
 @login_required
 @user_passes_test(is_admin)
-def rules_admin(request):
+def rules_admin(request, version_id=None):
     """Главная страница управления правилами"""
     from ..models import RuleTag
     
     versions = RuleVersion.objects.all().order_by('-published_date')
-    active_version = RuleVersion.objects.filter(is_active=True).first()
+    
+    # Если передан ID версии — показываем её, иначе активную или последнюю
+    if version_id:
+        active_version = get_object_or_404(RuleVersion, id=version_id)
+    else:
+        active_version = RuleVersion.objects.filter(is_active=True).first()
+        if not active_version:
+            active_version = versions.first()
     
     categories = []
     if active_version:
         categories = RuleCategory.objects.filter(
             version=active_version
         ).prefetch_related(
-            'sections__items', 
+            'sections__items',
+            'sections__items__tags',
             'direct_items',
             'direct_items__tags',
             'tags'
@@ -44,9 +52,11 @@ def rules_admin(request):
     context = {
         'versions': versions,
         'active_version': active_version,
+        'is_active_version': active_version and active_version.is_active,  # флаг, активна ли версия
         'categories': categories,
         'variables': variables,
         'all_tags': all_tags,
+        'viewing_version_id': active_version.id if active_version else None,
     }
     return render(request, 'tournament/rules/admin.html', context)
 

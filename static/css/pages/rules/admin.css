@@ -126,7 +126,6 @@
 
 .version-label {
     background: var(--gold);
-    color: var(--bg-primary);
     padding: 2px 12px;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -698,4 +697,49 @@ select[multiple] option:checked {
     font-size: 0.55rem;
     font-weight: 600;
     flex-shrink: 0;
+}
+
+/* ========== ВЕРСИИ ========== */
+.version-card.viewing {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.version-card.active {
+    border-color: #4ade80;
+    background: rgba(74, 222, 128, 0.05);
+}
+
+.badge-viewing {
+    background: rgba(212, 175, 55, 0.12);
+    color: var(--gold);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rules-header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.version-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-secondary);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+.version-label i {
+    font-size: 0.85rem;
 }
